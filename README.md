@@ -1,2 +1,2 @@
 # lunar
-Lunar Animation and Rigging Framework
+Lunatics animation and rigging  framework.
