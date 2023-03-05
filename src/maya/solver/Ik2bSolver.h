@@ -123,7 +123,6 @@ public:
 	double softenIk(double startIkLen, double startMidLen, double midEndLen, double startMidEndLen, double softness);
 	MObject getSourceObjFromPlug(const MObject& Object, const MObject& Plug);
 
-	MStatus parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks);
 
 	double GetLimbLength();
 	bool TimeChanged(MAnimControl& AnimCtrl, MTime& TimeCached, MTime& TimeCurrent);
@@ -133,7 +132,7 @@ public:
 	void GetFkTransforms();
 	void GetIkTransforms();
 
-	MStatus Solve(MDagPathArray& InOutLinks);
+	MStatus solve(MDagPathArray& InOutLinks);
 	bool SolveLimb(MDagPathArray& InOutLinks);
 	void SolveFk();
 	void SolveBlendedIk();
@@ -141,7 +140,8 @@ public:
 	void SolveStraightLimb();
 	void SolveTwoBoneIk();
 
-	MStatus UpdateOutput(const MPlug& Plug, MDataBlock& DataBlock);
+	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
+	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);
 
 private:
 	// Private data

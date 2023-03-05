@@ -16,6 +16,7 @@ global proc AEctrlTemplate(string $nodeName)
 		editorTemplate -beginLayout "Ctrl Display" -collapse false;
 			editorTemplate -addControl "shape";
 			editorTemplate -addControl "fillShape";
+			editorTemplate -addControl "drawLine";
 			editorTemplate -addControl "fillTransparency";
 			editorTemplate -addControl "lineWidth";
 			editorTemplate -endLayout;
@@ -52,6 +53,7 @@ global proc AEctrlTemplate(string $nodeName)
 		editorTemplate -suppress "primaryVisibility";
 		editorTemplate -suppress "compInstObjGroups";
 		editorTemplate -suppress "componentTags";
+		editorTemplate -suppress "drawLineTo";
 		editorTemplate -endNoOptimize;
 
 	// End Main Layout

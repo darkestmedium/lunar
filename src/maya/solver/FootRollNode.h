@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../api/Utils.h"
 // #include "MathUtility.h"
 
 // System Includes
@@ -40,6 +39,9 @@
 
 // Proxies
 #include <maya/MPxNode.h>
+
+// Custom
+#include "../api/Utils.h"
 
 
 

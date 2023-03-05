@@ -16,6 +16,8 @@ MObject Ctrl::localRotateZ;
 MObject Ctrl::localRotate;
 
 MObject Ctrl::shapeAttr;
+MObject Ctrl::attrInDrawLine;
+Attribute Ctrl::attrInDrawLineTo;
 MObject Ctrl::fillShapeAttr;
 MObject Ctrl::fillTransparencyAttr;
 MObject Ctrl::lineWidthAttr;
@@ -68,6 +70,13 @@ MStatus Ctrl::initialize()
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
+	attrInDrawLine = nAttr.create("drawLine", "dl", MFnNumericData::kBoolean, false);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
+
+	createAttribute(attrInDrawLineTo, "drawLineTo", DefaultValue<MMatrix>());
+
 	fillTransparencyAttr = nAttr.create("fillTransparency", "ft", MFnNumericData::kDouble);
 	nAttr.setMin(0.1);
 	nAttr.setDefault(0.25);
@@ -84,11 +93,10 @@ MStatus Ctrl::initialize()
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
-	CHECK_MSTATUS(addAttribute(localRotate));
-	CHECK_MSTATUS(addAttribute(shapeAttr));
-	CHECK_MSTATUS(addAttribute(fillShapeAttr));
-	CHECK_MSTATUS(addAttribute(fillTransparencyAttr));
-	CHECK_MSTATUS(addAttribute(lineWidthAttr));
+	// Add attributes
+	addAttributes(
+		localRotate, shapeAttr, attrInDrawLine, attrInDrawLineTo,	fillShapeAttr, fillTransparencyAttr, lineWidthAttr
+	);
 
 	return MS::kSuccess;
 }
@@ -107,8 +115,8 @@ MBoundingBox Ctrl::boundingBox() const
 	*/
 	CtrlData data;
 
-	data.getPlugs(__thisObj);
-	data.getBBox(__thisObj, data.matrix);
+	data.getPlugs(objSelf);
+	data.getBBox(objSelf, pathSelf, data.matLocalShape);
 
 	return data.bBox;
 }
@@ -151,8 +159,9 @@ void Ctrl::postConstructor()
 	get called immediately after the constructor when it is safe to call any MPxNode
 	member function.
 */
-	__thisObj = thisMObject();
-	MFnDependencyNode thisFn(__thisObj);
+	objSelf = thisMObject();
+	MDagPath::getAPathTo(objSelf, pathSelf);
+	MFnDependencyNode thisFn(objSelf);
 	thisFn.setName(Ctrl::typeName + "Shape");
 
 	MPlug hideOnPlaybackPlug = thisFn.findPlug("hideOnPlayback", false);

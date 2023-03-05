@@ -148,20 +148,20 @@ double Ik2bSolver::softenIk(double startIkLen, double startMidLen, double midEnd
 }
 
 
-MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks)
+MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks)
 {
 	/* Parse the data block and get all inputs.	*/
 	MStatus status;
 
 	// Ask for time value to force refresh on the node
-	TimeCurrent = DataBlock.inputValue(AttrInTime, &status).asTime();
+	TimeCurrent = dataBlock.inputValue(AttrInTime, &status).asTime();
 
 	// We're getting the mObj from the .attribute() instead of a numeric data type like double in
 	// order to retrieve the MFnTransform for the input controllers - this also triggers the input as
 	//  dirty. All of Maya's solvers get the world position from the .rotatePivot() method.
 	// Start fk controller
 	MDagPath PathFkStart;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
 	if (status == MS::kFailure) {
 		return MS::kFailure;
 	} else {
@@ -169,7 +169,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	}
 	// Mid fk controller
 	MDagPath PathFkMid;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
 	if (status == MS::kSuccess) {
 		FnFkMid.setObject(PathFkMid);
 	} else {
@@ -177,7 +177,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	}
 	// End fk controller
 	MDagPath PathFkEnd;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
 	if (status == MS::kSuccess) {
 		FnFkEnd.setObject(PathFkEnd);
 	} else {
@@ -185,7 +185,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	}
 	// Ik handle
 	MDagPath PathIkHandle;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
 	if (status == MS::kSuccess) {
 		FnIkHandle.setObject(PathIkHandle);
 	} else {
@@ -193,7 +193,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	}
 	// Pole vector
 	MDagPath PathPoleVector;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
 	if (status == MS::kSuccess) {
 		FnPoleVector.setObject(PathPoleVector);
 		bIsPoleVectorConnected = true;
@@ -210,9 +210,9 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	InOutLinks.append(PathPoleVector);
 
 	// Additional attributes
-	twist = DataBlock.inputValue(inTwistAttr).asDouble();
-	softness = DataBlock.inputValue(inSoftnessAttr).asDouble();
-	fkIk = DataBlock.inputValue(inFkIkAttr).asDouble();
+	twist = dataBlock.inputValue(inTwistAttr).asDouble();
+	softness = dataBlock.inputValue(inSoftnessAttr).asDouble();
+	fkIk = dataBlock.inputValue(inFkIkAttr).asDouble();
 
 	LimbLength = GetLimbLength();
 
@@ -318,7 +318,7 @@ bool Ik2bSolver::TimeChanged(MAnimControl& AnimCtrl, MTime& TimeCached, MTime& T
 }
 
 
-MStatus Ik2bSolver::Solve(MDagPathArray& InOutLinks)
+MStatus Ik2bSolver::solve(MDagPathArray& InOutLinks)
 {
 	/* */
 	MStatus status;
@@ -553,13 +553,13 @@ void Ik2bSolver::SolveTwoBoneIk()
 }
 
 
-MStatus Ik2bSolver::UpdateOutput(const MPlug& Plug, MDataBlock& DataBlock)
+MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock)
 {	
 	/* Sets the outputs and data block clean.
 
 	Args:
-		Plug (MPlug&): Plug representing the attribute that needs to be recomputed.
-		DataBlock (MDataBlock&): Data block containing storage for the node's attributes.
+		plug (MPlug&): Plug representing the attribute that needs to be recomputed.
+		dataBlock (MDataBlock&): Data block containing storage for the node's attributes.
 
 	Returns:
 		status code (MStatus): kSuccess if the operation was successful, kFailure if an	error occured
@@ -568,11 +568,11 @@ MStatus Ik2bSolver::UpdateOutput(const MPlug& Plug, MDataBlock& DataBlock)
 	*/
 	MStatus status;
 
-	MDataHandle DhOutUpdate = DataBlock.outputValue(AttrOutUpdate, &status);
+	MDataHandle DhOutUpdate = dataBlock.outputValue(AttrOutUpdate, &status);
 	DhOutUpdate.set3Double(0.0, 0.0, 0.0);
 	DhOutUpdate.setClean();
 
-	DataBlock.setClean(Plug);
+	dataBlock.setClean(plug);
 
 	return MS::kSuccess;
 }
@@ -616,11 +616,11 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock)
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Solve the limb
-	status = Solve(InOutLinks);
+	status = solve(InOutLinks);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Set the output and data block clean
-	status = UpdateOutput(plug, dataBlock);
+	status = updateOutput(plug, dataBlock);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	return MS::kSuccess;

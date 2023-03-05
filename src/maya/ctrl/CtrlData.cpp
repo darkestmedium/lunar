@@ -24,8 +24,27 @@ void CtrlData::getPlugs(const MObject& obj)
 	float sy = MPlug(obj, Ctrl::localScaleY).asFloat();
 	float sz = MPlug(obj, Ctrl::localScaleZ).asFloat();
 
+	MEulerRotation eulerRot(rx, ry, rz);
+	this->matLocalShape = eulerRot.asMatrix();
+	this->matLocalShape.matrix[0][0] *= sx;
+	this->matLocalShape.matrix[0][1] *= sx;
+	this->matLocalShape.matrix[0][2] *= sx;
+
+	this->matLocalShape.matrix[1][0] *= sy;
+	this->matLocalShape.matrix[1][1] *= sy;
+	this->matLocalShape.matrix[1][2] *= sy;
+
+	this->matLocalShape.matrix[2][0] *= sz;
+	this->matLocalShape.matrix[2][1] *= sz;
+	this->matLocalShape.matrix[2][2] *= sz;
+
+	this->matLocalShape.matrix[3][0] = tx;
+	this->matLocalShape.matrix[3][1] = ty;
+	this->matLocalShape.matrix[3][2] = tz;
+
 	MFnDependencyNode thisFn(obj);
 	fillShape = MPlug(obj, Ctrl::fillShapeAttr).asBool();
+	bDrawline = MPlug(obj, Ctrl::attrInDrawLine).asBool();
 	fillColor = MColor(
 		thisFn.findPlug("overrideColorR", false).asFloat(),
 		thisFn.findPlug("overrideColorG", false).asFloat(),
@@ -33,28 +52,10 @@ void CtrlData::getPlugs(const MObject& obj)
 		MPlug(obj, Ctrl::fillTransparencyAttr).asFloat()
 	);
 	lineWidth = MPlug(obj, Ctrl::lineWidthAttr).asFloat();
-
-	MEulerRotation eulerRot(rx, ry, rz);
-	this->matrix = eulerRot.asMatrix();
-	this->matrix.matrix[0][0] *= sx;
-	this->matrix.matrix[0][1] *= sx;
-	this->matrix.matrix[0][2] *= sx;
-
-	this->matrix.matrix[1][0] *= sy;
-	this->matrix.matrix[1][1] *= sy;
-	this->matrix.matrix[1][2] *= sy;
-
-	this->matrix.matrix[2][0] *= sz;
-	this->matrix.matrix[2][1] *= sz;
-	this->matrix.matrix[2][2] *= sz;
-
-	this->matrix.matrix[3][0] = tx;
-	this->matrix.matrix[3][1] = ty;
-	this->matrix.matrix[3][2] = tz;
 }
 
 
-void CtrlData::getBBox(const MObject& obj, MMatrix matrix) 
+void CtrlData::getBBox(const MObject& obj, const MDagPath& pathObj, MMatrix matrix) 
 {
 	/* Gets the bounding box from the shapesDefinition.h file
 
@@ -117,10 +118,14 @@ void CtrlData::getBBox(const MObject& obj, MMatrix matrix)
 		);
 	}
 	this->bBox.transformUsing(matrix);
+
+	// MMatrix matDrawLineTo = MDataHandle(MPlug(obj, Ctrl::attrInDrawLineTo).asMDataHandle()).asMatrix();
+	// this->bBox.expand(MPoint(matDrawLineTo[3][0], matDrawLineTo[3][1], matDrawLineTo[3][2]));
+
 }
 
 
-void CtrlData::getShape(const MObject& obj, MMatrix matrix) {
+void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix matrix) {
 	/* Get the points for each line and triangle used for drawing the shape.
 
 	Do not reorder the triangle append order since it will flip normals.
@@ -137,6 +142,7 @@ void CtrlData::getShape(const MObject& obj, MMatrix matrix) {
 	this->fTransformedList.clear();
 	this->fLineList.clear();
 	this->fTriangleList.clear();
+	this->listLine.clear();
 
 	if (shapeIndex == 0) {  // Cube
 		for (int i=0; i<cubeCount; i++) {
@@ -947,5 +953,12 @@ void CtrlData::getShape(const MObject& obj, MMatrix matrix) {
 	} else if (shapeIndex == 7) {  	// Line
 		fLineList.append(MPoint(listPointsLine[0][0], listPointsLine[0][1], listPointsLine[0][2]) * matrix);
 		fLineList.append(MPoint(listPointsLine[1][0], listPointsLine[1][1], listPointsLine[1][2]) * matrix);
+	}
+
+	// Draw line for pole vectors
+	if (bDrawline) { 
+		MMatrix matDrawLineTo = MDataHandle(MPlug(obj, Ctrl::attrInDrawLineTo).asMDataHandle()).asMatrix();
+		listLine.append(MPoint() * matrix);
+		listLine.append(MPoint(matDrawLineTo[3][0], matDrawLineTo[3][1], matDrawLineTo[3][2]) * pathObj.exclusiveMatrixInverse());
 	}
 }

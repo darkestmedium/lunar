@@ -69,6 +69,9 @@ public:
 	static const char* fillShapeFlagShort;
 	static const char* fillShapeFlagLong;
 
+	static const char* drawLineFlagShort;
+	static const char* drawLineFlagLong;
+
 	static const char* fillTransparencyFlagShort;
 	static const char* fillTransparencyFlagLong;
 
@@ -104,6 +107,7 @@ public:
 
 	short indxShape;
 	bool bFillShape;
+	bool bDrawLine;
 	double fillTransparency;
 	double lineWidth;
 	bool bLockShapeAttributes;
@@ -120,6 +124,7 @@ public:
  		, localScale(1.0, 1.0, 1.0)
  		, indxShape(0)
  		, bFillShape(true)
+ 		, bDrawLine(false)
  		, fillTransparency(0.25)
  		, lineWidth(1.0)
 		, strColor("yellow")

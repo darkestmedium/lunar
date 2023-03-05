@@ -23,8 +23,28 @@
 class CtrlData : public MUserData
 {
 public:
+	// Public Data
+	MBoundingBox bBox;
+	MMatrix matLocalShape;
+	
+	MObject objDrawLineTo;
+	MMatrix matTo;
+
+	MPointArray fTransformedList;
+	MPointArray fLineList;
+	MPointArray fTriangleList;
+	MPointArray listLine;
+
+	bool fillShape;
+	bool bDrawline;
+	float lineWidth;
+	MColor _wfColor;
+	MColor fillColor;
+
+	MPoint _textOffset;
 	unsigned int DepthPriority;
 	bool DrawInXray;
+
 	// Constructors
 	// CtrlData() : MUserData(false) {}; // Don't delete after draw
 	CtrlData()
@@ -36,21 +56,8 @@ public:
 
 	// Public Methods
 	virtual void getPlugs(const MObject& obj);
-	virtual void getBBox(const MObject& obj, MMatrix matrix);
-	virtual void getShape(const MObject& obj, MMatrix matrix);
+	virtual void getBBox(const MObject& obj, const MDagPath& objPath, MMatrix matrix);
+	virtual void getShape(const MObject& obj, const MDagPath& pathObj, MMatrix matrix);
 
-	// Public Data
-	MBoundingBox bBox;
-	MMatrix matrix;
 
-	MPointArray fTransformedList;
-	MPointArray fLineList;
-	MPointArray fTriangleList;
-
-	float lineWidth;
-	MColor _wfColor;
-	bool fillShape;
-	MColor fillColor;
-
-	MPoint _textOffset;
 };

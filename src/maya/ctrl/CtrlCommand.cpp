@@ -34,6 +34,9 @@ const char* CtrlCommand::shapeFlagLong = "-shape";
 const char* CtrlCommand::fillShapeFlagShort = "-fs";
 const char* CtrlCommand::fillShapeFlagLong = "-fillShape";
 
+const char* CtrlCommand::drawLineFlagShort = "-dl";
+const char* CtrlCommand::drawLineFlagLong = "-drawLine";
+
 const char* CtrlCommand::fillTransparencyFlagShort = "-ft";
 const char* CtrlCommand::fillTransparencyFlagLong = "-fillTransparency";
 
@@ -79,6 +82,7 @@ MSyntax CtrlCommand::syntaxCreator() {
 	// Visual flags
 	sytnax.addFlag(shapeFlagShort, shapeFlagLong, MSyntax::kString);
 	sytnax.addFlag(fillShapeFlagShort, fillShapeFlagLong, MSyntax::kBoolean);
+	sytnax.addFlag(drawLineFlagShort, drawLineFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(fillTransparencyFlagShort, fillTransparencyFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(lineWidthFlagShort, lineWidthFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(colorFlagShort, colorFlagLong, MSyntax::kString);
@@ -124,6 +128,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		strHelp += "   -ls   -localScale           Double3    Local Scale of the controller.\n";
 		strHelp += "   -sh   -shape                String     Shape to be drawn: 'cube' 'sphere' cross' 'diamond' 'square' 'circle' 'locator'.\n";
 		strHelp += "   -fs   -fillShape            Bool       Whether or not you want to render the solid shape or just the outline.\n";
+		strHelp += "   -dl   -drawLine             Bool       Whether or not you want to display a line from the object center to a target.\n";
 		strHelp += "   -ft   -fillTransparency     Double     Controls the transparency of the fill shape.\n";
 		strHelp += "   -fw   -lineWidth            Double     Controls the line width of the outline.\n";
 		strHelp += "   -cl   -color                String     Viewport display color of the controller: 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
@@ -227,6 +232,11 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 	// Fill Shape Flag
 	if (argData.isFlagSet(fillShapeFlagShort)) {
 		bFillShape = argData.flagArgumentBool(fillShapeFlagShort, 0, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+	// Draw Line Flag
+	if (argData.isFlagSet(drawLineFlagShort)) {
+		bDrawLine = argData.flagArgumentBool(drawLineFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Fill Transparency Flag
@@ -421,6 +431,9 @@ MStatus CtrlCommand::redoIt() {
 			// Visual flags
 			MPlug plugFillShape = shapeFn.findPlug("fillShape", false);
 			plugFillShape.setBool(bFillShape);
+
+			MPlug plugDrawLine = shapeFn.findPlug("drawLine", false);
+			plugDrawLine.setBool(bDrawLine);
 
 			MPlug plugFillTransparency = shapeFn.findPlug("fillTransparency", false);
 			plugFillTransparency.setValue(fillTransparency);

@@ -23,7 +23,7 @@ MBoundingBox CtrlDrawOverride::boundingBox(const MDagPath& objPath, const MDagPa
 	MObject node = objPath.node();
 
 	data.getPlugs(node);
-	data.getBBox(node, data.matrix);
+	data.getBBox(node, objPath, data.matLocalShape);
 
 	return data.bBox;
 }
@@ -69,12 +69,12 @@ MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagP
 	MStatus status;
 
 	CtrlData* data = dynamic_cast<CtrlData*>(oldData);
-	MObject oNode = objPath.node(&status);
+	MObject objShape = objPath.node(&status);
 
 	if (!data) {data=new CtrlData;}
 
-	data->getPlugs(oNode);
-	data->getShape(oNode, data->matrix);
+	data->getPlugs(objShape);
+	data->getShape(objShape, objPath, data->matLocalShape);
 
 	data->_wfColor = MHWRender::MGeometryUtilities::wireframeColor(objPath);
 
@@ -135,6 +135,9 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 	drawManager.setColor(pCtrlData->_wfColor);
 	drawManager.setLineWidth(pCtrlData->lineWidth);
 	drawManager.mesh(MHWRender::MUIDrawManager::kLines, pCtrlData->fLineList);
+	if (pCtrlData->bDrawline) {
+		drawManager.mesh(MHWRender::MUIDrawManager::kLines, pCtrlData->listLine);
+	}
 
 	// End drawable
 	if (pCtrlData->DrawInXray) {drawManager.endDrawInXray();}

@@ -31,7 +31,7 @@ class Ctrl():
 	defaultTransparency = 0.15
 	defaultLineWidth = 2.0
 	defaultFingerLineWidth = 5.0
-	defaultLockShapeAttributes = False
+	defaultLockShapeAttributes = True
 
 	def __init__(self,
 		name="new_ctrl",
@@ -227,9 +227,9 @@ class RollCtrl(Ctrl):
 		translateTo="",
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
-		localRotate=(45.0, 0.0, 0.0),
-		localScale=(2.0, 4.0, 4.0),
-		shape="cube",
+		localRotate=(0.0, 45.0, 90.0),
+		localScale=(4.0, 4.0, 4.0),
+		shape="square",
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
@@ -348,6 +348,7 @@ class PoleVectorCtrl():
 		localScale=(6.0, 6.0, 6.0),
 		shape="diamond",
 		fillShape=False,
+		drawLine=True,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
@@ -364,6 +365,7 @@ class PoleVectorCtrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
+			drawLine=drawLine,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -1264,7 +1266,7 @@ class IkArmComponent():
 				translateTo=translateTo,
 				rotateTo=rotateTo,
 				localScale=(3.0, 3.0, 3.0),
-				lineWidth=1.5,
+				lineWidth=2.0,
 				color=color,
 			)
 
@@ -1284,6 +1286,7 @@ class IkArmComponent():
 		if poleVector: 
 			cmds.connectAttr(f"{self.CtrlPoleVector.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.poleVector")
 			cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlPoleVector.transform}.rotatePivot")
+			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 
 		# Add ik attributes
 		lm.MAttrUtils.addSeparator(self.CtrlIk.transform)
@@ -1372,6 +1375,7 @@ class IkLegComponent():
 		if poleVector: 
 			cmds.connectAttr(f"{self.CtrlPoleVector.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.poleVector")
 			cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlPoleVector.transform}.rotatePivot")
+			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 
 		# Add ik attributes
 		lm.MAttrUtils.addSeparator(self.CtrlIk.transform)

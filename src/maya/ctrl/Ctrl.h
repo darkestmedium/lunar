@@ -32,14 +32,40 @@
 // Proxies
 #include <maya/MPxLocatorNode.h>
 
+// Custom
+#include "../api/Utils.h"
+
 
 
 class Ctrl : public MPxLocatorNode
 {
 public:
-	// Constructors
-	Ctrl() : MPxLocatorNode() {};
+	// Public Data
+	static const MString typeName;
+	static const MTypeId typeId;
+	static const MString drawDbClassification;
+	static const MString drawRegistrationId;
 
+	// Node's Input Attributes
+	static MObject localRotateX;
+	static MObject localRotateY;
+	static MObject localRotateZ;
+	static MObject localRotate;
+
+	static MObject shapeAttr;
+	static MObject attrInDrawLine;
+	static Attribute attrInDrawLineTo;
+	static MObject fillShapeAttr;
+	static MObject fillTransparencyAttr;
+	static MObject lineWidthAttr;
+
+	MObject objSelf;
+	MDagPath pathSelf;
+
+	// Constructors
+	Ctrl()
+		: MPxLocatorNode() 	
+	{};
 	// Destructor
 	virtual ~Ctrl() override {};
 
@@ -55,29 +81,4 @@ public:
 		MObjectArray& monitoredAttributes
 	) const override;
 	virtual void postConstructor() override;
-
-	// Public Data
-	static const MString typeName;
-	static const MTypeId typeId;
-	static const MString drawDbClassification;
-	static const MString drawRegistrationId;
-
-	// Node's Input Attributes
-	static MObject localRotateX;
-	static MObject localRotateY;
-	static MObject localRotateZ;
-	static MObject localRotate;
-
-	static MObject shapeAttr;
-	static MObject fillShapeAttr;
-	static MObject fillTransparencyAttr;
-	static MObject lineWidthAttr;
-
-	// Nodes's Output Attributes
-
-private:
-	// Private Methods
-
-	// Private Data
-	MObject __thisObj;
 };
