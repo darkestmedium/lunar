@@ -97,9 +97,12 @@ public:
 	static Attribute AttrOutUpdateZ;
 	static Attribute AttrOutUpdate;
 
+	bool bIsPoleVectorConnected;
+
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
+		, bIsPoleVectorConnected(false)
 		, LimbLength(0.0)
 	{};
 	// Destructors
@@ -120,7 +123,7 @@ public:
 	double softenIk(double startIkLen, double startMidLen, double midEndLen, double startMidEndLen, double softness);
 	MObject getSourceObjFromPlug(const MObject& Object, const MObject& Plug);
 
-	MStatus ParseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks);
+	MStatus parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks);
 
 	double GetLimbLength();
 	bool TimeChanged(MAnimControl& AnimCtrl, MTime& TimeCached, MTime& TimeCurrent);
@@ -203,5 +206,4 @@ private:
 	// Helpers
 	MSelectionList __selList;
 	MAnimControl AnimCtrl;
-	MDagPath __dp;
 };

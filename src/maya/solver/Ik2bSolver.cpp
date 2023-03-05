@@ -148,13 +148,10 @@ double Ik2bSolver::softenIk(double startIkLen, double startMidLen, double midEnd
 }
 
 
-MStatus Ik2bSolver::ParseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks)
+MStatus Ik2bSolver::parseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLinks)
 {
 	/* Parse the data block and get all inputs.	*/
 	MStatus status;
-
-	// TODO:
-	// 	Add error checking - we need at least four inputs
 
 	// Ask for time value to force refresh on the node
 	TimeCurrent = DataBlock.inputValue(AttrInTime, &status).asTime();
@@ -164,24 +161,46 @@ MStatus Ik2bSolver::ParseDataBlock(MDataBlock& DataBlock, MDagPathArray& InOutLi
 	//  dirty. All of Maya's solvers get the world position from the .rotatePivot() method.
 	// Start fk controller
 	MDagPath PathFkStart;
-	__dp.getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
-	FnFkStart.setObject(PathFkStart);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
+	if (status == MS::kFailure) {
+		return MS::kFailure;
+	} else {
+		FnFkStart.setObject(PathFkStart);
+	}
 	// Mid fk controller
 	MDagPath PathFkMid;
-	__dp.getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
-	FnFkMid.setObject(PathFkMid);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
+	if (status == MS::kSuccess) {
+		FnFkMid.setObject(PathFkMid);
+	} else {
+		return MS::kFailure;
+	}
 	// End fk controller
 	MDagPath PathFkEnd;
-	__dp.getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
-	FnFkEnd.setObject(PathFkEnd);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
+	if (status == MS::kSuccess) {
+		FnFkEnd.setObject(PathFkEnd);
+	} else {
+		return MS::kFailure;
+	}
 	// Ik handle
 	MDagPath PathIkHandle;
-	__dp.getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
-	FnIkHandle.setObject(PathIkHandle);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
+	if (status == MS::kSuccess) {
+		FnIkHandle.setObject(PathIkHandle);
+	} else {
+		return MS::kFailure;
+	}
 	// Pole vector
 	MDagPath PathPoleVector;
-	__dp.getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
-	FnPoleVector.setObject(PathPoleVector);
+	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, DataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
+	if (status == MS::kSuccess) {
+		FnPoleVector.setObject(PathPoleVector);
+		bIsPoleVectorConnected = true;
+	} else {
+		FnPoleVector.setObject(MObject::kNullObj);
+		bIsPoleVectorConnected = false;
+	}
 
 	// MDagPathArray InOutLinks;
 	InOutLinks.append(PathFkStart);		// Hip / Root
@@ -505,9 +524,9 @@ void Ik2bSolver::SolveTwoBoneIk()
 
 	MVector ac = (startEndVec).normal();
 	
-	MVector d = (PosFkMid - (PosFkStart + (ac * ((startMidVec) * ac)))).normal();
+	MVector direction = (PosFkMid - (PosFkStart + (ac * ((startMidVec) * ac)))).normal();
 
-	MVector axis0 = ((startEndVec) ^ d).normal();
+	MVector axis0 = ((startEndVec) ^ direction).normal();
 	MVector axis1 = (startEndVec ^ startIkVec).normal();
 
 	MQuaternion r0(ac_ab_1 - ac_ab_0, axis0);
@@ -519,16 +538,15 @@ void Ik2bSolver::SolveTwoBoneIk()
 	MQuaternion r3 = n1.rotateTo(n2);
 	
 	// Rotation cross vectors and twist
-	MQuaternion QuatTwist(twist, startIkVec);
+	MQuaternion qTwist(twist, startIkVec);
 
 	// Start rotation
-	QuatIkStart *= r0 * r2 * r3;
-	// QuatIkStart *= QuatTwist * r0 * r2 * r3;
+	QuatIkStart *= r0 * r2 * r3 * qTwist;
 	
 	// Mid rotation
 	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
 	QuatIkMid *= r1;
-	QuatIkMid *= r0 * r2 * r3;
+	QuatIkMid *= r0 * r2 * r3 * qTwist;
 
 	// End rotation
 	FnIkHandle.getRotation(QuatIkEnd, MSpace::kWorld);
@@ -594,7 +612,7 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock)
 
 	// Check if all inputs are connected and parse the data block
 	MDagPathArray InOutLinks;
-	status = ParseDataBlock(dataBlock, InOutLinks);
+	status = parseDataBlock(dataBlock, InOutLinks);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Solve the limb

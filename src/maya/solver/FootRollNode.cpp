@@ -128,18 +128,24 @@ MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock)
 	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInBall).attribute()), pathBall);
 	if (status == MS::kSuccess) {
 		fnBall.setObject(pathBall);
+	} else {
+		return MS::kFailure;
 	}
 	// Toe
 	MDagPath pathToe;
 	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInToe).attribute()), pathToe);
 	if (status == MS::kSuccess) {
 		fnToe.setObject(pathToe);
+	} else {
+		return MS::kFailure;
 	}
 	// Ankle
 	MDagPath pathAnkle;
 	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInAnkle).attribute()), pathAnkle);
 	if (status == MS::kSuccess) {
 		fnAnkle.setObject(pathAnkle);
+	} else {
+		return MS::kFailure;
 	}
 
 	// Additional attributes
