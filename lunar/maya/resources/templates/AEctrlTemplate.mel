@@ -1,0 +1,59 @@
+/*  AEctrlTemplate.mel
+		The Attribute Editor template for the ctrl node.
+*/
+
+global proc AEctrlTemplate(string $nodeName)
+{
+	// Main Layout
+	editorTemplate -beginScrollLayout;
+
+		editorTemplate -beginLayout "Local Transform Attributes" -collapse false;
+			editorTemplate -addControl "localPosition";
+			editorTemplate -addControl "localRotate";
+			editorTemplate -addControl "localScale";
+			editorTemplate -endLayout;
+
+		editorTemplate -beginLayout "Ctrl Display" -collapse false;
+			editorTemplate -addControl "shape";
+			editorTemplate -addControl "fillShape";
+			editorTemplate -addControl "fillTransparency";
+			editorTemplate -addControl "lineWidth";
+			editorTemplate -endLayout;
+
+		// include/call base class/node attributes
+		editorTemplate -beginLayout (uiRes("m_AEshapeTemplate.kObjectDisplay"));
+			AEdagNodeCommon $nodeName;
+		editorTemplate -endLayout;
+
+		// include/call base class/node attributes
+		AEdagNodeInclude $nodeName;
+
+		editorTemplate -addExtraControls;
+
+		// hide extra attributes
+		editorTemplate -beginNoOptimize;
+		editorTemplate -suppress "aInWorldMatrix";
+		editorTemplate -suppress "motionBlur";
+		editorTemplate -suppress "visibleInReflections";
+		editorTemplate -suppress "visibleInRefractions";
+		editorTemplate -suppress "castsShadows";
+		editorTemplate -suppress "receiveShadows";
+		editorTemplate -suppress "maxVisibilitySamplesOverride";
+		editorTemplate -suppress "maxVisibilitySamples";
+		editorTemplate -suppress "geometryAntialiasingOverride";
+		editorTemplate -suppress "antialiasingLevel";
+		editorTemplate -suppress "shadingSamplesOverride";
+		editorTemplate -suppress "shadingSamples";
+		editorTemplate -suppress "maxShadingSamples";
+		editorTemplate -suppress "volumeSamplesOverride";
+		editorTemplate -suppress "volumeSamples";
+		editorTemplate -suppress "depthJitter";
+		editorTemplate -suppress "ignoreSelfShadowing";
+		editorTemplate -suppress "primaryVisibility";
+		editorTemplate -suppress "compInstObjGroups";
+		editorTemplate -suppress "componentTags";
+		editorTemplate -endNoOptimize;
+
+	// End Main Layout
+	editorTemplate -endScrollLayout;
+};

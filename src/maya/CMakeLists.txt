@@ -1,24 +1,4 @@
 set(MAYA_FILES
-	# Ctrl.h
-	# CtrlCommand.h
-	# CtrlData.h
-	# CtrlDrawOverride.h
-	# Ik2bSolver.h
-	# IkCommand.h
-
-	# FootRollNode.h
-	# ShapesDefinition.h
-	# MathUtility.h
-	# Utils.h
-	# Ctrl.cpp
-	# CtrlCommand.cpp
-	# CtrlData.cpp
-	# CtrlDrawOverride.cpp
-	# Ik2bSolver.cpp
-	# IkCommand.cpp
-	# MetaDataNode.cpp
-	# MetaDataCmd.cpp
-	# FootRollNode.cpp
 	MainPlugin.cpp
 )
 
