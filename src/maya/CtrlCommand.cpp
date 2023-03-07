@@ -154,7 +154,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		if (strTranslateTo != "") {
 			bTranslateTo = true;
-			status = LunarMaya::getDagPathFromString(strTranslateTo, dpTargetTranslation);
+			status = LMObject::getDagPathFromString(strTranslateTo, dpTargetTranslation);
 			if (status == MS::kSuccess) {
 				MFnTransform targetFn(dpTargetTranslation);
 				posTarget = targetFn.getTranslation(MSpace::kWorld);
@@ -169,7 +169,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		if (strRotateTo != "") {
 			bRotateTo = true;
-			status = LunarMaya::getDagPathFromString(strRotateTo, dpTargetRotation);
+			status = LMObject::getDagPathFromString(strRotateTo, dpTargetRotation);
 			if (status == MS::kSuccess)	{
 				MFnTransform targetFn(dpTargetRotation);
 				targetFn.getRotation(rotTarget, MSpace::kWorld);
@@ -283,25 +283,6 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 	return MS::kSuccess;
 }
 
-
-
-// MStatus CtrlCommand::getDagPathFromString(MString& objectName, MDagPath& path) {
-// 	MStatus status;
-// 	MSelectionList listSel;
-
-// 	status = listSel.add(objectName);
-// 	if (status == MS::kSuccess)	{
-// 		listSel.getDagPath(0, path);
-// 		if (path.hasFn(MFn::kTransform) == true) {
-// 			return MS::kSuccess;
-// 		}	else {
-// 			MGlobal::displayError("Given '" + objectName + "' is not a transform node.");
-// 		}
-// 	}	else {
-// 		MGlobal::displayError("Given '" + objectName + "' does not exist.");
-// 	}
-// 	return MS::kFailure;
-// }
 
 
 MStatus CtrlCommand::doIt(const MArgList& argList) {
@@ -440,23 +421,23 @@ MStatus CtrlCommand::redoIt() {
 			if (bLockShapeAttributes == true) {
 				// optimize with a for loop and MPlugArray
 				// Local position
-				LunarMaya::lockAndHideAttr(plugLocalPositionX);
-				LunarMaya::lockAndHideAttr(plugLocalPositionY);
-				LunarMaya::lockAndHideAttr(plugLocalPositionZ);
+				LMAttribute::lockAndHideAttr(plugLocalPositionX);
+				LMAttribute::lockAndHideAttr(plugLocalPositionY);
+				LMAttribute::lockAndHideAttr(plugLocalPositionZ);
 				// Local rotate
-				LunarMaya::lockAndHideAttr(plugLocalRotateX);
-				LunarMaya::lockAndHideAttr(plugLocalRotateY);
-				LunarMaya::lockAndHideAttr(plugLocalRotateZ);
+				LMAttribute::lockAndHideAttr(plugLocalRotateX);
+				LMAttribute::lockAndHideAttr(plugLocalRotateY);
+				LMAttribute::lockAndHideAttr(plugLocalRotateZ);
 				// Local scale
-				LunarMaya::lockAndHideAttr(plugLocalScaleX);
-				LunarMaya::lockAndHideAttr(plugLocalScaleY);
-				LunarMaya::lockAndHideAttr(plugLocalScaleZ);
+				LMAttribute::lockAndHideAttr(plugLocalScaleX);
+				LMAttribute::lockAndHideAttr(plugLocalScaleY);
+				LMAttribute::lockAndHideAttr(plugLocalScaleZ);
 				// Shape attrs
-				LunarMaya::lockAndHideAttr(plugShape);
-				LunarMaya::lockAndHideAttr(plugFillShape);
-				LunarMaya::lockAndHideAttr(plugDrawLine);
-				LunarMaya::lockAndHideAttr(plugFillTransparency);
-				LunarMaya::lockAndHideAttr(plugLineWidth);
+				LMAttribute::lockAndHideAttr(plugShape);
+				LMAttribute::lockAndHideAttr(plugFillShape);
+				LMAttribute::lockAndHideAttr(plugDrawLine);
+				LMAttribute::lockAndHideAttr(plugFillTransparency);
+				LMAttribute::lockAndHideAttr(plugLineWidth);
 			}
 		}
 		// Set hide on playback

@@ -109,25 +109,25 @@ bool Ik2bSolver::isPassiveOutput(const MPlug& plug) const
 }
 
 
-MObject Ik2bSolver::getSourceObjFromPlug(const MObject& Object, const MObject& Plug)
-{
-	/* Gets the object from the given plug if it is connected.
+// MObject Ik2bSolver::getSourceObjFromPlug(const MObject& Object, const MObject& Plug)
+// {
+// 	/* Gets the object from the given plug if it is connected.
 
-	Args:
-		Plug (MObject&): Object for the given plug.
+// 	Args:
+// 		Plug (MObject&): Object for the given plug.
 	
-	Returns:
-		MObject: If the plug is a valid connection it will return the obj, otherwise a null object will
-			be returned instead.
+// 	Returns:
+// 		MObject: If the plug is a valid connection it will return the obj, otherwise a null object will
+// 			be returned instead.
 
-	*/
-	MPlug PlugDestination(Object, Plug);
-	if (PlugDestination.isConnected())
-	{
-		return PlugDestination.source().node();
-	}
-	return MObject::kNullObj;
-}
+// 	*/
+// 	MPlug PlugDestination(Object, Plug);
+// 	if (PlugDestination.isConnected())
+// 	{
+// 		return PlugDestination.source().node();
+// 	}
+// 	return MObject::kNullObj;
+// }
 
 
 double Ik2bSolver::softenEdge(double hardEdge, double chainLength, double dsoft)
@@ -161,7 +161,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	//  dirty. All of Maya's solvers get the world position from the .rotatePivot() method.
 	// Start fk controller
 	MDagPath PathFkStart;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkStartAttr).attribute()), PathFkStart);
 	if (status == MS::kFailure) {
 		return MS::kFailure;
 	} else {
@@ -169,7 +169,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Mid fk controller
 	MDagPath PathFkMid;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkMidAttr).attribute()), PathFkMid);
 	if (status == MS::kSuccess) {
 		FnFkMid.setObject(PathFkMid);
 	} else {
@@ -177,7 +177,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// End fk controller
 	MDagPath PathFkEnd;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkEndAttr).attribute()), PathFkEnd);
 	if (status == MS::kSuccess) {
 		FnFkEnd.setObject(PathFkEnd);
 	} else {
@@ -185,7 +185,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Ik handle
 	MDagPath PathIkHandle;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inIkHandleAttr).attribute()), PathIkHandle);
 	if (status == MS::kSuccess) {
 		FnIkHandle.setObject(PathIkHandle);
 	} else {
@@ -193,7 +193,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Pole vector
 	MDagPath PathPoleVector;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inPoleVectorAttr).attribute()), PathPoleVector);
 	if (status == MS::kSuccess) {
 		FnPoleVector.setObject(PathPoleVector);
 		bIsPoleVectorConnected = true;
@@ -260,24 +260,6 @@ void Ik2bSolver::GetIkTransforms()
 }
 
 
-MVector Ik2bSolver::GetPoleVectorPosition(MVector& PosStart, MVector& PosMid, MVector& PosEnd)
-{
-	/* Calculates the perfect pole vector position for ik solving.
-
-	From Greg's Hendrix tutorial https://www.youtube.com/watch?v=bB_HL1tBVHY
-
-	*/
-	MVector VecStartEnd(PosEnd - PosStart);
-	MVector VecMidEnd(PosEnd - PosMid);
-
-	double ValScale = (VecStartEnd * VecMidEnd) / (VecStartEnd * VecStartEnd);
-	MVector VecProjection = (VecStartEnd * ValScale) + PosStart;
-	double LenLimb = (PosMid - PosStart).length() + VecMidEnd.length();
-
-	return (PosMid - VecProjection).normal() * LenLimb + PosMid;
-}
-
-
 void Ik2bSolver::BlendFkIk()
 {
 	// because we wantto use 0 - 100 in the channel box, yeah i know :|
@@ -290,31 +272,6 @@ void Ik2bSolver::BlendFkIk()
 	// so this still is an issue since it's a bit off from the fk end ctrl pos, maybe we just snap to it
 	PosOutHandle = Lerp(PosFkHandle, PosIkHandle, ScaledWeight);
 	PosOutPoleVector = Lerp(PosFkPoleVector, PosIkPoleVector, ScaledWeight);
-}
-
-
-bool Ik2bSolver::TimeChanged(MAnimControl& AnimCtrl, MTime& TimeCached, MTime& TimeCurrent)
-{
-	/* Checks wheter or not time has changed.
-
-	Playback / scrubbing / time change
-	if (AnimCtrl.isPlaying() or AnimCtrl.isScrubbing() or TimeCached != TimeCurrent)
-
-	Args:
-		AnimCtrl (MAnimControl&): Animation control instance to check isPlaying and isSrubbing.
-		TimeCached (MTimge&): Time that has been cached - ex. previous frame.
-		TimeCurrent (MTimge&): Current time / frame.
-
-	Return:
-		bool: True if time has changed, false if it didn't.
-
-	*/
-	if (AnimCtrl.isPlaying() || AnimCtrl.isScrubbing() || TimeCached != TimeCurrent)
-	{
-		return true;
-	}
-
-	return false;
 }
 
 
@@ -334,8 +291,7 @@ MStatus Ik2bSolver::solve(MDagPathArray& InOutLinks)
 }
 
 
-bool Ik2bSolver::SolveLimb(MDagPathArray& InOutLinks)
-{
+bool Ik2bSolver::SolveLimb(MDagPathArray& InOutLinks) {
 	/* Solves the limb. 
 
 	Main fk / ik routing method.
@@ -344,7 +300,7 @@ bool Ik2bSolver::SolveLimb(MDagPathArray& InOutLinks)
 		InOutLinks (MDagPathArray&): Array with path to the input transforms.
 
 	*/
-	if (TimeChanged(AnimCtrl, TimeCached, TimeCurrent))	{
+	if (LMAnimControl::timeChanged(AnimCtrl, TimeCached, TimeCurrent)) {
 		// Solve for playback and all other possible cases - just solve something
 		if (fkIk == 0.0) {
 			SolveFk();
@@ -357,8 +313,8 @@ bool Ik2bSolver::SolveLimb(MDagPathArray& InOutLinks)
 		}
 	}	else {
 		// Editing
-		MGlobal::getActiveSelectionList(__selList);
-		if (__selList.hasItem(InOutLinks[3]) || __selList.hasItem(InOutLinks[4])) {
+		MGlobal::getActiveSelectionList(listSelection);
+		if (listSelection.hasItem(InOutLinks[3]) || listSelection.hasItem(InOutLinks[4])) {
 			SolveIk();
 		}	else {
 			SolveFk();
@@ -368,8 +324,7 @@ bool Ik2bSolver::SolveLimb(MDagPathArray& InOutLinks)
 }
 
 
-void Ik2bSolver::SolveFk()
-{
+void Ik2bSolver::SolveFk() {
 	/* Set the fk transforms.
 
 	We don't actually solve fk - it's called like this just for consistency and readability.
@@ -377,7 +332,7 @@ void Ik2bSolver::SolveFk()
 	a constant distance (limb length) calculated from the mid transform. 
 
 	*/
-	FnPoleVector.setTranslation(GetPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
+	FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
 
 	// Set ik transforms
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
@@ -385,8 +340,7 @@ void Ik2bSolver::SolveFk()
 }
 
 
-void Ik2bSolver::SolveBlendedIk()
-{
+void Ik2bSolver::SolveBlendedIk() {
 	/* So kind of does what the name says but not really.
 	*/
 	MStatus status;
@@ -407,21 +361,16 @@ void Ik2bSolver::SolveBlendedIk()
 }
 
 
-void Ik2bSolver::SolveIk()
-{
-
+void Ik2bSolver::SolveIk() {
 	// Neat optimization though i couldn't get the single joint solve to work properley without flips
 	SolveTwoBoneIk();
 
 	// Get chain length
 	// GetLimbLength();
 
-	// if (RootTargetDistance >= LimbLength)
-	// {
+	// if (RootTargetDistance >= LimbLength) {
 	// 	SolveStraightLimb();
-	// }
-	// else
-	// {
+	// } else {
 	// 	SolveTwoBoneIk();
 	// }
 
@@ -432,8 +381,7 @@ void Ik2bSolver::SolveIk()
 }
 
 
-void Ik2bSolver::SolveStraightLimb()
-{
+void Ik2bSolver::SolveStraightLimb() {
 	MVector FkEndLocation = FnFkEnd.rotatePivot(MSpace::kWorld);
 	MVector FkMidLocation = FnFkMid.rotatePivot(MSpace::kWorld);
 	MVector FkStartLocation = FnFkStart.rotatePivot(MSpace::kWorld);
@@ -646,8 +594,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		|| plugBeingDirtied == inSoftnessAttr
 		|| plugBeingDirtied == inFkIkAttr
 		|| plugBeingDirtied == AttrInTime
-	)
-	{
+	)	{
 		affectedPlugs.append(MPlug(SelfObj, AttrOutUpdate));
 	}
 
@@ -676,8 +623,7 @@ void Ik2bSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisabl
 }
 
 
-void Ik2bSolver::postConstructor()
-{
+void Ik2bSolver::postConstructor() {
 	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and

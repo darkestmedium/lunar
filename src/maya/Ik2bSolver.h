@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Utils.h"
-#include "MathUtility.h"
-
 // System Includes
 // #include <cmath>
 #include <string.h>
@@ -40,6 +37,14 @@
 
 // Proxies
 #include <maya/MPxNode.h>
+
+// Custom
+#include "LMAttribute.h"
+#include "LMAnimControl.h"
+#include "LMRigUtils.h"
+#include "Utils.h"
+#include "MathUtility.h"
+
 
 
 
@@ -99,6 +104,9 @@ public:
 
 	bool bIsPoleVectorConnected;
 
+	// Helpers
+	MSelectionList listSelection;
+
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
@@ -121,12 +129,8 @@ public:
 	// Custom solver methods
 	double softenEdge(double hardEdge, double chainLength, double dsoft);
 	double softenIk(double startIkLen, double startMidLen, double midEndLen, double startMidEndLen, double softness);
-	MObject getSourceObjFromPlug(const MObject& Object, const MObject& Plug);
-
 
 	double GetLimbLength();
-	bool TimeChanged(MAnimControl& AnimCtrl, MTime& TimeCached, MTime& TimeCurrent);
-	MVector GetPoleVectorPosition(MVector& PosStart, MVector& PosMid, MVector& PosEnd);
 	void BlendFkIk();
 
 	void GetFkTransforms();
@@ -203,7 +207,6 @@ private:
 
 	MTime TimeCurrent;
 	MTime TimeCached;
-	// Helpers
-	MSelectionList __selList;
+
 	MAnimControl AnimCtrl;
 };

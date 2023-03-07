@@ -37,13 +37,15 @@
 #include <maya/MPxLocatorNode.h>
 #include <maya/MPxDrawOverride.h>
 
-// Custom include
+// Custom
 #include "Utils.h"
+#include "LMAttribute.h"
+
+
 
 
 // Node
-class MetaDataNode : public MPxLocatorNode
-{
+class MetaDataNode : public MPxLocatorNode {
 public:
 	// Node Data
 	static const MString typeName;
@@ -80,15 +82,12 @@ public:
 	) const override;
 	void postConstructor() override;
 	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
-
-	MStatus lockHideAttribute(MPlug plug);
 };
 
 
 
 // User data
-class MetaDataNodeData : public MUserData
-{
+class MetaDataNodeData : public MUserData {
 public:
 	MString Text;
 	MPoint TextPosition;
@@ -106,8 +105,7 @@ public:
 
 
 // Draw override
-class MetaDataNodeDrawOverride : public MHWRender::MPxDrawOverride
-{
+class MetaDataNodeDrawOverride : public MHWRender::MPxDrawOverride {
 public:
 	// Constructors
 	MetaDataNodeDrawOverride(const MObject& Object)
@@ -117,24 +115,18 @@ public:
 	virtual ~MetaDataNodeDrawOverride() override {};
 
 	static MHWRender::MPxDrawOverride* creator(const MObject& Object) {return new MetaDataNodeDrawOverride(Object);}
-
 	virtual MHWRender::DrawAPI supportedDrawAPIs() const override {return MHWRender::kAllDevices;}
-
 	virtual bool hasUIDrawables() const override {return true;}
-
 	virtual void addUIDrawables(
 		const MDagPath& objPath,
 		MHWRender::MUIDrawManager& drawManager, 
 		const MHWRender::MFrameContext& frameContext,
 		const MUserData* data
 	) override;
-
 	virtual MUserData* prepareForDraw(
 		const MDagPath& objPath,
 		const MDagPath& cameraPath,
 		const MHWRender::MFrameContext& frameContext,
 		MUserData* oldData
 	) override;
-
-	// Static Methods
 };

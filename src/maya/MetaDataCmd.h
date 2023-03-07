@@ -30,7 +30,6 @@
 // Custom includes
 #include "MetaDataNode.h"
 #include "Utils.h"
-#include "LunarMaya.h"
 
 
 
@@ -74,7 +73,7 @@ public:
 	MObject objTransform;
 	MObject objShape;
 
-	// Constructorśs
+	// Constructors
 	MetaDataCmd()
  		: MPxCommand()
 		, name(MetaDataNode::typeName)

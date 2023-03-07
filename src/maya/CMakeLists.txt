@@ -1,4 +1,5 @@
 set(MAYA_FILES
+# Modules
 	Ctrl.h
 	Ctrl.cpp
 	CtrlCommand.h
@@ -13,15 +14,21 @@ set(MAYA_FILES
 	Ik2bSolver.cpp
 	IkCommand.h
 	IkCommand.cpp
-	LunarMaya.h
-	MainPlugin.cpp
-	MathUtility.h
 	MetaDataCmd.h
 	MetaDataCmd.cpp
 	MetaDataNode.h
 	MetaDataNode.cpp
 	ShapesDefinition.h
+# Api
+	LMAttribute.h
+	LMAnimControl.h
+	LMObject.h
+	LMRigUtils.h
+	LMScene.h
+	MathUtility.h
 	Utils.h
+# Main
+	MainPlugin.cpp
 )
 
 find_package(Maya REQUIRED)

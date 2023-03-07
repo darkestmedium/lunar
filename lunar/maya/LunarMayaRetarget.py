@@ -2288,8 +2288,8 @@ if __name__ == "__main__":
 	retargeter = MRetargeter(
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
-			"/Users/luky/Downloads/anim-ellie-player-movement",
-			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/CauseIssues/StillBroken/AS_player_backpack_adjust_01__part.fbx",
+			# "/Users/luky/Downloads/anim-ellie-player-movement",
+			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/ladder_v2/AS_player_ladder_enter_top_railing_fw.fbx",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
 		# targets=["C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Characters/Player/Rigs/RIG_Player.ma"],

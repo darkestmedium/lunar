@@ -195,25 +195,25 @@ MStatus MetaDataCmd::redoIt()
 		MFnDependencyNode fnShape(objShape);
 		// TRANSFORM NODE
 		MPlug plugTranslateX = fnTransform.findPlug("translateX", false);
-		LunarMaya::lockAndHideAttr(plugTranslateX);
+		LMAttribute::lockAndHideAttr(plugTranslateX);
 		MPlug plugTranslateY = fnTransform.findPlug("translateY", false);
-		LunarMaya::lockAndHideAttr(plugTranslateY);
+		LMAttribute::lockAndHideAttr(plugTranslateY);
 		MPlug plugTranslateZ = fnTransform.findPlug("translateZ", false);
-		LunarMaya::lockAndHideAttr(plugTranslateZ);
+		LMAttribute::lockAndHideAttr(plugTranslateZ);
 		MPlug plugRotateX = fnTransform.findPlug("rotateX", false);
-		LunarMaya::lockAndHideAttr(plugRotateX);
+		LMAttribute::lockAndHideAttr(plugRotateX);
 		MPlug plugRotateY = fnTransform.findPlug("rotateY", false);
-		LunarMaya::lockAndHideAttr(plugRotateY);
+		LMAttribute::lockAndHideAttr(plugRotateY);
 		MPlug plugRotateZ = fnTransform.findPlug("rotateZ", false);
-		LunarMaya::lockAndHideAttr(plugRotateZ);
+		LMAttribute::lockAndHideAttr(plugRotateZ);
 		MPlug plugScaleX = fnTransform.findPlug("scaleX", false);
-		LunarMaya::lockAndHideAttr(plugScaleX);
+		LMAttribute::lockAndHideAttr(plugScaleX);
 		MPlug plugScaleY = fnTransform.findPlug("scaleY", false);
-		LunarMaya::lockAndHideAttr(plugScaleY);
+		LMAttribute::lockAndHideAttr(plugScaleY);
 		MPlug plugScaleZ = fnTransform.findPlug("scaleZ", false);
-		LunarMaya::lockAndHideAttr(plugScaleZ);
+		LMAttribute::lockAndHideAttr(plugScaleZ);
 		MPlug plugVisibility = fnTransform.findPlug("visibility", false);
-		LunarMaya::lockAndHideAttr(plugVisibility);
+		LMAttribute::lockAndHideAttr(plugVisibility);
 
 		// SHAPE NODE
 		// Sets the plugs values based on the flag arguments

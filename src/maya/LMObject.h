@@ -37,14 +37,16 @@
 // Proxies
 #include <maya/MPxNode.h>
 
+// Custom
 
 
 
-namespace LunarMaya {
 
+namespace LMObject {
 	/* MObjectUtils
-	 * Wrapper class for attribute utilities.
+	 * Wrapper namespace class for attribute utilities.
 	 */
+
 
 	inline MObject getObjFromString(MString name) {
 		/* Gets the MObject from the given name.
@@ -82,57 +84,4 @@ namespace LunarMaya {
 		return MS::kFailure;
 	};
 
-
-
-
-	/* LMScene
-	 * Lunar Maya Scene wrapper class.
-	 */
-	inline MObject getTimeNode() {return getObjFromString("time1");}
-
-
-
-
-	//--------------------------------------------------------------------------------------------------
-	// Utilities
-	//--------------------------------------------------------------------------------------------------
-
-
-
-
-	// LMAttrUtilis
-	inline MStatus lockAndHideAttr(MPlug& plug) {
-		/* Locks and hides the given plug from the channelbox.
-
-		Returns:
-			status code (MStatus): kSuccess if the command was successful, kFailure if an error occured
-				during the command.
-
-		*/
-		MStatus status;
-		plug.setKeyable(false);
-		plug.setChannelBox(false);
-		plug.setLocked(true);
-
-		return MS::kSuccess;
-	}
-
-
-	// MObjectUtils
-	inline MStatus connectSceneTime(MObject& object, MString plug) {
-		/* Connects the scene's default time1 node to the given target.
-		 */
-		MFnDependencyNode fnDestinationtNode = object;
-		MPlug plugDestinationInTime = fnDestinationtNode.findPlug(plug, false);
-
-		MFnDependencyNode fnTimeNode = getTimeNode();
-		MPlug plugTimeOutTime = fnTimeNode.findPlug("outTime", false);
-		
-		MDGModifier dgMod;
-		dgMod.connect(plugTimeOutTime, plugDestinationInTime);
-		dgMod.doIt();
-		return MS::kSuccess;
-	}
-
-};
-
+}

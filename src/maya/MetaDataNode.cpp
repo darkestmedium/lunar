@@ -19,8 +19,7 @@ MObject MetaDataNode::AttrOutUpdate;
 
 
 
-MStatus MetaDataNode::initialize()
-{
+MStatus MetaDataNode::initialize() {
 	MStatus status;
 	MFnTypedAttribute AttrTyped;
 	MFnNumericAttribute AttrNum;
@@ -61,8 +60,7 @@ MStatus MetaDataNode::initialize()
 }
 
 
-void MetaDataNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const
-{
+void MetaDataNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
 	/* Disables Cached Playback support by default.
 
 	Built-in locators all enable Cached Playback by default, but plug-ins have to
@@ -82,8 +80,7 @@ void MetaDataNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisa
 }
 
 
-void MetaDataNode::postConstructor()
-{
+void MetaDataNode::postConstructor() {
 	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and
@@ -101,40 +98,25 @@ void MetaDataNode::postConstructor()
 	FnShape.setName(MetaDataNode::typeName + "Shape");
 
 	MPlug PlugVisibility(SelfObj, MetaDataNode::visibility);
-	// PlugVisibility.setKeyable(true);
 	PlugVisibility.setChannelBox(true);
 
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localPositionX));
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localPositionY));
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localPositionZ));
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localScaleX));
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localScaleY));
-	lockHideAttribute(MPlug(SelfObj, MetaDataNode::localScaleZ));
+	MPlug plugLocalPositionX(SelfObj, MetaDataNode::localPositionX);
+	MPlug plugLocalPositionY(SelfObj, MetaDataNode::localPositionY);
+	MPlug plugLocalPositionZ(SelfObj, MetaDataNode::localPositionZ);
+	MPlug plugLocalScaleX(SelfObj, MetaDataNode::localScaleX);
+	MPlug plugLocalScaleY(SelfObj, MetaDataNode::localScaleY);
+	MPlug plugLocalScaleZ(SelfObj, MetaDataNode::localScaleZ);
+
+	LMAttribute::lockAndHideAttr(plugLocalPositionX);
+	LMAttribute::lockAndHideAttr(plugLocalPositionY);
+	LMAttribute::lockAndHideAttr(plugLocalPositionZ);
+	LMAttribute::lockAndHideAttr(plugLocalScaleX);
+	LMAttribute::lockAndHideAttr(plugLocalScaleY);
+	LMAttribute::lockAndHideAttr(plugLocalScaleZ);
 }
 
 
-MStatus MetaDataNode::lockHideAttribute(MPlug plug)
-{
-	/* Locks and hides the given plug from the channelbox.
-
-	Returns:
-		status code (MStatus): kSuccess if the command was successful, kFailure if an error occured
-			during the command.
-
-	*/
-	MStatus status;
-
-	plug.setLocked(true);
-	plug.setKeyable(false);
-	plug.setChannelBox(false);
-
-	return MS::kSuccess;
-}
-
-
-
-MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) 
-{
+MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) {
 	/* Called by Maya whenever the object is dirty and needs to update for draw.
 
 	Any data needed from the Maya dependency graph must be retrieved and cached in this
@@ -194,8 +176,7 @@ MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, con
 }
 
 
-void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data)
-{
+void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data) {
 	/* Provides access to the MUIDrawManager, which can be used to queue up operations to draw simple
 	UI shapes like lines, circles, text, etc.
 

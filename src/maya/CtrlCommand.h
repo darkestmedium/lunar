@@ -30,7 +30,9 @@
 // Custom
 #include "Ctrl.h"
 #include "Utils.h"
-#include "LunarMaya.h"
+#include "LMAttribute.h"
+#include "LMObject.h"
+
 
 
 class CtrlCommand : public MPxCommand {
