@@ -48,7 +48,7 @@ public:
 	// Constructors
 	// CtrlData() : MUserData(false) {}; // Don't delete after draw
 	CtrlData()
-	 : MUserData()
+		: MUserData()
 	{};  // Don't delete after draw
 
 	// Destructor

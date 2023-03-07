@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Ctrl.h"
-#include "../api/Utils.h"
-
 // System Includes
 #include <string>
 
@@ -30,6 +27,10 @@
 // Proxies
 #include <maya/MPxCommand.h>
 
+// Custom
+#include "Ctrl.h"
+#include "Utils.h"
+#include "LunarMaya.h"
 
 
 class CtrlCommand : public MPxCommand {
@@ -143,12 +144,11 @@ public:
 	virtual MStatus redoIt() override;
 	virtual MStatus undoIt() override;
 
+	MStatus parseArguments(const MArgList& argList);
+
 private:
 	// Private Method
-	MStatus objExists(MString& objectName);
-	MStatus getDagPathFromString(MString& objectName, MDagPath& path);
-	MStatus parseArguments(const MArgList& argList);
-	MStatus lockHideAttribute(MPlug& plug);
+	// MStatus getDagPathFromString(MString& objectName, MDagPath& path);
 
 	// Private Data
 	MObject objThisTransform;
@@ -162,5 +162,4 @@ private:
 
 	MSelectionList listSelection;
 	MDagModifier modDag;
-	MDagPath dp;
 };

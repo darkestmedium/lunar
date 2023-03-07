@@ -8,8 +8,8 @@ from collections import OrderedDict
 # Third-party imports
 from maya import cmds
 from maya import mel
-import maya.api.OpenMaya as om
-import maya.api.OpenMayaAnim as oma
+import maya.OpenMaya as om
+import maya.OpenMayaAnim as oma
 from PySide2 import QtCore as qtc
 
 # Custom imports
@@ -526,7 +526,7 @@ class MScene():
 	def getAnimationRange(cls) -> tuple:
 		"""Gets the scene's start and end frame.
 		"""
-		return (oma.MAnimControl.minTime().value, oma.MAnimControl.maxTime().value)
+		return (oma.MAnimControl.minTime().value(), oma.MAnimControl.maxTime().value())
 
 
 	@classmethod
@@ -563,7 +563,7 @@ class MMetaData():
 	"""
 	def __init__(self,
 		name:str="sceneMetaData",
-		text:str="",
+		text:str="untitled",
 		textPosition:tuple=(100, 100),
 		textColor:tuple=(2.0, 2.0, 2.0),
 		textVisibility:bool=True,
@@ -659,8 +659,8 @@ class MAttrUtils():
 	def copyTransformsToOPM(cls, object:str):
 		"""Copies the translation and rotation values to the offset parent matrix attribute.
 		"""
-		matrixLocal = om.MMatrix(cmds.xform(object, query=True, matrix=True, worldSpace=False))
-		cmds.setAttr(f"{object}.offsetParentMatrix", matrixLocal, type="matrix")
+		arrayLocalMatrix = cmds.xform(object, query=True, matrix=True, worldSpace=False),
+		cmds.setAttr(f"{object}.offsetParentMatrix", arrayLocalMatrix[0], type="matrix")
 		cmds.xform(object, translation=(0,0,0), rotation=(0,0,0))
 
 
@@ -757,7 +757,7 @@ class MAttrUtils():
 
 	@classmethod
 	def connectSceneTime(cls, object:str, plug:str) -> None:
-		"""Connects the scene's default time node to the give target.
+		"""Connects the scene's default time1 node to the given target.
 		"""
 		fnTarget = om.MFnDependencyNode(MObjectUtils.getObjFromString(object))
 		plugInTime = fnTarget.findPlug(plug, False)
@@ -785,8 +785,10 @@ class MTransformUtils():
 			if target == None:
 				return False
 			else:
-				sourcePoint = om.MPoint(cmds.xform(source, query=True, translation=True, worldSpace=True))
-				targetPoint = om.MPoint(cmds.xform(target[0], query=True, translation=True, worldSpace=True))
+				sourcePt = cmds.xform(source, query=True, translation=True, worldSpace=True)
+				targetPt = cmds.xform(target[0], query=True, translation=True, worldSpace=True)
+				sourcePoint = om.MPoint(sourcePt[0], sourcePt[1], sourcePt[2])
+				targetPoint = om.MPoint(targetPt[0], targetPt[1], targetPt[2])
 				distance = sourcePoint.distanceTo(targetPoint)
 
 				return distance
@@ -871,9 +873,14 @@ class MObjectUtils():
 
 	@classmethod
 	def getObjFromString(cls, object:str) -> om.MObject:
-		"""Gets the MObject with the given name.
+		"""Gets the MObject from the given name.
 
 		"""
-		return om.MSelectionList().add(object).getDependNode(0)
+		listSelection = om.MSelectionList()
+		listSelection.add(object)
+		mObject = om.MObject()
+		listSelection.getDependNode(0, mObject)
+
+		return mObject
 	
 

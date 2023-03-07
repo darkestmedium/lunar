@@ -1,8 +1,5 @@
 #pragma once
 
-#include "MetaDataNode.h"
-#include "../api/Utils.h"
-
 // System Includes
 #include <string>
 
@@ -29,6 +26,11 @@
 
 // Proxies
 #include <maya/MPxCommand.h>
+
+// Custom includes
+#include "MetaDataNode.h"
+#include "Utils.h"
+#include "LunarMaya.h"
 
 
 
@@ -92,14 +94,10 @@ public:
 	virtual MStatus redoIt() override;
 	virtual MStatus undoIt() override;
 
+	MStatus parseArguments(const MArgList& argList);
+
 private:
 	// Private Methods
-	MStatus objExists(MString& objectName);
-	MStatus getDagPathFromString(MString& objectName, MDagPath& path);
-	MStatus parseArguments(const MArgList& argList);
-	MStatus lockHideAttribute(MPlug plug);
-
 	MSelectionList selList;
 	MDagModifier dagMod;
-	MDagPath _dp;
 };

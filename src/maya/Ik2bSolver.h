@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../api/Utils.h"
-#include "../api/MathUtility.h"
+#include "Utils.h"
+#include "MathUtility.h"
 
 // System Includes
 // #include <cmath>

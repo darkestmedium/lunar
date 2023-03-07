@@ -1,11 +1,11 @@
-#include "ctrl/Ctrl.h"
-#include "ctrl/CtrlDrawOverride.h"
-#include "ctrl/CtrlCommand.h"
-#include "solver/Ik2bSolver.h"
-#include "solver/IkCommand.h"
-#include "solver/FootRollNode.h"
-#include "misc/MetaDataNode.h"
-#include "misc/MetaDataCmd.h"
+#include "Ctrl.h"
+#include "CtrlDrawOverride.h"
+#include "CtrlCommand.h"
+#include "Ik2bSolver.h"
+#include "IkCommand.h"
+#include "FootRollNode.h"
+#include "MetaDataNode.h"
+#include "MetaDataCmd.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -41,27 +41,27 @@ MStatus initializePlugin(MObject obj)
 
 	// Register Controller node
 	status = pluginFn.registerNode(
-	Ctrl::typeName,
-	Ctrl::typeId,
-	Ctrl::creator,
-	Ctrl::initialize,
-	MPxLocatorNode::kLocatorNode,
-	&Ctrl::drawDbClassification
+		Ctrl::typeName,
+		Ctrl::typeId,
+		Ctrl::creator,
+		Ctrl::initialize,
+		MPxLocatorNode::kLocatorNode,
+		&Ctrl::drawDbClassification
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register Controller draw override
 	status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(
-	Ctrl::drawDbClassification,
-	Ctrl::drawRegistrationId,
-	CtrlDrawOverride::creator
+		Ctrl::drawDbClassification,
+		Ctrl::drawRegistrationId,
+		CtrlDrawOverride::creator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register Controller command
 	status = pluginFn.registerCommand(
-	CtrlCommand::commandName,
-	CtrlCommand::creator,
-	CtrlCommand::syntaxCreator
+		CtrlCommand::commandName,
+		CtrlCommand::creator,
+		CtrlCommand::syntaxCreator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
@@ -94,9 +94,9 @@ MStatus initializePlugin(MObject obj)
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register MetaData draw override
 	status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(
-	MetaDataNode::drawDbClassification,
-	MetaDataNode::drawRegistrationId,
-	MetaDataNodeDrawOverride::creator
+		MetaDataNode::drawDbClassification,
+		MetaDataNode::drawRegistrationId,
+		MetaDataNodeDrawOverride::creator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register MetaData command
@@ -120,7 +120,7 @@ MStatus initializePlugin(MObject obj)
 	if (MGlobal::mayaState() == MGlobal::kInteractive)
 	{
 		// Register callback to set selection priority on locators to 999
-		setMelConfig;
+		setMelConfig(NULL);
 
 		afterNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterNew, setMelConfig, NULL, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);

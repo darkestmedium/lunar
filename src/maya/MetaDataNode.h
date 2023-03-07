@@ -38,7 +38,7 @@
 #include <maya/MPxDrawOverride.h>
 
 // Custom include
-#include "../api/Utils.h"
+#include "Utils.h"
 
 
 // Node

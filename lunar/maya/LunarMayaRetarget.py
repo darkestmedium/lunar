@@ -9,13 +9,13 @@ from collections import OrderedDict
 # Third-party imports
 from maya import cmds
 from maya import mel
-import maya.api.OpenMaya as om
-import maya.api.OpenMayaAnim as oma
+import maya.OpenMaya as om
+import maya.OpenMayaAnim as oma
 from PySide2 import QtCore as qtc
 
 # Custom imports
-import lunar.maya.api.LunarMaya as lm
-import lunar.maya.api.LunarMayaAnim as lma
+import lunar.maya.LunarMaya as lm
+import lunar.maya.LunarMayaAnim as lma
 
 # HumanIk templates
 import lunar.maya.resources.retarget.humanik as lmrrhi
@@ -876,8 +876,8 @@ class MHumanIk():
 			nodes = self.getExportNodes()
 			if nodes.__len__() >= self.minimalDefinition.__len__():
 
-				if not startFrame: startFrame = oma.MAnimControl.minTime().value
-				if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 				# mel.eval("hikBakeCharacter 0")
 
@@ -910,8 +910,8 @@ class MHumanIk():
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
@@ -1148,6 +1148,9 @@ class MMetaHuman(MHumanIk):
 
 				self.cleanUpPairBlendNodes()
 				if self.rootCnst: cmds.delete(self.rootCnst)
+
+				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
+					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
 
 				self.setSource("None")
 
@@ -1614,11 +1617,14 @@ class MLunarCtrl(MHumanIk):
 
 			if nodes.__len__() >= self.minimalDefinition.__len__():
 
-				if not startFrame: startFrame = oma.MAnimControl.minTime().value
-				if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 				# Temp workaround for now
 				self.deleteAnimationOnIk()
+
+				# Needs one cpu cycle after import to properly move ik solvers
+				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
 				lma.MAnimBake.bakeTransform(nodes, (startFrame, endFrame), True)
 				self.filterRotations(nodes)
@@ -1626,8 +1632,13 @@ class MLunarCtrl(MHumanIk):
 				# Clean up
 				self.cleanUpPairBlendNodes()
 				if self.rootCnst: cmds.delete(self.rootCnst)
-				
+
+				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
+					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
+
 				self.setSource("None")
+				
+				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
 				return True
@@ -1676,8 +1687,8 @@ class MLunarCtrl(MHumanIk):
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
@@ -1720,8 +1731,8 @@ class MLunarExport(MMannequinUe5):
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 

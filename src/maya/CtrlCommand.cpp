@@ -154,7 +154,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		if (strTranslateTo != "") {
 			bTranslateTo = true;
-			status = getDagPathFromString(strTranslateTo, dpTargetTranslation);
+			status = LunarMaya::getDagPathFromString(strTranslateTo, dpTargetTranslation);
 			if (status == MS::kSuccess) {
 				MFnTransform targetFn(dpTargetTranslation);
 				posTarget = targetFn.getTranslation(MSpace::kWorld);
@@ -169,7 +169,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		if (strRotateTo != "") {
 			bRotateTo = true;
-			status = getDagPathFromString(strRotateTo, dpTargetRotation);
+			status = LunarMaya::getDagPathFromString(strRotateTo, dpTargetRotation);
 			if (status == MS::kSuccess)	{
 				MFnTransform targetFn(dpTargetRotation);
 				targetFn.getRotation(rotTarget, MSpace::kWorld);
@@ -284,37 +284,24 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 }
 
 
-MStatus CtrlCommand::objExists(MString& objectName) {
-	MStatus status;
-	MSelectionList selList;
 
-	status = selList.add(objectName);
+// MStatus CtrlCommand::getDagPathFromString(MString& objectName, MDagPath& path) {
+// 	MStatus status;
+// 	MSelectionList listSel;
 
-	if (status == MS::kSuccess) {
-		return MS::kSuccess;
-	}
-
-	return MS::kFailure;
-}
-
-
-MStatus CtrlCommand::getDagPathFromString(MString& objectName, MDagPath& path) {
-	MStatus status;
-	MSelectionList listSel;
-
-	status = listSel.add(objectName);
-	if (status == MS::kSuccess)	{
-		listSel.getDagPath(0, path);
-		if (path.hasFn(MFn::kTransform) == true) {
-			return MS::kSuccess;
-		}	else {
-			MGlobal::displayError("Given '" + objectName + "' is not a transform node.");
-		}
-	}	else {
-		MGlobal::displayError("Given '" + objectName + "' does not exist.");
-	}
-	return MS::kFailure;
-}
+// 	status = listSel.add(objectName);
+// 	if (status == MS::kSuccess)	{
+// 		listSel.getDagPath(0, path);
+// 		if (path.hasFn(MFn::kTransform) == true) {
+// 			return MS::kSuccess;
+// 		}	else {
+// 			MGlobal::displayError("Given '" + objectName + "' is not a transform node.");
+// 		}
+// 	}	else {
+// 		MGlobal::displayError("Given '" + objectName + "' does not exist.");
+// 	}
+// 	return MS::kFailure;
+// }
 
 
 MStatus CtrlCommand::doIt(const MArgList& argList) {
@@ -383,7 +370,7 @@ MStatus CtrlCommand::redoIt() {
 		MStatus status;
 		// We need to init the MFnTransform with a dag path, mobjects do not work with transformations
 		// even if the object has a MFn::kTransform
-		dp.getAPathTo(objThisTransform, dpThisTransform);
+		MDagPath::getAPathTo(objThisTransform, dpThisTransform);
 		MFnTransform transformFn(dpThisTransform);
 		MFnDependencyNode shapeFn(objThisShape);
 
@@ -453,22 +440,23 @@ MStatus CtrlCommand::redoIt() {
 			if (bLockShapeAttributes == true) {
 				// optimize with a for loop and MPlugArray
 				// Local position
-				lockHideAttribute(plugLocalPositionX);
-				lockHideAttribute(plugLocalPositionY);
-				lockHideAttribute(plugLocalPositionZ);
+				LunarMaya::lockAndHideAttr(plugLocalPositionX);
+				LunarMaya::lockAndHideAttr(plugLocalPositionY);
+				LunarMaya::lockAndHideAttr(plugLocalPositionZ);
 				// Local rotate
-				lockHideAttribute(plugLocalRotateX);
-				lockHideAttribute(plugLocalRotateY);
-				lockHideAttribute(plugLocalRotateZ);
+				LunarMaya::lockAndHideAttr(plugLocalRotateX);
+				LunarMaya::lockAndHideAttr(plugLocalRotateY);
+				LunarMaya::lockAndHideAttr(plugLocalRotateZ);
 				// Local scale
-				lockHideAttribute(plugLocalScaleX);
-				lockHideAttribute(plugLocalScaleY);
-				lockHideAttribute(plugLocalScaleZ);
+				LunarMaya::lockAndHideAttr(plugLocalScaleX);
+				LunarMaya::lockAndHideAttr(plugLocalScaleY);
+				LunarMaya::lockAndHideAttr(plugLocalScaleZ);
 				// Shape attrs
-				lockHideAttribute(plugShape);
-				lockHideAttribute(plugFillShape);
-				lockHideAttribute(plugFillTransparency);
-				lockHideAttribute(plugLineWidth);
+				LunarMaya::lockAndHideAttr(plugShape);
+				LunarMaya::lockAndHideAttr(plugFillShape);
+				LunarMaya::lockAndHideAttr(plugDrawLine);
+				LunarMaya::lockAndHideAttr(plugFillTransparency);
+				LunarMaya::lockAndHideAttr(plugLineWidth);
 			}
 		}
 		// Set hide on playback
@@ -500,24 +488,6 @@ MStatus CtrlCommand::undoIt() {
 	// Restore the initial state
 	status = modDag.undoIt();
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	return MS::kSuccess;
-}
-
-
-MStatus CtrlCommand::lockHideAttribute(MPlug& plug) {
-	/* Locks and hides the given plug from the channelbox.
-
-	Returns:
-		status code (MStatus): kSuccess if the command was successful, kFailure if an error occured
-			during the command.
-
-	*/
-	MStatus status;
-
-	plug.setLocked(true);
-	plug.setKeyable(false);
-	plug.setChannelBox(false);
 
 	return MS::kSuccess;
 }

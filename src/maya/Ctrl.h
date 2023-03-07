@@ -33,7 +33,7 @@
 #include <maya/MPxLocatorNode.h>
 
 // Custom
-#include "../api/Utils.h"
+#include "Utils.h"
 
 
 

@@ -34,10 +34,10 @@ import maya.OpenMayaAnim as oma
 from PySide2 import QtCore as qtc
 
 # Custom imports
-import lunar.maya.api.LunarMaya as lm
-import lunar.maya.api.LunarMayaAnim as lma
-import lunar.maya.api.LunarMayaRig as lmr
-import lunar.maya.api.LunarMayaRetarget as lmrtg
+import lunar.maya.LunarMaya as lm
+import lunar.maya.LunarMayaAnim as lma
+import lunar.maya.LunarMayaRig as lmr
+import lunar.maya.LunarMayaRetarget as lmrtg
 
 
 
@@ -98,7 +98,8 @@ def wrapRetargeters():
 
 	if not ctrlRig:	ctrlRig = lmrtg.MLunarCtrl(f"{namespaceRig}:Ctrl")
 	if not exportSkeleton: exportSkeleton = lmrtg.MLunarExport(f"{namespaceRig}:Export")
-	if not sceneMetaData: sceneMetaData = lm.MMetaData(text="untitled")
+	if not sceneMetaData: sceneMetaData = lm.MMetaData()
+
 	
 
 def buildNewAnimationScene() -> bool:
@@ -114,6 +115,8 @@ def buildNewAnimationScene() -> bool:
 		lm.MFile.load(fiPlayerRig.filePath(), namespaceRig)
 		# sceneMetaData = lm.MMetaData(text="untitled")
 		wrapRetargeters()
+
+		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.MMetaData()
 
 		return True
 	return False
@@ -147,6 +150,10 @@ def loadMocap() -> bool:
 		# Get the namespace from fbx
 		namespaceMocap = list(set(lm.MScene.getNamespaces()).difference(listSceneNamespaces))
 		# If there are no new namspaces this means that mocap matches the rig so we can import onto 
+
+		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.MMetaData()
+		sceneMetaData.setText(fiAnimFbx.fileName())
+	
 		# the export skeleton 
 		if not namespaceMocap:
 			ctrlRig.setSourceAndBake(exportSkeleton)
@@ -156,10 +163,7 @@ def loadMocap() -> bool:
 		mocapSkeleton = lmrtg.MMannequinUe5(f"{namespaceMocap[0]}:Mocap")
 		ctrlRig.setSourceAndBake(mocapSkeleton)
 
-		# Clean up
-		# check if metadata node exists since we could open a new file and we end up with a node from a previous scene
-		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.MMetaData()
-		sceneMetaData.setText(fiAnimFbx.fileName())
+		# Clean up namespaces
 		om.MNamespace.removeNamespace(namespaceMocap[0], True)
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 
@@ -172,7 +176,8 @@ def loadMocap() -> bool:
 def exportAnimation(exportAs=False):
 	"""Export animaiton to the engine.
 	"""
-	global fiAnimFbx
+	# global fiAnimFbx
+	global sceneMetaData
 	wrapRetargeters()
 
 	if exportAs:
@@ -188,10 +193,10 @@ def exportAnimation(exportAs=False):
 		return False
 
 	# Source and bake to export skeleton
-	exportSkeleton.setSourceAndBake(ctrlRig)
-	exportSkeleton.exportAnimation(f"{fiAnimations.filePath()}/{fiAnimFbx.fileName()}")
+	# exportSkeleton.setSourceAndBake(ctrlRig)
+	# # exportSkeleton.exportAnimation(f"{fiAnimations.filePath()}/{fiAnimFbx.fileName()}")
 
-	return True
+	# return True
 
 
 def createTimeEditorClip():
@@ -227,25 +232,25 @@ def importMhFaceCtrlAnimatino():
 
 
 
-if __name__ == "__main__":
-	"""For Development Only.
+# if __name__ == "__main__":
+# 	"""For Development Only.
 
-	Test code to accelerate reloading and testing the plugin.
+# 	Test code to accelerate reloading and testing the plugin.
 
-	"""
-	import importlib
-	from maya import cmds
+# 	"""
+# 	import importlib
+# 	from maya import cmds
 
-	import lunar.maya.api.LunarMaya as lm
-	import lunar.maya.api.LunarMayaAnim as lma
-	import lunar.maya.api.LunarMayaRig as lmr
-	import lunar.maya.api.LunarMayaRetarget as lmrtg
+# 	import lunar.maya.LunarMaya as lm
+# 	import lunar.maya.LunarMayaAnim as lma
+# 	import lunar.maya.LunarMayaRig as lmr
+# 	import lunar.maya.LunarMayaRetarget as lmrtg
 
-	from lunar.maya.toolset import animation
+# 	from lunar.maya.toolset import animation
 
-	[importlib.reload(module) for module in [lm, lma, lmr, lmrtg]]
+# 	[importlib.reload(module) for module in [lm, lma, lmr, lmrtg]]
 
-	animation.buildNewAnimationScene()
+# 	animation.buildNewAnimationScene()
 
 # 	animation.ImportMocap()
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ctrl/Ctrl.h"
+#include "Ctrl.h"
 // #include "Utils.h"
 
 // System Includes

@@ -8,8 +8,8 @@ from collections import OrderedDict
 # Third-party imports
 from maya import cmds
 from maya import mel
-import maya.api.OpenMaya as om
-import maya.api.OpenMayaAnim as oma
+import maya.OpenMaya as om
+import maya.OpenMayaAnim as oma
 from PySide2 import QtCore as qtc
 
 # Custom imports
@@ -37,8 +37,8 @@ class MTimeEditor():
 
 		"""
 		if not name.startswith("AS_"): name = f"AS_{name}"
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value
+		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
 		cmds.timeEditorClip(
 			name,

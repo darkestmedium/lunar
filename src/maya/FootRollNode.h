@@ -41,7 +41,7 @@
 #include <maya/MPxNode.h>
 
 // Custom
-#include "../api/Utils.h"
+#include "Utils.h"
 
 
 

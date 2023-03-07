@@ -7,13 +7,11 @@ from collections import OrderedDict
 
 # Third-party imports
 from maya import cmds
-# from maya import mel
-import maya.api.OpenMaya as om
-# import maya.OpenMayaAnim as oma
+import maya.OpenMaya as om
 from PySide2 import QtCore as qtc
 
 # Custom imports
-import lunar.maya.api.LunarMaya as lm
+import lunar.maya.LunarMaya as lm
 
 
 
@@ -1230,7 +1228,7 @@ class FkHandComponent():
 
 
 
-class IkArmComponent():
+class Ik2bLimbComponent():
 	"""Class for building ik comoponents."""
 
 
@@ -1243,6 +1241,9 @@ class IkArmComponent():
 		arm_pv_l_ctrl
 
 		"""
+		if side == "center":
+			sideSuffix = ""
+			color = "yellow"
 		if side == "left":
 			sideSuffix = "_l"
 			color = "orange"
@@ -1258,14 +1259,13 @@ class IkArmComponent():
 			lineWidth=3,
 			color=color,
 		)
-
 		if poleVector:
 			self.CtrlPoleVector = PoleVectorCtrl(
 				name=f"{name}_pv{sideSuffix}_ctrl",
 				parent=parent,
 				translateTo=translateTo,
 				rotateTo=rotateTo,
-				localScale=(3.0, 3.0, 3.0),
+				localScale=(4.0, 4.0, 4.0),
 				lineWidth=2.0,
 				color=color,
 			)
@@ -1306,92 +1306,6 @@ class IkArmComponent():
 
 		# # Rematch translation on the pole vector after connecting the solver to properly freeze the OPM
 		# cmds.matchTransform(self.CtrlPoleVector.transform, translateTo, position=True)
-
-		# Post setup
-		lm.MAttrUtils.copyTransformsToOPM(self.CtrlIk.transform)
-		lm.MAttrUtils.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
-		if poleVector:
-			lm.MAttrUtils.copyTransformsToOPM(self.CtrlPoleVector.transform)
-			lm.MAttrUtils.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
-
-
-	def getCtrls(self):
-		return (self.CtrlIk, self.CtrlPoleVector)
-
-
-
-
-class IkLegComponent():
-	"""Class for building ik comoponents."""
-
-
-	def __init__(self, name, parent, translateTo, rotateTo, fkStart, fkMid, fkEnd, side="left", poleVector=True) -> None:
-		"""Class constructor.
-
-		Args:
-			parent (string): Parent of the component to be parented to.
-
-		arm_pv_l_ctrl
-
-		"""
-		if side == "left":
-			sideSuffix = "_l"
-			color = "orange"
-		if side == "right":
-			sideSuffix = "_r"
-			color = "blue"
-
-		self.CtrlIk = IkCtrl(
-			name=f"{name}_ik{sideSuffix}_ctrl",
-			parent=parent,
-			translateTo=fkEnd,
-			rotateTo=fkEnd,
-			lineWidth=3,
-			color=color,
-		)
-
-		if poleVector:
-			self.CtrlPoleVector = PoleVectorCtrl(
-				name=f"{name}_pv{sideSuffix}_ctrl",
-				parent=parent,
-				translateTo=translateTo,
-				rotateTo=rotateTo,
-				color=color,
-			)
-
-		# Make ik solver
-		self.NodeIk2bSolver = cmds.createNode("ik2bSolver", name=f"{name}{sideSuffix}_Ik2bSolver")
-		cmds.setAttr(f"{self.NodeIk2bSolver}.fkIk", 0)
-		cmds.connectAttr(f"{fkEnd}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkEnd")
-		cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkMid")
-		cmds.connectAttr(f"{fkStart}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkStart")
-		cmds.connectAttr(f"{self.CtrlIk.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.ikHandle")
-
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkEnd}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkMid}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkStart}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlIk.transform}.rotatePivot")
-
-		if poleVector: 
-			cmds.connectAttr(f"{self.CtrlPoleVector.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.poleVector")
-			cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlPoleVector.transform}.rotatePivot")
-			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
-
-		# Add ik attributes
-		lm.MAttrUtils.addSeparator(self.CtrlIk.transform)
-		# Fk / Ik
-		AttrFkIk = lm.MAttrUtils.addFloat(self.CtrlIk.transform, "fkIk")
-		cmds.connectAttr(AttrFkIk, f"{self.NodeIk2bSolver}.fkIk")
-		# Softness
-		cmds.addAttr(self.CtrlIk.transform, longName="softness", at="float", min=0.0, max=100.0, keyable=True, dv=0)
-		cmds.connectAttr(f"{self.CtrlIk.transform}.softness", f"{self.NodeIk2bSolver}.softness")
-		# Twist
-		cmds.addAttr(self.CtrlIk.transform, longName="twist", at="float", keyable=True, dv=0)
-		cmds.connectAttr(f"{self.CtrlIk.transform}.twist", f"{self.NodeIk2bSolver}.twist")
-
-
-		# Connect time1
-		cmds.connectAttr(f"time1.outTime", f"{self.NodeIk2bSolver}.inTime")
 
 		# Post setup
 		lm.MAttrUtils.copyTransformsToOPM(self.CtrlIk.transform)

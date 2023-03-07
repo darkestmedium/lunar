@@ -127,46 +127,6 @@ MStatus MetaDataCmd::parseArguments(const MArgList &argList) {
 }
 
 
-MStatus MetaDataCmd::objExists(MString& objectName)
-{
-	MStatus status;
-	MSelectionList selList;
-
-	status = selList.add(objectName);
-
-	if (status == MS::kSuccess)
-	{
-		return MS::kSuccess;
-	}
-
-	return MS::kFailure;
-}
-
-
-MStatus MetaDataCmd::getDagPathFromString(MString& objectName, MDagPath& path)
-{
-	MStatus status;
-	MSelectionList selectionList;
-
-	status = selectionList.add(objectName);
-	if (status == MS::kSuccess)	{
-		selectionList.getDagPath(0, path);
-		if (path.hasFn(MFn::kTransform) == true) {
-			return MS::kSuccess;
-		}
-		else
-		{
-			MGlobal::displayError("Given '" + objectName + "' is not a transform node.");
-		}
-	}
-	else
-	{
-		MGlobal::displayError("Given '" + objectName + "' does not exist.");
-	}
-	return MS::kFailure;
-}
-
-
 MStatus MetaDataCmd::doIt(const MArgList& argList)
 {
 	/* Command's doIt method.
@@ -225,8 +185,7 @@ MStatus MetaDataCmd::redoIt()
 	*/
 
 	// Command create mode
-	if (command == kCommandCreate)
-	{
+	if (command == kCommandCreate) {
 		MStatus status;
 
 		status = dagMod.doIt();
@@ -235,17 +194,26 @@ MStatus MetaDataCmd::redoIt()
 		MFnDependencyNode fnTransform(objTransform);
 		MFnDependencyNode fnShape(objShape);
 		// TRANSFORM NODE
-		lockHideAttribute(fnTransform.findPlug("translateX", false));
-		lockHideAttribute(fnTransform.findPlug("translateY", false));
-		lockHideAttribute(fnTransform.findPlug("translateZ", false));
-		lockHideAttribute(fnTransform.findPlug("rotateX", false));
-		lockHideAttribute(fnTransform.findPlug("rotateY", false));
-		lockHideAttribute(fnTransform.findPlug("rotateZ", false));
-		lockHideAttribute(fnTransform.findPlug("scaleX", false));
-		lockHideAttribute(fnTransform.findPlug("scaleY", false));
-		lockHideAttribute(fnTransform.findPlug("scaleZ", false));
-		lockHideAttribute(fnTransform.findPlug("visibility", false));
-
+		MPlug plugTranslateX = fnTransform.findPlug("translateX", false);
+		LunarMaya::lockAndHideAttr(plugTranslateX);
+		MPlug plugTranslateY = fnTransform.findPlug("translateY", false);
+		LunarMaya::lockAndHideAttr(plugTranslateY);
+		MPlug plugTranslateZ = fnTransform.findPlug("translateZ", false);
+		LunarMaya::lockAndHideAttr(plugTranslateZ);
+		MPlug plugRotateX = fnTransform.findPlug("rotateX", false);
+		LunarMaya::lockAndHideAttr(plugRotateX);
+		MPlug plugRotateY = fnTransform.findPlug("rotateY", false);
+		LunarMaya::lockAndHideAttr(plugRotateY);
+		MPlug plugRotateZ = fnTransform.findPlug("rotateZ", false);
+		LunarMaya::lockAndHideAttr(plugRotateZ);
+		MPlug plugScaleX = fnTransform.findPlug("scaleX", false);
+		LunarMaya::lockAndHideAttr(plugScaleX);
+		MPlug plugScaleY = fnTransform.findPlug("scaleY", false);
+		LunarMaya::lockAndHideAttr(plugScaleY);
+		MPlug plugScaleZ = fnTransform.findPlug("scaleZ", false);
+		LunarMaya::lockAndHideAttr(plugScaleZ);
+		MPlug plugVisibility = fnTransform.findPlug("visibility", false);
+		LunarMaya::lockAndHideAttr(plugVisibility);
 
 		// SHAPE NODE
 		// Sets the plugs values based on the flag arguments
@@ -297,25 +265,6 @@ MStatus MetaDataCmd::undoIt()
 	// Restore the initial state
 	status = dagMod.undoIt();
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	return MS::kSuccess;
-}
-
-
-MStatus MetaDataCmd::lockHideAttribute(MPlug plug)
-{
-	/* Locks and hides the given plug from the channelbox.
-
-	Returns:
-		status code (MStatus): kSuccess if the command was successful, kFailure if an error occured
-			during the command.
-
-	*/
-	MStatus status;
-
-	plug.setLocked(true);
-	plug.setKeyable(false);
-	plug.setChannelBox(false);
 
 	return MS::kSuccess;
 }
