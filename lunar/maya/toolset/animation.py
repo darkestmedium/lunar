@@ -93,15 +93,14 @@ def wrapRetargeters():
 	global sceneMetaData
 
 	if not namespaceRig:
-		namespaceRig = lm.MScene.getNamespaces()
+		namespaceRig = lm.LMScene.getNamespaces()
 		if not namespaceRig: namespaceRig=""
 
-	if not ctrlRig:	ctrlRig = lmrtg.MLunarCtrl(f"{namespaceRig}:Ctrl")
-	if not exportSkeleton: exportSkeleton = lmrtg.MLunarExport(f"{namespaceRig}:Export")
-	if not sceneMetaData: sceneMetaData = lm.MMetaData()
+	if not ctrlRig:	ctrlRig = lmrtg.LMLunarCtrl(f"{namespaceRig}:Ctrl")
+	if not exportSkeleton: exportSkeleton = lmrtg.LMLunarExport(f"{namespaceRig}:Export")
+	if not sceneMetaData: sceneMetaData = lm.LMMetaData()
 
 	
-
 def buildNewAnimationScene() -> bool:
 	"""Builds a new animation scene with a clean player rig for working with mocap.
 
@@ -109,14 +108,14 @@ def buildNewAnimationScene() -> bool:
 	global namespaceRig
 	global sceneMetaData
 
-	if lm.MFile.new():
-		lm.MScene.setFramerate()
+	if lm.LMFile.new():
+		lm.LMScene.setFramerate()
 		namespaceRig = "Player"
-		lm.MFile.load(fiPlayerRig.filePath(), namespaceRig)
+		lm.LMFile.load(fiPlayerRig.filePath(), namespaceRig)
 		# sceneMetaData = lm.MMetaData(text="untitled")
 		wrapRetargeters()
 
-		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.MMetaData()
+		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 
 		return True
 	return False
@@ -127,31 +126,31 @@ def loadMocap() -> bool:
 	"""
 	global fiAnimFbx
 	global sceneMetaData
-	lm.MScene.setFramerate()
-	strFilePath = lm.MFile.importDialog()
+	lm.LMScene.setFramerate()
+	strFilePath = lm.LMFile.importDialog()
 
 	if strFilePath != None:
 		wrapRetargeters()
 		stateAutoKey = oma.MAnimControl.autoKeyMode()
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
 
-		listSceneNamespaces = lm.MScene.getNamespaces()
+		listSceneNamespaces = lm.LMScene.getNamespaces()
 
 		fiAnimFbx = qtc.QFileInfo(strFilePath[0])
 		
-		lm.MFile.load(fiAnimFbx.filePath())  # Import mocap source skeletonß
+		lm.LMFile.load(fiAnimFbx.filePath())  # Import mocap source skeletonß
 		# Import fbx animation
-		takes = lm.MFbx.gatherTakes(fiAnimFbx.filePath())
+		takes = lm.LMFbx.gatherTakes(fiAnimFbx.filePath())
 		take = list(takes.keys())[0]
-		lm.MFbx.importAnimation(
+		lm.LMFbx.importAnimation(
 			fiAnimFbx.filePath(),
 			takes[take]['startFrame'], takes[take]['endFrame'], takes[take]['index']
 		)
 		# Get the namespace from fbx
-		namespaceMocap = list(set(lm.MScene.getNamespaces()).difference(listSceneNamespaces))
+		namespaceMocap = list(set(lm.LMScene.getNamespaces()).difference(listSceneNamespaces))
 		# If there are no new namspaces this means that mocap matches the rig so we can import onto 
 
-		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.MMetaData()
+		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 		sceneMetaData.setText(fiAnimFbx.fileName())
 	
 		# the export skeleton 
@@ -160,7 +159,7 @@ def loadMocap() -> bool:
 			if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 			return True
 
-		mocapSkeleton = lmrtg.MMannequinUe5(f"{namespaceMocap[0]}:Mocap")
+		mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
 		ctrlRig.setSourceAndBake(mocapSkeleton)
 
 		# Clean up namespaces
@@ -178,12 +177,12 @@ def exportAnimation(exportAs=False):
 	"""
 	# global fiAnimFbx
 	global sceneMetaData
-	wrapRetargeters()
+	# wrapRetargeters()
 
 	if exportAs:
-		StrFilePath = lm.MFile.exportDialog(fiAnimations.filePath())
-		if StrFilePath != None:
-			FiAnimFbx = qtc.QFileInfo(StrFilePath[0])
+		strFilePath = lm.LMFile.exportDialog(f"{fiAnimations.filePath()}/{sceneMetaData.getText()}")
+		if strFilePath != None:
+			FiAnimFbx = qtc.QFileInfo(strFilePath[0])
 			# Source and bake to export skeleton
 			exportSkeleton.setSourceAndBake(ctrlRig)
 			exportSkeleton.exportAnimation(FiAnimFbx.filePath())

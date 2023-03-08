@@ -18,7 +18,7 @@ from lunar.abstract.fbx import AbstractFbx
 
 
 
-class MFbx(AbstractFbx):
+class LMFbx(AbstractFbx):
 	"""Maya Fbx class, inherited from AbstractFbx.
 
 	TODO add exportAnimation method
@@ -84,7 +84,7 @@ class MFbx(AbstractFbx):
 
 		# The FBXImportSetMayaFrameRate -v 1 and FBXImportFillTimeline -v 1 are executed
 		# only in cpu idle state and don't work with batch export
-		MScene.setAnimationRange(startFrame, endFrame, False)
+		LMScene.setAnimationRange(startFrame, endFrame, False)
 		# cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Restore settings saved by the push command
@@ -114,7 +114,7 @@ class MFbx(AbstractFbx):
 
 		cls.__setExportAnimationSettings()
 
-		MFinder.createDirectory(qtc.QFileInfo(filePath).absolutePath())
+		LMFinder.createDirectory(qtc.QFileInfo(filePath).absolutePath())
 
 		if bake:
 			mel.eval("FBXExportBakeComplexAnimation -v 1")
@@ -194,7 +194,7 @@ class MFbx(AbstractFbx):
 
 
 
-class MFinder(qtc.QObject):
+class LMFinder(qtc.QObject):
 	"""Class for cross platform file managment based on QtCore.
 
 	Convinience methods for automating file - related common tasks like listing files in directories,
@@ -395,7 +395,7 @@ class MFinder(qtc.QObject):
 
 
 
-class MFile():
+class LMFile():
 	""""Class wrapper for file operations.
 	"""
 
@@ -507,7 +507,7 @@ class MFile():
 
 
 
-class MScene():
+class LMScene():
 	"""Maya Scene wrapper class.
 
 	"""
@@ -554,11 +554,12 @@ class MScene():
 		"""Gets the function set for the scene's time1 node.
 
 		"""
-		return om.MFnDependencyNode(MObjectUtils.getObjFromString("time1"))
+		return om.MFnDependencyNode(LMObject.getObjFromString("time1"))
 
 
 
-class MMetaData():
+
+class LMMetaData():
 	"""Wrapper class for the metaData node.
 	"""
 	def __init__(self,
@@ -577,6 +578,8 @@ class MMetaData():
 		self.textVisibility = textVisibility
 
 		self.validate()
+
+		self.text = self.getText()
 
 
 	def validate(self) -> bool:
@@ -636,6 +639,9 @@ class MMetaData():
 		cmds.setAttr(f"{self.name}.textColorG", value[1])
 		cmds.setAttr(f"{self.name}.textColorB", value[2])
 
+	def getText(self):
+		return cmds.getAttr(f"{self.name}.text")
+
 
 
 
@@ -646,7 +652,7 @@ class MMetaData():
 
 
 
-class MAttrUtils():
+class LMAttribute():
 	"""Wrapper class for attribute utilities.
 	"""
 
@@ -759,20 +765,21 @@ class MAttrUtils():
 	def connectSceneTime(cls, object:str, plug:str) -> None:
 		"""Connects the scene's default time1 node to the given target.
 		"""
-		fnTarget = om.MFnDependencyNode(MObjectUtils.getObjFromString(object))
+		fnTarget = om.MFnDependencyNode(LMObject.getObjFromString(object))
 		plugInTime = fnTarget.findPlug(plug, False)
-		plugTime1Out =  MScene.getTimeNode().findPlug("outTime", False)
+		plugTime1Out =  LMScene.getTimeNode().findPlug("outTime", False)
 		cls.dgMod.connect(plugTime1Out, plugInTime)
 		cls.dgMod.doIt()
 
 
 
 
-class MTransformUtils():
+class LMTransformUtils():
 	"""Wrapper class for transforms utilities.
 	"""
 
 	log = logging.getLogger("MTransformUtils")	
+
 
 	@classmethod
 	def getDistanceBetween(cls, source:str):
@@ -826,16 +833,16 @@ class MTransformUtils():
 
 		for ctrl, jnt in zip(ListControllers, ListUnpackedJoints):
 			if cmds.objExists(ctrl):
-				MAttrUtils.copyTransformsToOPM(ctrl)
+				LMAttribute.copyTransformsToOPM(ctrl)
 				cls.reconnectSkin(jnt, ctrl)
 				if ctrl == "pelvis_rot_ctrl": continue
-				MAttrUtils.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
+				LMAttribute.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
 
 				if "twist" not in jnt:
 					distance = cls.getDistanceBetween(jnt)
 					if distance:
-						MAttrUtils.editLocked(f"{ctrl}Shape.localScaleX", distance*0.7)
-						MAttrUtils.editLocked(f"{ctrl}Shape.localPositionX", distance*0.5)
+						LMAttribute.editLocked(f"{ctrl}Shape.localScaleX", distance*0.7)
+						LMAttribute.editLocked(f"{ctrl}Shape.localPositionX", distance*0.5)
 
 
 	@classmethod
@@ -864,7 +871,7 @@ class MTransformUtils():
 
 
 
-class MObjectUtils():
+class LMObject():
 	"""Wrapper class with MObjects utils.
 	"""
 

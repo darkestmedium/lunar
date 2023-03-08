@@ -70,8 +70,7 @@ MStatus MetaDataCmd::parseArguments(const MArgList &argList) {
 	MArgDatabase argData(syntax(), argList);
 
 	// Display Help
-	if (argData.isFlagSet(helpFlagShort))
-	{
+	if (argData.isFlagSet(helpFlagShort))	{
 		command = kCommandHelp;
 		MString helpStr;
 		helpStr += "Flags:\n";
@@ -85,30 +84,25 @@ MStatus MetaDataCmd::parseArguments(const MArgList &argList) {
 		MGlobal::displayInfo(helpStr);
 		return MS::kSuccess;
 	}
-
 	// Name Flag
-	if (argData.isFlagSet(nameFlagShort))
-	{
+	if (argData.isFlagSet(nameFlagShort))	{
 		name = argData.flagArgumentString(nameFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Text Flag
-	if (argData.isFlagSet(textFlagShort))
-	{
+	if (argData.isFlagSet(textFlagShort))	{
 		text = argData.flagArgumentString(textFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Text Position Flag
-	if (argData.isFlagSet(textPositionFlagShort))
-	{
+	if (argData.isFlagSet(textPositionFlagShort))	{
 		textPosition.x = argData.flagArgumentInt(textPositionFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		textPosition.y = argData.flagArgumentInt(textPositionFlagShort, 1, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Text Color Flag
-	if (argData.isFlagSet(textPositionFlagShort))
-	{
+	if (argData.isFlagSet(textPositionFlagShort))	{
 		textColor.r = argData.flagArgumentDouble(textColorFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		textColor.g = argData.flagArgumentDouble(textColorFlagShort, 1, &status);
@@ -117,8 +111,7 @@ MStatus MetaDataCmd::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Text Visibility Flag
-	if (argData.isFlagSet(textVisibilityFlagShort))
-	{
+	if (argData.isFlagSet(textVisibilityFlagShort))	{
 		textVisibility = argData.flagArgumentBool(textVisibilityFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
@@ -127,8 +120,7 @@ MStatus MetaDataCmd::parseArguments(const MArgList &argList) {
 }
 
 
-MStatus MetaDataCmd::doIt(const MArgList& argList)
-{
+MStatus MetaDataCmd::doIt(const MArgList& argList) {
 	/* Command's doIt method.
 
 	This method should perform a command by setting up internal class data and then	calling the
@@ -151,19 +143,15 @@ MStatus MetaDataCmd::doIt(const MArgList& argList)
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Command create mode
-	if (command == kCommandCreate)
-	{
+	if (command == kCommandCreate) {
 		objTransform = dagMod.createNode("transform", MObject::kNullObj);
 		objShape = dagMod.createNode(MetaDataNode::typeName, objTransform);
 
 		// If name equals to "metaData" rename only the transform node as the shape node will be
 		// renamed in the rigController.RigController::postConstructor method.
-		if (name == MetaDataNode::typeName)
-		{
+		if (name == MetaDataNode::typeName)	{
 			dagMod.renameNode(objTransform, name);
-		}
-		else
-		{
+		}	else {
 			dagMod.renameNode(objTransform, name);
 			dagMod.renameNode(objShape, name + "Shape");
 		}
@@ -172,8 +160,7 @@ MStatus MetaDataCmd::doIt(const MArgList& argList)
 }
 
 
-MStatus MetaDataCmd::redoIt()
-{
+MStatus MetaDataCmd::redoIt() {
 	/* Command's redoIt method.
 
 	This method should do the actual work of the command based on the internal class data only.	Internal class data should be set in the doIt method.
@@ -249,8 +236,7 @@ MStatus MetaDataCmd::redoIt()
 }
 
 
-MStatus MetaDataCmd::undoIt()
-{
+MStatus MetaDataCmd::undoIt() {
 	/* Command's undoIt method.
 
 	This method should undo the work done by the redoIt method based on the internal class data only.

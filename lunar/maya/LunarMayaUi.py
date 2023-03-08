@@ -16,10 +16,11 @@ from PySide2 import QtCore as qtc
 
 
 
-class MViewport():
+class LMViewport():
 	"""Class wrapper for the 3d viewport.
 	"""
 	log = logging.getLogger("MViewport")
+
 
 	@classmethod
 	def getActiveViewport(cls) -> str or None:

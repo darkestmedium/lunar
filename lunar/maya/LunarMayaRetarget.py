@@ -54,7 +54,7 @@ if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): __loadDependencies()
 
 
 
-class MHumanIk():
+class LMHumanIk():
 	"""Retargeting with HumanIk in Maya, inherited from AbstractRetarget.
 
 	Logic Flow:
@@ -879,9 +879,7 @@ class MHumanIk():
 				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
 				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
-				# mel.eval("hikBakeCharacter 0")
-
-				lma.MAnimBake.bakeTransform(nodes, (startFrame, endFrame))
+				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
 				self.filterRotations(nodes)
 
 				self.cleanUpPairBlendNodes()
@@ -920,7 +918,7 @@ class MHumanIk():
 
 		cmds.select(self.root)
 
-		lm.MFbx.exportAnimation(filePath, startFrame, endFrame, bake)
+		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
 		# cmds.setAttr(f"{self.root}.visibility", False)
 
@@ -991,7 +989,7 @@ class MHumanIk():
 
 
 
-class MMetaHuman(MHumanIk):
+class LMMetaHuman(LMHumanIk):
 	"""Class for setting up the MetaHuman skeleton in Maya.
 
 	Contains full hik joint definition which propagates down to the UE5 and UE4 Skeleton
@@ -1143,7 +1141,7 @@ class MMetaHuman(MHumanIk):
 				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
 				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
 
-				lma.MAnimBake.bakeTransform(nodes, (startFrame, endFrame))
+				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
 				self.filterRotations(nodes)
 
 				self.cleanUpPairBlendNodes()
@@ -1161,7 +1159,7 @@ class MMetaHuman(MHumanIk):
 
 
 
-class MMannequinUe5(MMetaHuman):
+class LMMannequinUe5(LMMetaHuman):
 	"""Class for setting up the mannequin ue5 rig in maya.
 
 	TODO replace print with logger
@@ -1200,7 +1198,7 @@ class MMannequinUe5(MMetaHuman):
 
 
 
-class MMannequinUe4(MMetaHuman):
+class LMMannequinUe4(LMMetaHuman):
 	"""Class for setting up the mannequin ue4 rig in maya.
 
 	TODO replace print with logger
@@ -1214,7 +1212,7 @@ class MMannequinUe4(MMetaHuman):
 
 
 
-class MMannequinAsRig(MMetaHuman):
+class LMMannequinAsRig(LMMetaHuman):
 	"""Class for setting up the UE5 manneuqin rigged with Advanced Skeleton in Maya.
 
 	TODO hookUp rootMotion reconnect method
@@ -1343,7 +1341,7 @@ class MMannequinAsRig(MMetaHuman):
 
 
 
-class MMannequinAsSkeleton(MMetaHuman):
+class LMMannequinAsSkeleton(LMMetaHuman):
 	"""Class for setting up the UE5 manneuqin export skeleton in Maya.
 
 	TODO hookUp rootMotion reconnect method
@@ -1380,7 +1378,7 @@ class MMannequinAsSkeleton(MMetaHuman):
 		cmds.setAttr(f"{exportNode}.visibility", True)
 
 		cmds.select(self.rootMotion)
-		lm.MFbx.exportAnimation(filePath, startFrame, endFrame, bake)
+		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
 		# Unhide the joints after export
 		cmds.setAttr(f"{exportNode}.visibility", False)
@@ -1395,7 +1393,7 @@ class MMannequinAsSkeleton(MMetaHuman):
 
 
 
-class MLunarCtrl(MHumanIk):
+class LMLunarCtrl(LMHumanIk):
 	"""Class for setting up the Maya Lunar Control rig in Maya.
 
 	Must share same namespace with the MLunarExport. Used for animating inside Maya.
@@ -1626,7 +1624,7 @@ class MLunarCtrl(MHumanIk):
 				# Needs one cpu cycle after import to properly move ik solvers
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
-				lma.MAnimBake.bakeTransform(nodes, (startFrame, endFrame), True)
+				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), True)
 				self.filterRotations(nodes)
 
 				# Clean up
@@ -1700,11 +1698,11 @@ class MLunarCtrl(MHumanIk):
 
 		cmds.select(self.mainCtrl)
 
-		lm.MFbx.exportAnimation(filePath, startFrame, endFrame, bake)
+		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
 
 
-class MLunarExport(MMannequinUe5):
+class LMLunarExport(LMMannequinUe5):
 	"""Class for setting up the Maya Lunar Export Skeleton rig in Maya.
 
 	Must share same namespace with the MLunarCtrl. Used for exporting animation to the game engine.
@@ -1737,7 +1735,7 @@ class MLunarExport(MMannequinUe5):
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Get the main ctrl with namespace
-		CtrlMain = self.returnNodeWithNameSpace(MLunarCtrl.CtrlMain)
+		CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
 		# FnMainCtrl = om.MFnDependencyNode(coreApi.getObjectFromString(mainCtrl))
 		# PlugExportSkeletonVisibility = FnMainCtrl.findPlug("exportSkeletonVisibility", False)
 		# # Check if visibility is off,
@@ -1758,7 +1756,7 @@ class MLunarExport(MMannequinUe5):
 
 		cmds.select(self.rootMotion)
 
-		lm.MFbx.exportAnimation(filePath, startFrame, endFrame, bake)
+		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
 		# Hide it back
 		if not IsVisible:
@@ -1778,7 +1776,7 @@ class MLunarExport(MMannequinUe5):
 
 
 
-class MSinnersDev2(MHumanIk):
+class LMSinnersDev2(LMHumanIk):
 	"""Class for setting up the Sinners Dev Rig in Maya with HumanIk.
 
 	TODO add scaleGrp to root
@@ -1864,7 +1862,7 @@ class MSinnersDev2(MHumanIk):
 
 
 
-class MSinnersDev1(MHumanIk):
+class LMSinnersDev1(LMHumanIk):
 	"""Class for setting up the Sinners Dev Rig in Maya with HumanIk.
 
 	TODO add scaleGrp to root
@@ -1954,7 +1952,7 @@ class MSinnersDev1(MHumanIk):
 
 
 
-class MRetargeter():
+class LMRetargeter():
 	"""Maya retargeter class.
 
 	TODO:
@@ -2084,34 +2082,34 @@ class MRetargeter():
 			nameSpace (str): Name space to use for the rig
  
 		Returns:
-			slot (Class): Initialized class ['MayaHumanIk', 'MayaMannequin', 'MMetaHuman', 'MayaSinnersDev'] 
+			slot (Class): Initialized class ['MayaHumanIk', 'MayaMannequin', 'LMMetaHuman', 'MayaSinnersDev'] 
 
 		"""
 		if nameSpace:	name = f'{nameSpace}:{name}'
 
 		if slotTemplate == 'HumanIk':
-			slot = MHumanIk(name)
+			slot = LMHumanIk(name)
 
 		elif slotTemplate == 'LunarCtrl':
-			slot = MLunarCtrl(name)
+			slot = LMLunarCtrl(name)
 
 		elif slotTemplate == 'LunarExport':
-			slot = MLunarExport(name)
+			slot = LMLunarExport(name)
 	
 		elif slotTemplate == 'MannequinUe4':
-			slot = MMannequinUe4(name)
+			slot = LMMannequinUe4(name)
 
 		elif slotTemplate == 'MannequinUe5':
-			slot = MMannequinUe5(name)
+			slot = LMMannequinUe5(name)
 
 		elif slotTemplate == 'MetaHuman':
-			slot = MMetaHuman(name)
+			slot = LMMetaHuman(name)
 
 		elif slotTemplate == 'SinnersDev2':
-			slot = MSinnersDev2(name)
+			slot = LMSinnersDev2(name)
 
 		elif slotTemplate == 'SinnersDev1':
-			slot = MSinnersDev1(name)
+			slot = LMSinnersDev1(name)
 
 		else:
 			self.log.critical(f"'{slotTemplate}' slot rig type unsupported!")
@@ -2183,13 +2181,13 @@ class MRetargeter():
 		# Iterate through source list with QFileInfo's
 		for source in self.sources:
 			# Get takes name and start / end frame
-			takes = lm.MFbx.gatherTakes(source.filePath())
+			takes = lm.LMFbx.gatherTakes(source.filePath())
 			for take in takes:
 				index = takes[take]['index']
 				startFrame = takes[take]['startFrame'] + trimStart
 				endFrame = takes[take]['endFrame'] + trimEnd
 
-				lm.MFbx.importAnimation(source.filePath(), startFrame, endFrame, index)
+				lm.LMFbx.importAnimation(source.filePath(), startFrame, endFrame, index)
 
 				# Test
 				self.target.deleteAnimation()
@@ -2285,7 +2283,7 @@ if __name__ == "__main__":
 
 	cmds.file(new=True, force=True)
 
-	retargeter = MRetargeter(
+	retargeter = LMRetargeter(
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/Downloads/anim-ellie-player-movement",

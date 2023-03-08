@@ -49,6 +49,7 @@ namespace LMAttribute {
 	 * Wrapper namespace for attribute utilities.
 	 */
 
+
 	inline MStatus lockAndHideAttr(MPlug& plug) {
 		/* Locks and hides the given plug from the channelbox.
 
@@ -63,7 +64,7 @@ namespace LMAttribute {
 		plug.setLocked(true);
 
 		return MS::kSuccess;
-	}
+	};
 
 
 	inline MStatus connectSceneTime(MObject& object, MString plug) {
@@ -78,8 +79,9 @@ namespace LMAttribute {
 		MDGModifier dgMod;
 		dgMod.connect(plugTimeOutTime, plugDestinationInTime);
 		dgMod.doIt();
+	
 		return MS::kSuccess;
-	}
+	};
 
 
 	inline MObject getSourceObjFromPlug(const MObject& object, const MObject& plug) {
@@ -97,7 +99,8 @@ namespace LMAttribute {
 		if (plugDestination.isConnected()) {
 			return plugDestination.source().node();
 		}
+
 		return MObject::kNullObj;
-	}
+	};
 
 }

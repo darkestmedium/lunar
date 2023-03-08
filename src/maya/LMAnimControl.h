@@ -69,6 +69,7 @@ namespace LMAnimControl {
 		if (animCtrl.isPlaying() || animCtrl.isScrubbing() || timeCached != timeCurrent) {
 			return true;
 		}
+
 		return false;
 	};
 

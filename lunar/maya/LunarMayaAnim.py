@@ -17,7 +17,7 @@ from PySide2 import QtCore as qtc
 
 
 
-class MTimeEditor():
+class LMTimeEditor():
 	"""Wrapper class for the time editor.
 
 	"""
@@ -70,7 +70,7 @@ class MTimeEditor():
 
 
 
-class MAnimBake():
+class LMAnimBake():
 	"""Wrappper class for custom baking."""
 
 	log = logging.getLogger("MAnimBake")

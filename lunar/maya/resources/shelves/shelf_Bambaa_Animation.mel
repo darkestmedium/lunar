@@ -230,7 +230,7 @@ global proc shelf_Bambaa_Animation () {
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
-        -command "import lunar.maya.LunarMayaUi as lmui\n\nlmui.MViewport.toggleXrayJoints()" 
+        -command "import lunar.maya.LunarMayaUi as lmui\n\nlmui.LMViewport.toggleXrayJoints()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
@@ -277,7 +277,7 @@ global proc shelf_Bambaa_Animation () {
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
-        -command "import lunar.maya.LunarMaya as lm\nfrom lunar.maya.toolset import animation\n\n\nlm.MFinder.openInFileManager(animation.fiAnimations.filePath())" 
+        -command "import lunar.maya.LunarMaya as lm\nfrom lunar.maya.toolset import animation\n\n\nlm.LMFinder.openInFileManager(animation.fiAnimations.filePath())" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
