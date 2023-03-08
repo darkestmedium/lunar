@@ -77,7 +77,7 @@ class Ctrl():
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -117,7 +117,7 @@ class MainCtrl(Ctrl):
 			lockShapeAttributes=lockShapeAttributes,
 		)
 		self.__createUnifiedScale()
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 	def __createUnifiedScale(self):
@@ -172,7 +172,7 @@ class RootMotionCtrl(Ctrl):
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -211,7 +211,7 @@ class PelvisPosCtrl(Ctrl):
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -250,7 +250,7 @@ class RollCtrl(Ctrl):
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -289,7 +289,7 @@ class FingerCtrl():
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -328,7 +328,7 @@ class IkCtrl():
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -369,7 +369,7 @@ class PoleVectorCtrl():
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -408,7 +408,7 @@ class CorrectiveCtrl():
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
 		)
-		lm.MAttrUtils.lockControlChannels(self.transform, lockChannels)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
 
 
 
@@ -453,7 +453,7 @@ class Base():
 		cmds.setAttr(f"{self.grpBase}.rotateX", -90)
 
 		# for group in [self.grpBase, self.grpMesh]:
-		[lm.MAttrUtils.lockControlChannels(Object, ["translate", "scale", "visibility"]) for Object in [self.grpBase, self.grpMesh]]
+		[lm.LMAttribute.lockControlChannels(Object, ["translate", "scale", "visibility"]) for Object in [self.grpBase, self.grpMesh]]
 
 
 	def __setupRigGroups(self):
@@ -471,38 +471,38 @@ class Base():
 		"""Creates visibility and display type attributes on the main cotroller and connects them.
 		
 		"""
-		lm.MAttrUtils.addSeparator(self.ctrlMain.transform)
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform)
 		# Visibility
 		# Main Ctrls
-		self.AttrCtrlsVisibility = lm.MAttrUtils.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
+		self.AttrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
 		cmds.connectAttr(self.AttrCtrlsVisibility, f"{self.ctrlMain.transform}.visibility")
-		lm.MAttrUtils.lockControlChannels(self.ctrlMain.transform, ["visibility"])
+		lm.LMAttribute.lockControlChannels(self.ctrlMain.transform, ["visibility"])
 		# Roll Ctrls
-		self.AttrRollCtrlsVisibility = lm.MAttrUtils.addOnOff(self.ctrlMain.transform, "rollCtrlsVisibility")
+		self.AttrRollCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "rollCtrlsVisibility")
 		# Meshes
-		self.AttrMeshVisibility = lm.MAttrUtils.addOnOff(self.ctrlMain.transform, "meshVisibility")
+		self.AttrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "meshVisibility")
 		cmds.connectAttr(self.AttrMeshVisibility, f"{self.grpMesh}.visibility")
 		# Export Skeleton
-		self.AttrExportSkeletonVisibility = lm.MAttrUtils.addOnOff(self.ctrlMain.transform, "exportSkeletonVisibility", False)
+		self.AttrExportSkeletonVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "exportSkeletonVisibility", False)
 
 		# Hide Ctrls On Playback
-		self.AttrHideCtrlsOnPlayback = lm.MAttrUtils.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
+		self.AttrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
 		cmds.connectAttr(self.AttrHideCtrlsOnPlayback, f"{self.ctrlMain.shape}.hideOnPlayback")
 
-		lm.MAttrUtils.addSeparator(self.ctrlMain.transform, "__")
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
 
 		# Diplay Type Overrides
 		# Main Ctrls 
-		self.AttrCtrlsDisplayType = lm.MAttrUtils.addDisplayType(self.ctrlMain.transform, "ctrlsDisplayType")
+		self.AttrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "ctrlsDisplayType")
 		cmds.connectAttr(self.AttrCtrlsDisplayType, f"{self.ctrlMain.transform}.overrideDisplayType")
 		# Roll Ctrls
-		self.AttrRollCtrlsDisplayType = lm.MAttrUtils.addDisplayType(self.ctrlMain.transform, "rollCtrlsDisplayType")
+		self.AttrRollCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "rollCtrlsDisplayType")
 		# Meshes
-		self.AttrMeshDisplayType = lm.MAttrUtils.addDisplayType(self.ctrlMain.transform, "meshDisplayType", 2)
+		self.AttrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "meshDisplayType", 2)
 		cmds.setAttr(f"{self.grpMesh}.overrideEnabled", True)
 		cmds.connectAttr(self.AttrMeshDisplayType, f"{self.grpMesh}.overrideDisplayType")
 		# Export Skeleton
-		self.AttrExportSkeletonDisplayType = lm.MAttrUtils.addDisplayType(self.ctrlMain.transform, "exportSkeletonDisplayType", 2)
+		self.AttrExportSkeletonDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "exportSkeletonDisplayType", 2)
 
 
 
@@ -530,10 +530,10 @@ class PelvisComponent():
 			rotateTo=listJoints["Spine"]["Pelvis"],
 		)
 
-		lm.MAttrUtils.copyTransformsToOPM(self.CtrlPelvisPos.transform)
-		lm.MAttrUtils.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["rotate", "scale", "visibility", "offsetParentMatrix"])
-		lm.MAttrUtils.copyTransformsToOPM(self.CtrlPelvisRot.transform)
-		lm.MAttrUtils.lockControlChannels(self.CtrlPelvisRot.transform, lockChannels=["translate", "scale", "visibility"])
+		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisPos.transform)
+		lm.LMAttribute.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["rotate", "scale", "visibility", "offsetParentMatrix"])
+		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisRot.transform)
+		lm.LMAttribute.lockControlChannels(self.CtrlPelvisRot.transform, lockChannels=["translate", "scale", "visibility"])
 
 	def getCtrls(self):
 		return (self.CtrlPelvisPos, self.CtrlPelvisRot)
@@ -592,7 +592,7 @@ class FkSpineComponent():
 				rotateTo=joint
 			)
 			self.CtrlCorrective.append(CtrlCorrective)
-		lm.MTransformUtils.postCtrlTransform(listJoints["Spine"])
+		lm.LMTransformUtils.postCtrlTransform(listJoints["Spine"])
 
 
 	def getCtrls(self):
@@ -630,7 +630,7 @@ class FkHeadComponent():
 			translateTo=listJoints["Head"]["Head"],
 			rotateTo=listJoints["Head"]["Head"],
 		)
-		lm.MTransformUtils.postCtrlTransform(listJoints["Head"])
+		lm.LMTransformUtils.postCtrlTransform(listJoints["Head"])
 
 
 	def getCtrls(self):
@@ -800,7 +800,7 @@ class FkLegComponent():
 			self.CtrlCorrective.append(CtrlCorrective)
 		self.CtrlCorrective.append(self.CtrlUpLegCorrectiveRoot)
 		self.CtrlCorrective.append(self.CtrlLegCorrectiveRoot)
-		lm.MTransformUtils.postCtrlTransform(listJoints["Leg"], sideSuffix)
+		lm.LMTransformUtils.postCtrlTransform(listJoints["Leg"], sideSuffix)
 
 
 	def getCtrls(self):
@@ -983,7 +983,7 @@ class FkArmComponent():
 			self.CtrlCorrective.append(CtrlCorrective)
 		self.CtrlCorrective.append(self.CtrlArmCorrectiveRoot)
 		self.CtrlCorrective.append(self.CtrlForeArmCorrectiveRoot)
-		lm.MTransformUtils.postCtrlTransform(listJoints["Arm"], sideSuffix)
+		lm.LMTransformUtils.postCtrlTransform(listJoints["Arm"], sideSuffix)
 
 
 	def getCtrls(self):
@@ -1160,7 +1160,7 @@ class FkHandComponent():
 			rotateTo="{}{}".format(listJoints["Hand"]["Pinky3"], sideSuffix),
 			color=color,
 		)
-		lm.MTransformUtils.postCtrlTransform(listJoints["Hand"], sideSuffix)
+		lm.LMTransformUtils.postCtrlTransform(listJoints["Hand"], sideSuffix)
 
 
 	def getCtrls(self):
@@ -1289,9 +1289,9 @@ class Ik2bLimbComponent():
 			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 
 		# Add ik attributes
-		lm.MAttrUtils.addSeparator(self.CtrlIk.transform)
+		lm.LMAttribute.addSeparator(self.CtrlIk.transform)
 		# Fk / Ik
-		AttrFkIk = lm.MAttrUtils.addFloat(self.CtrlIk.transform, "fkIk")
+		AttrFkIk = lm.LMAttribute.addFloat(self.CtrlIk.transform, "fkIk")
 		cmds.connectAttr(AttrFkIk, f"{self.NodeIk2bSolver}.fkIk")
 		# Softness
 		cmds.addAttr(self.CtrlIk.transform, longName="softness", at="float", min=0.0, max=100.0, keyable=True, dv=0)
@@ -1301,18 +1301,18 @@ class Ik2bLimbComponent():
 		cmds.connectAttr(f"{self.CtrlIk.transform}.twist", f"{self.NodeIk2bSolver}.twist")
 
 		# Connect time1
-		lm.MAttrUtils.connectSceneTime(self.NodeIk2bSolver, "inTime")
+		lm.LMAttribute.connectSceneTime(self.NodeIk2bSolver, "inTime")
 		# cmds.connectAttr(f"time1.outTime", f"{self.NodeIk2bSolver}.inTime")
 
 		# # Rematch translation on the pole vector after connecting the solver to properly freeze the OPM
 		# cmds.matchTransform(self.CtrlPoleVector.transform, translateTo, position=True)
 
 		# Post setup
-		lm.MAttrUtils.copyTransformsToOPM(self.CtrlIk.transform)
-		lm.MAttrUtils.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
+		lm.LMAttribute.copyTransformsToOPM(self.CtrlIk.transform)
+		lm.LMAttribute.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
 		if poleVector:
-			lm.MAttrUtils.copyTransformsToOPM(self.CtrlPoleVector.transform)
-			lm.MAttrUtils.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
+			lm.LMAttribute.copyTransformsToOPM(self.CtrlPoleVector.transform)
+			lm.LMAttribute.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
 
 
 	def getCtrls(self):

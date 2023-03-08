@@ -152,8 +152,8 @@ class LMFbx(AbstractFbx):
 		mel.eval("FBXImportSkins -v 0")
 
 		mel.eval("FBXImportUpAxis y")
-		# mel.eval("FBXImportSetMayaFrameRate -v 1")  # These two need an idle cycle to work
-		# mel.eval("FBXImportFillTimeline -v 1")
+		mel.eval("FBXImportSetMayaFrameRate -v 1")  # These two need an idle cycle to work
+		mel.eval("FBXImportFillTimeline -v 1")
 		mel.eval("FBXImportGenerateLog -v 0")
 
 		return True
@@ -489,20 +489,20 @@ class LMFile():
 			buttons=["Install", "Cancel"],
 			cancelButton="Cancel"
 		) -> str:
-			"""Convinience wrapper method for creating confirm dialogs.
+		"""Convinience wrapper method for creating confirm dialogs.
 
-			Returns:
-				str: Input from user as string e.g. "Install" or "Cancel".
+		Returns:
+			str: Input from user as string e.g. "Install" or "Cancel".
 
-			"""
-			return cmds.confirmDialog(
-				title=title,
-				message=message,
-				icon=icon,
-				button=buttons,
-				cancelButton=cancelButton,
-				dismissString=cancelButton
-			)
+		"""
+		return cmds.confirmDialog(
+			title=title,
+			message=message,
+			icon=icon,
+			button=buttons,
+			cancelButton=cancelButton,
+			dismissString=cancelButton
+		)
 
 
 

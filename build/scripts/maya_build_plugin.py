@@ -17,7 +17,7 @@ class LMBuildPlugin():
 	"""
 	def __init__(self,
 		projectName="mlunar",
-		mayaVersion=2022, 
+		mayaVersion=2023, 
 		buildType="Release",
 		buildTarget="all",
 		clean=True,

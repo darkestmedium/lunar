@@ -40,6 +40,7 @@
 
 // Custom
 #include "LMAttribute.h"
+#include "LMGlobal.h"
 #include "LMAnimControl.h"
 #include "LMRigUtils.h"
 #include "Utils.h"
@@ -104,8 +105,20 @@ public:
 
 	bool bIsPoleVectorConnected;
 
+	MObject objFkStart;
+	MObject objFkMid;
+	MObject objFkEnd;
+	MObject objIkhandle;
+	MObject objPoleVector;
+
+	MMatrix matInFkStart;
+	MMatrix matInFkMid;
+	MMatrix matInFkEnd;
+	MMatrix matInIkHandle;
+	MMatrix matInPoleVector;
+
 	// Helpers
-	MSelectionList listSelection;
+	MSelectionList listSel;
 
 	// Constructors
 	Ik2bSolver()
@@ -137,8 +150,9 @@ public:
 	void GetIkTransforms();
 
 	MStatus solve(MDagPathArray& InOutLinks);
-	bool SolveLimb(MDagPathArray& InOutLinks);
+	bool solveLimb(MDagPathArray& InOutLinks);
 	void SolveFk();
+	void solveFkWhileEditing();
 	void SolveBlendedIk();
 	void SolveIk();
 	void SolveStraightLimb();
@@ -150,7 +164,6 @@ public:
 private:
 	// Private data
 	MObject SelfObj;
-	MSelectionList SelListTemp;
 
 	// Function sets
 	MFnTransform FnFkStart;

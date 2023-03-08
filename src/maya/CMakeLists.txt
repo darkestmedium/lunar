@@ -21,6 +21,7 @@ set(MAYA_FILES
 	ShapesDefinition.h
 # Api
 	LMAttribute.h
+	LMGlobal.h
 	LMAnimControl.h
 	LMObject.h
 	LMRigUtils.h

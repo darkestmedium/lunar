@@ -29,7 +29,17 @@ import lunar.maya.resources.retarget.unreal as lmrrue
 def __loadDependencies():
 	"""Loads all dependencies (hik plugins and mel sources).
 	"""
-	[cmds.loadPlugin(plugin) for plugin in ["mayaHIK", "mayaCharacterization", "retargeterNodes"] if cmds.pluginInfo(plugin, query=True, loaded=False)]
+	# [cmds.loadPlugin(plugin) for plugin in ["mayaHIK", "mayaCharacterization", "retargeterNodes"] if cmds.pluginInfo(plugin, query=True, loaded=False)]
+	# if cmds.pluginInfo("mayaHIK", query=True, loaded=False): 
+	cmds.loadPlugin("mayaHIK")
+	# if cmds.pluginInfo("mayaCharacterization", query=True, loaded=False): 
+	cmds.loadPlugin("mayaCharacterization")
+	# if cmds.pluginInfo("retargeterNodes", query=True, loaded=False): 
+	cmds.loadPlugin("retargeterNodes")
+	
+	
+	# "mayaCharacterization", "retargeterNodes"] 
+	
 
 	mel.eval('HIKCharacterControlsTool')
 
@@ -2031,11 +2041,11 @@ class LMRetargeter():
 
 		filePathList = []
 		for entry in entries:
-			fileInfo = lm.MFinder.validateFileInfo(entry)  # Check if entry exists
+			fileInfo = lm.LMFinder.validateFileInfo(entry)  # Check if entry exists
 			if fileInfo:
 				if fileInfo.isDir():
 					self.log.debug(f"Entry '{entry}' is a directory.")
-					fileInfoList = lm.MFinder.getFilesInDirectory(entry, nameFilters)
+					fileInfoList = lm.LMFinder.getFilesInDirectory(entry, nameFilters)
 					if fileInfoList:
 						for fileInfo in fileInfoList:
 							self.log.debug(f"Adding entry '{fileInfo.filePath()}'")
@@ -2121,7 +2131,7 @@ class LMRetargeter():
 	def setupTarget(self, matchSource, reachActorChest) -> bool:
 		"""Sets up the target rig."""
 
-		lm.MFile.load(self.targets[0].filePath(), self.targetNameSpace)
+		lm.LMFile.load(self.targets[0].filePath(), self.targetNameSpace)
 
 		name = "HiK"
 		if self.targetTemplate == "LunarExport":
@@ -2134,7 +2144,7 @@ class LMRetargeter():
 
 	def setupSource(self) -> bool:
 
-		lm.MFile.load(self.sources[0].filePath())
+		lm.LMFile.load(self.sources[0].filePath())
 
 		# Temp Sinners override
 		if self.sourceTemplate == 'SinnersDev2':
@@ -2199,7 +2209,7 @@ class LMRetargeter():
 
 				if preserveFolderHierarchy:
 					self.outputFile = qtc.QFileInfo(source.filePath().replace(self.inputDirectory, self.outputDirectory))
-					lm.MFinder.createDirectory(self.outputFile.absolutePath())
+					lm.LMFinder.createDirectory(self.outputFile.absolutePath())
 				else:
 					self.outputFile = f'{self.outputDirectory}/{source.fileName()}'
 
@@ -2254,7 +2264,7 @@ class LMRetargeter():
 		if matchSource: self.target.setMatchSource()
 		if reachActorChest: self.target.setReachActorChest(reachActorChest)
 
-		lm.MFinder.createDirectory(self.outputDirectory)
+		lm.LMFinder.createDirectory(self.outputDirectory)
 		# if not status: raise RuntimeError(f"Could not setup output directory: '{self.outputDirectory}'")
 
 		self.__doRetargeting(preserveFolderHierarchy, trimStart, trimEnd, oversamplingRate, rootMotion, rootRotationOffset)
@@ -2287,13 +2297,13 @@ if __name__ == "__main__":
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/Downloads/anim-ellie-player-movement",
-			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/ladder_v2/AS_player_ladder_enter_top_railing_fw.fbx",
+			"/Users/luky/Downloads/ellie-mm-explore-run-strafe-fw^idle-l-foot_5ABE1B4Cout.fbx",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
 		# targets=["C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Characters/Player/Rigs/RIG_Player.ma"],
 		# targets=["C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Characters/Manny/Rigs/Manny.ma"],
 		# outputDirectory="C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Player/Damage",
-		outputDirectory="/Users/luky/Downloads/anim-ellie-player-movement_OUT",
+		outputDirectory="/Users/luky/Downloads/ellie-mm-explore-run-strafe-fw^idle-l-foot_5ABE1B4Cout_out.fbx",
 		# sourceNameSpace="Anton",
 		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe5",
