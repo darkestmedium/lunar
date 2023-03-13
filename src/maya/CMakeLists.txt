@@ -26,6 +26,7 @@ set(MAYA_FILES
 	LMObject.h
 	LMRigUtils.h
 	LMScene.h
+	LMText.h
 	MathUtility.h
 	Utils.h
 # Main

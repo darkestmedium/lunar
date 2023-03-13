@@ -697,7 +697,7 @@ class LMAttribute():
 		"""Adds a float attribute on the given object.
 		"""
 		attrName = f"{object}.{name}"
-		cmds.addAttr(object, longName=name, attributeType="float", minValue=0.0, maxValue=100.0, keyable=True, defaultValue=defaultValue)
+		cmds.addAttr(object, longName=name, attributeType="float", keyable=True, defaultValue=defaultValue)
 		return attrName
 
 
@@ -719,7 +719,17 @@ class LMAttribute():
 		cmds.addAttr(object, longName=name, attributeType="enum", enumName=" =0:", defaultValue=False, keyable=False)
 		cmds.setAttr(attrName, lock=True, channelBox=True)
 		return attrName
-	
+
+
+	@classmethod
+	def addFloatFkIk(cls, object:str, name:str, minValue:float=0.0, maxValue:float=100.0, defaultValue:float=0.0) -> str:
+		"""Adds a float attribute on the given object.
+		"""
+		attrName = f"{object}.{name}"
+		cmds.addAttr(object, longName=name, attributeType="float", minValue=minValue, maxValue=maxValue, keyable=True, defaultValue=defaultValue)
+		return attrName
+
+
 	
 	@classmethod
 	def lockControlChannels(cls, object:str, lockChannels:list):
@@ -762,7 +772,7 @@ class LMAttribute():
 
 
 	@classmethod
-	def connectSceneTime(cls, object:str, plug:str) -> None:
+	def connectSceneTime(cls, object:str, plug:str="inTime") -> None:
 		"""Connects the scene's default time1 node to the given target.
 		"""
 		fnTarget = om.MFnDependencyNode(LMObject.getObjFromString(object))

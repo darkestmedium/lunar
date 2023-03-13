@@ -53,11 +53,21 @@ public:
 	static MObject localRotate;
 
 	static MObject shapeAttr;
-	static MObject attrInDrawLine;
-	static Attribute attrInDrawLineTo;
 	static MObject fillShapeAttr;
 	static MObject fillTransparencyAttr;
 	static MObject lineWidthAttr;
+
+	static MObject attrInDrawLine;
+	static Attribute attrInDrawLineTo;
+
+	static MObject attrInDrawText;
+	static MObject attrInTextPositionX;
+	static MObject attrInTextPositionY;
+	static MObject attrInTextPositionZ;
+	static MObject attrInTextPosition;
+	static MObject attrInText;
+
+	static MObject attrInFkIk;
 
 	MObject objSelf;
 	MDagPath pathSelf;

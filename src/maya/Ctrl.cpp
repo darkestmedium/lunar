@@ -16,18 +16,27 @@ MObject Ctrl::localRotateZ;
 MObject Ctrl::localRotate;
 
 MObject Ctrl::shapeAttr;
-MObject Ctrl::attrInDrawLine;
-Attribute Ctrl::attrInDrawLineTo;
 MObject Ctrl::fillShapeAttr;
 MObject Ctrl::fillTransparencyAttr;
 MObject Ctrl::lineWidthAttr;
+
+MObject Ctrl::attrInDrawLine;
+Attribute Ctrl::attrInDrawLineTo;
+
+MObject Ctrl::attrInDrawText;
+MObject Ctrl::attrInTextPositionX;
+MObject Ctrl::attrInTextPositionY;
+MObject Ctrl::attrInTextPositionZ;
+MObject Ctrl::attrInTextPosition;
+
+MObject Ctrl::attrInFkIk;
+
 
 // Nodes's Output Attributes
 
 
 
-MStatus Ctrl::initialize()
-{
+MStatus Ctrl::initialize() {
 	/* Node Initializer.
 
 	This method initializes the node, and should be overridden in user-defined
@@ -93,17 +102,41 @@ MStatus Ctrl::initialize()
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
+
+	attrInDrawText = nAttr.create("drawText", "dt", MFnNumericData::kBoolean, false);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
+
+	attrInTextPositionX = nAttr.create("textPositionX", "tpx", MFnNumericData::kDouble, 0.0);
+	attrInTextPositionY = nAttr.create("textPositionY", "tpy", MFnNumericData::kDouble, 0.0);
+	attrInTextPositionZ = nAttr.create("textPositionZ", "tpz", MFnNumericData::kDouble, 0.0);
+	attrInTextPosition = nAttr.create("textPosition", "tp", attrInTextPositionX, attrInTextPositionY, attrInTextPositionZ);
+	nAttr.setStorable(true);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
+
+	attrInFkIk = nAttr.create("inFkIk", "ifi", MFnNumericData::kDouble);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
+
+
+
 	// Add attributes
 	addAttributes(
-		localRotate, shapeAttr, attrInDrawLine, attrInDrawLineTo,	fillShapeAttr, fillTransparencyAttr, lineWidthAttr
+		localRotate, shapeAttr,	fillShapeAttr, fillTransparencyAttr, lineWidthAttr,
+		attrInDrawLine, attrInDrawLineTo,
+		attrInDrawText, attrInTextPosition,
+		attrInFkIk
 	);
 
 	return MS::kSuccess;
 }
 
 
-MBoundingBox Ctrl::boundingBox() const 
-{
+MBoundingBox Ctrl::boundingBox() const {
 	/* This method should be overridden to return a bounding box for the locator.
 
 	If this method is overridden, then MPxLocatorNode::isBounded should also be overridden
@@ -148,8 +181,7 @@ void Ctrl::getCacheSetup(
 }
 
 
-void Ctrl::postConstructor() 
-{
+void Ctrl::postConstructor() {
 	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal

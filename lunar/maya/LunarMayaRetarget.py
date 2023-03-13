@@ -1429,6 +1429,8 @@ class LMLunarCtrl(LMHumanIk):
 	CtrlIkHandles = ["arm_ik_l_ctrl", "arm_ik_r_ctrl", "leg_ik_l_ctrl", "leg_ik_r_ctrl"]
 	CtrlFkHands = ["hand_l_ctrl", "hand_r_ctrl"]
 
+	AttrIk = ["leftArmFkIk", "rightArmFkIk", "leftLegFkIk", "rightLegFkIk"]
+
 
 	def __init__(self, name="HiK") -> None:
 		"""Maya human ik init function for wrapping the in scene skeleton to the python object."""
@@ -1569,13 +1571,13 @@ class LMLunarCtrl(LMHumanIk):
 		return False
 
 
-	def getCtrlIkHandles(self) -> list:
+	# def getCtrlIkHandles(self) -> list:
 
-		ListCtrlsNamespace = []
-		if self.isValid():
-			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlIkHandles]
+	# 	ListCtrlsNamespace = []
+	# 	if self.isValid():
+	# 		[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlIkHandles]
 
-		return ListCtrlsNamespace
+	# 	return ListCtrlsNamespace
 
 
 	def getCtrlFkHand(self):
@@ -1590,7 +1592,7 @@ class LMLunarCtrl(LMHumanIk):
 	def setCtrlsIkToFk(self):
 
 		ListFkHand = self.getCtrlFkHand()
-		[cmds.setAttr(f"{ctrl}.fkIk", 0) for ctrl in self.getCtrlIkHandles()]
+		[cmds.setAttr(f"{self.CtrlMain}.{attr}", 0) for attr in self.AttrIk]
 
 		[cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in ListFkHand]
 		[cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in ListFkHand]
@@ -2004,8 +2006,8 @@ class LMRetargeter():
 		if not self.status: raise RuntimeError(f"Could not validate any targets from: {targets}")
 
 		# Internal variables
-		self.inputDirectory = sources[0]
-		self.outputDirectory = outputDirectory
+		self.inputDirectory = qtc.QFileInfo(sources[0])
+		self.outputDirectory = qtc.QFileInfo(outputDirectory)
 		self.sourceNameSpace = sourceNameSpace
 		self.sourceTemplate = sourceTemplate
 		self.targetNameSpace = targetNameSpace
@@ -2201,23 +2203,22 @@ class LMRetargeter():
 
 				# Test
 				self.target.deleteAnimation()
+				# self.setSourceAndBake(self.source)
 				self.target.setTPose()
-
 				self.target.setSource(self.source, rootMotion, rootRotationOffset)
-
 				self.target.bakeAnimation(startFrame, endFrame)
 
 				if preserveFolderHierarchy:
-					self.outputFile = qtc.QFileInfo(source.filePath().replace(self.inputDirectory, self.outputDirectory))
+					self.outputFile = qtc.QFileInfo(source.filePath().replace(self.inputDirectory.absolutePath(), self.outputDirectory.filePath()))
 					lm.LMFinder.createDirectory(self.outputFile.absolutePath())
 				else:
-					self.outputFile = f'{self.outputDirectory}/{source.fileName()}'
+					self.outputFile = qtc.QFileInfo(f'{self.outputDirectory.filePath()}/{source.fileName()}')
 
 				if takes.__len__() > 1: self.outputFile = f'{self.outputFile}_{take}'
 
 				self.log.info(f"Exporting '{source.fileName()}' ...")
 				# TODO cleanUp
-				# cmds.select(f'{self.targetNameSpace}:root')
+				cmds.select(f'{self.targetNameSpace}:root')
 				self.target.exportAnimation(self.outputFile.filePath(), startFrame, endFrame)
 				self.log.info(f"Successfully exported '{self.outputFile.filePath()}'")
 
@@ -2264,7 +2265,7 @@ class LMRetargeter():
 		if matchSource: self.target.setMatchSource()
 		if reachActorChest: self.target.setReachActorChest(reachActorChest)
 
-		lm.LMFinder.createDirectory(self.outputDirectory)
+		lm.LMFinder.createDirectory(self.outputDirectory.absolutePath())
 		# if not status: raise RuntimeError(f"Could not setup output directory: '{self.outputDirectory}'")
 
 		self.__doRetargeting(preserveFolderHierarchy, trimStart, trimEnd, oversamplingRate, rootMotion, rootRotationOffset)
@@ -2275,7 +2276,7 @@ class LMRetargeter():
 
 
 if __name__ == "__main__":
-	import importlib
+	# import importlib
 	from maya import cmds
 	# from lunar.maya.retarget import unreal
 	# [importlib.reload(module) for module in [retargeter, lunar]]
@@ -2296,14 +2297,11 @@ if __name__ == "__main__":
 	retargeter = LMRetargeter(
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
-			# "/Users/luky/Downloads/anim-ellie-player-movement",
-			"/Users/luky/Downloads/ellie-mm-explore-run-strafe-fw^idle-l-foot_5ABE1B4Cout.fbx",
+			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
+			"/Users/luky/Desktop/testInput",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		# targets=["C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Characters/Player/Rigs/RIG_Player.ma"],
-		# targets=["C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Characters/Manny/Rigs/Manny.ma"],
-		# outputDirectory="C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Player/Damage",
-		outputDirectory="/Users/luky/Downloads/ellie-mm-explore-run-strafe-fw^idle-l-foot_5ABE1B4Cout_out.fbx",
+		outputDirectory="/Users/luky/Desktop/OUT",
 		# sourceNameSpace="Anton",
 		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe5",
@@ -2312,8 +2310,8 @@ if __name__ == "__main__":
 	)
 
 	retargeter.retarget(
-		# preserveFolderHierarchy=False,
-		trimStart=1,
+		preserveFolderHierarchy=False,
+		trimStart=1,  # if baking from sinnersDev set
 		matchSource=True,
 		# reachActorChest=1.0,
 		oversamplingRate=1,

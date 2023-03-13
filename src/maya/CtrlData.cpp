@@ -4,8 +4,7 @@
 
 
 
-void CtrlData::getPlugs(const MObject& obj)
-{
+void CtrlData::getPlugs(const MObject& obj) {
 	/* Get all the necessary data from the attributes of the locator.
 
 	Args:
@@ -55,8 +54,7 @@ void CtrlData::getPlugs(const MObject& obj)
 }
 
 
-void CtrlData::getBBox(const MObject& obj, const MDagPath& pathObj, MMatrix matrix) 
-{
+void CtrlData::getBBox(const MObject& obj, const MDagPath& pathObj, MMatrix matrix) {
 	/* Gets the bounding box from the shapesDefinition.h file
 
 	Args:
@@ -961,4 +959,15 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 		listLine.append(MPoint() * matrix);
 		listLine.append(MPoint(matDrawLineTo[3][0], matDrawLineTo[3][1], matDrawLineTo[3][2]) * pathObj.exclusiveMatrixInverse());
 	}
+}
+
+void CtrlData::getText(const MObject &obj) {
+	bDrawText = MPlug(obj, Ctrl::attrInDrawText).asBool();
+	posText = MPoint(
+		MPlug(obj, Ctrl::attrInTextPositionX).asDouble(),
+		MPlug(obj, Ctrl::attrInTextPositionY).asDouble(),
+		MPlug(obj, Ctrl::attrInTextPositionZ).asDouble()
+	);
+	MString strFkIk = LMText::doublePrecision(MPlug(obj, Ctrl::attrInFkIk).asDouble(), 0).c_str();
+	strDrawText = MString("fk | ik  " + strFkIk);
 }

@@ -37,6 +37,12 @@ const char* CtrlCommand::fillShapeFlagLong = "-fillShape";
 const char* CtrlCommand::drawLineFlagShort = "-dl";
 const char* CtrlCommand::drawLineFlagLong = "-drawLine";
 
+const char* CtrlCommand::drawTextFlagShort = "-dt";
+const char* CtrlCommand::drawTextFlagLong = "-drawText";
+
+const char* CtrlCommand::textPositionFlagShort = "-tp";
+const char* CtrlCommand::textPositionFlagLong = "-textPosition";
+
 const char* CtrlCommand::fillTransparencyFlagShort = "-ft";
 const char* CtrlCommand::fillTransparencyFlagLong = "-fillTransparency";
 
@@ -86,6 +92,10 @@ MSyntax CtrlCommand::syntaxCreator() {
 	sytnax.addFlag(fillTransparencyFlagShort, fillTransparencyFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(lineWidthFlagShort, lineWidthFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(colorFlagShort, colorFlagLong, MSyntax::kString);
+
+	sytnax.addFlag(drawTextFlagShort, drawTextFlagLong, MSyntax::kBoolean);
+	sytnax.addFlag(textPositionFlagShort, textPositionFlagLong, MSyntax::kDouble, MSyntax::kDouble, MSyntax::kDouble);
+
 	sytnax.addFlag(lockShapeAttributesFlagShort, lockShapeAttributesFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(hideOnPlaybackFlagShort, hideOnPlaybackFlagLong, MSyntax::kBoolean);
 	
@@ -129,6 +139,8 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		strHelp += "   -sh   -shape                String     Shape to be drawn: 'cube' 'sphere' cross' 'diamond' 'square' 'circle' 'locator'.\n";
 		strHelp += "   -fs   -fillShape            Bool       Whether or not you want to render the solid shape or just the outline.\n";
 		strHelp += "   -dl   -drawLine             Bool       Whether or not you want to display a line from the object center to a target.\n";
+		strHelp += "   -dt   -drawText             Bool       Whether or not you want to display te fk / ik switch value.\n";
+		strHelp += "   -tp   -textPosition         Double3    Local Position of the text that will be displayed.\n";
 		strHelp += "   -ft   -fillTransparency     Double     Controls the transparency of the fill shape.\n";
 		strHelp += "   -fw   -lineWidth            Double     Controls the line width of the outline.\n";
 		strHelp += "   -cl   -color                String     Viewport display color of the controller: 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
@@ -235,8 +247,22 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Draw Line Flag
+	if (argData.isFlagSet(drawTextFlagShort)) {
+		bDrawText = argData.flagArgumentBool(drawTextFlagShort, 0, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+	// Draw Text Flag
 	if (argData.isFlagSet(drawLineFlagShort)) {
 		bDrawLine = argData.flagArgumentBool(drawLineFlagShort, 0, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+	// Text Position Flag
+	if (argData.isFlagSet(textPositionFlagShort)) {
+		textPosition.x = argData.flagArgumentDouble(textPositionFlagShort, 0, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		textPosition.y = argData.flagArgumentDouble(textPositionFlagShort, 1, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		textPosition.z = argData.flagArgumentDouble(textPositionFlagShort, 2, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Fill Transparency Flag
@@ -403,6 +429,16 @@ MStatus CtrlCommand::redoIt() {
 			MPlug plugDrawLine = shapeFn.findPlug("drawLine", false);
 			plugDrawLine.setBool(bDrawLine);
 
+			// Text
+			MPlug plugDrawText = shapeFn.findPlug("drawText", false);
+			plugDrawText.setBool(bDrawText);
+			MPlug plugTextPositionX = shapeFn.findPlug("textPositionX", false);
+			plugTextPositionX.setValue(textPosition.x);
+			MPlug plugTextPositionY = shapeFn.findPlug("textPositionY", false);
+			plugTextPositionY.setValue(textPosition.y);
+			MPlug plugTextPositionZ = shapeFn.findPlug("textPositionZ", false);
+			plugTextPositionZ.setValue(textPosition.z);
+
 			MPlug plugFillTransparency = shapeFn.findPlug("fillTransparency", false);
 			plugFillTransparency.setValue(fillTransparency);
 
@@ -436,6 +472,12 @@ MStatus CtrlCommand::redoIt() {
 				LMAttribute::lockAndHideAttr(plugShape);
 				LMAttribute::lockAndHideAttr(plugFillShape);
 				LMAttribute::lockAndHideAttr(plugDrawLine);
+
+				LMAttribute::lockAndHideAttr(plugDrawText);
+				LMAttribute::lockAndHideAttr(plugTextPositionX);
+				LMAttribute::lockAndHideAttr(plugTextPositionY);
+				LMAttribute::lockAndHideAttr(plugTextPositionZ);
+
 				LMAttribute::lockAndHideAttr(plugFillTransparency);
 				LMAttribute::lockAndHideAttr(plugLineWidth);
 			}

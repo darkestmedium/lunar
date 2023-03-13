@@ -17,8 +17,10 @@ global proc AEctrlTemplate(string $nodeName)
 			editorTemplate -addControl "shape";
 			editorTemplate -addControl "fillShape";
 			editorTemplate -addControl "drawLine";
+			editorTemplate -addControl "drawText";
 			editorTemplate -addControl "fillTransparency";
 			editorTemplate -addControl "lineWidth";
+			editorTemplate -addControl "textPosition";
 			editorTemplate -addControl "drawLineTo";
 			editorTemplate -endLayout;
 
@@ -54,7 +56,8 @@ global proc AEctrlTemplate(string $nodeName)
 		editorTemplate -suppress "primaryVisibility";
 		editorTemplate -suppress "compInstObjGroups";
 		editorTemplate -suppress "componentTags";
-		// editorTemplate -suppress "drawLineTo";
+		editorTemplate -suppress "fkIk";
+		editorTemplate -suppress "inFkIk";
 		editorTemplate -endNoOptimize;
 
 	// End Main Layout

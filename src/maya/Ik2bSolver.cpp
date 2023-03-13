@@ -57,6 +57,7 @@ MStatus Ik2bSolver::initialize() {
 	nAttr.setKeyable(true);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
+	uAttr.setReadable(true);
 	nAttr.setMin(0.0);
 	nAttr.setMax(100.0);
 

@@ -75,6 +75,7 @@ MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagP
 
 	data->getPlugs(objShape);
 	data->getShape(objShape, objPath, data->matLocalShape);
+	data->getText(objShape);
 
 	data->_wfColor = MHWRender::MGeometryUtilities::wireframeColor(objPath);
 
@@ -126,8 +127,7 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 	// If XRay Joints Draw in XRay Mode
 	if (pCtrlData->DrawInXray) {drawManager.beginDrawInXray();}
 	// Draw the fill shape
-	if (pCtrlData->fillShape)
-	{
+	if (pCtrlData->fillShape)	{
 		drawManager.setColor(pCtrlData->fillColor);
 		drawManager.mesh(MHWRender::MUIDrawManager::kTriangles, pCtrlData->fTriangleList);
 	}
@@ -137,6 +137,11 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 	drawManager.mesh(MHWRender::MUIDrawManager::kLines, pCtrlData->fLineList);
 	if (pCtrlData->bDrawline) {
 		drawManager.mesh(MHWRender::MUIDrawManager::kLines, pCtrlData->listLine);
+	}
+
+	if (pCtrlData->bDrawText) {
+		drawManager.setFontSize(12);
+		drawManager.text(pCtrlData->posText, pCtrlData->strDrawText, drawManager.kCenter);
 	}
 
 	// End drawable

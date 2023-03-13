@@ -18,6 +18,9 @@
 #include <maya/MPxDrawOverride.h>
 #include <maya/MUserData.h>
 
+// Custom	
+#include <LMText.h>
+
 
 
 class CtrlData : public MUserData
@@ -41,7 +44,10 @@ public:
 	MColor _wfColor;
 	MColor fillColor;
 
-	MPoint _textOffset;
+	bool bDrawText;
+	MPoint posText;
+	MString strDrawText;
+
 	unsigned int DepthPriority;
 	bool DrawInXray;
 
@@ -58,6 +64,7 @@ public:
 	virtual void getPlugs(const MObject& obj);
 	virtual void getBBox(const MObject& obj, const MDagPath& objPath, MMatrix matrix);
 	virtual void getShape(const MObject& obj, const MDagPath& pathObj, MMatrix matrix);
+	virtual void getText(const MObject& obj);
 
 
 };

@@ -41,6 +41,8 @@ class Ctrl():
 		localScale=(2.0, 2.0, 2.0),
 		shape="cube",
 		fillShape=True,
+		drawText=False,
+		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=defaultTransparency,
 		lineWidth=defaultLineWidth,
 		color="yellow",
@@ -72,6 +74,8 @@ class Ctrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
+			drawText=drawText,
+			textPosition=textPosition,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -307,6 +311,8 @@ class IkCtrl():
 		localScale=(6.0, 6.0, 6.0),
 		shape="cube",
 		fillShape=False,
+		drawText=True,
+		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="magenta",
@@ -323,6 +329,8 @@ class IkCtrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
+			drawText=drawText,
+			textPosition=textPosition,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -471,7 +479,37 @@ class Base():
 		"""Creates visibility and display type attributes on the main cotroller and connects them.
 		
 		"""
+
 		lm.LMAttribute.addSeparator(self.ctrlMain.transform)
+
+		# Left Arm
+		self.AttrLeftArmFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftArmFkIk")
+		self.AttrLeftArmSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftArmSoftness", 0, 10)
+		self.AttrLeftArmTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "leftArmTwist")
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
+
+		# Right Arm
+		self.AttrRightArmFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightArmFkIk")
+		self.AttrRightArmSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightArmSoftness", 0, 10)
+		self.AttrRightArmTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "rightArmTwist")
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "___")
+
+		# Left Leg
+		self.AttrLeftLegFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftLegFkIk")
+		self.AttrLeftLegSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftLegSoftness", 0, 10)
+		self.AttrLeftLegTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "leftLegTwist")
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "____")
+
+		# Right Leg
+		self.AttrRightLegFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightLegFkIk")
+		self.AttrRightLegSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightLegSoftness", 0, 10)
+		self.AttrRightLegTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "rightLegTwist")
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "_____")
+
 		# Visibility
 		# Main Ctrls
 		self.AttrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
@@ -489,7 +527,7 @@ class Base():
 		self.AttrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
 		cmds.connectAttr(self.AttrHideCtrlsOnPlayback, f"{self.ctrlMain.shape}.hideOnPlayback")
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "______")
 
 		# Diplay Type Overrides
 		# Main Ctrls 
@@ -1232,13 +1270,15 @@ class Ik2bLimbComponent():
 	"""Class for building ik comoponents."""
 
 
-	def __init__(self, name, parent, translateTo, rotateTo, fkStart, fkMid, fkEnd, side="left", poleVector=True) -> None:
+	def __init__(self,
+	  name, parent, translateTo, rotateTo, fkStart, fkMid, fkEnd, side="left", poleVector=True,
+	  # drawText=True,
+		textPosition=(0.0, 0.0, 0.0),
+		) -> None:
 		"""Class constructor.
 
 		Args:
 			parent (string): Parent of the component to be parented to.
-
-		arm_pv_l_ctrl
 
 		"""
 		if side == "center":
@@ -1257,6 +1297,7 @@ class Ik2bLimbComponent():
 			translateTo=fkEnd,
 			rotateTo=fkEnd,
 			lineWidth=3,
+			textPosition=textPosition,
 			color=color,
 		)
 		if poleVector:
@@ -1272,7 +1313,7 @@ class Ik2bLimbComponent():
 
 		# Make ik solver
 		self.NodeIk2bSolver = cmds.createNode("ik2bSolver", name=f"{name}{sideSuffix}_Ik2bSolver")
-		cmds.setAttr(f"{self.NodeIk2bSolver}.fkIk", 0)
+		# cmds.setAttr(f"{self.NodeIk2bSolver}.fkIk", 0)
 		cmds.connectAttr(f"{fkEnd}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkEnd")
 		cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkMid")
 		cmds.connectAttr(f"{fkStart}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkStart")
@@ -1288,21 +1329,10 @@ class Ik2bLimbComponent():
 			cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlPoleVector.transform}.rotatePivot")
 			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 
-		# Add ik attributes
-		lm.LMAttribute.addSeparator(self.CtrlIk.transform)
-		# Fk / Ik
-		AttrFkIk = lm.LMAttribute.addFloat(self.CtrlIk.transform, "fkIk")
-		cmds.connectAttr(AttrFkIk, f"{self.NodeIk2bSolver}.fkIk")
-		# Softness
-		cmds.addAttr(self.CtrlIk.transform, longName="softness", at="float", min=0.0, max=100.0, keyable=True, dv=0)
-		cmds.connectAttr(f"{self.CtrlIk.transform}.softness", f"{self.NodeIk2bSolver}.softness")
-		# Twist
-		cmds.addAttr(self.CtrlIk.transform, longName="twist", at="float", keyable=True, dv=0)
-		cmds.connectAttr(f"{self.CtrlIk.transform}.twist", f"{self.NodeIk2bSolver}.twist")
+
 
 		# Connect time1
-		lm.LMAttribute.connectSceneTime(self.NodeIk2bSolver, "inTime")
-		# cmds.connectAttr(f"time1.outTime", f"{self.NodeIk2bSolver}.inTime")
+		lm.LMAttribute.connectSceneTime(self.NodeIk2bSolver)
 
 		# # Rematch translation on the pole vector after connecting the solver to properly freeze the OPM
 		# cmds.matchTransform(self.CtrlPoleVector.transform, translateTo, position=True)
