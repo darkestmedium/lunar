@@ -219,7 +219,11 @@ void Ik2bSolver::GetFkTransforms()
 	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
 	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
 	PosFkHandle = PosFkEnd;
-	PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
+	if (bIsPoleVectorConnected) {
+		PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
+	}	else {
+		PosFkPoleVector = MVector(matInPoleVector[3][0], matInPoleVector[3][1], matInPoleVector[3][2]);
+	}
 
 	// Rotations
 	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
@@ -259,13 +263,6 @@ void Ik2bSolver::BlendFkIk()
 MStatus Ik2bSolver::solve(MDagPathArray& InOutLinks) {
 	/* */
 	MStatus status;
-
-	// Force Refresh matrix ops
-	// MVector posFkStart(matInFkStart[3][0], matInFkStart[3][1], matInFkStart[3][2]);
-	// MVector posFkMid(matInFkMid[3][0], matInFkMid[3][1], matInFkMid[3][2]);
-	// MVector posFkEnd(matInFkEnd[3][0], matInFkEnd[3][1], matInFkEnd[3][2]);
-	// MVector posIkHandle(matInIkHandle[3][0], matInIkHandle[3][1], matInIkHandle[3][2]);
-	// MVector posPoleVector(matInPoleVector[3][0], matInPoleVector[3][1], matInPoleVector[3][2]);
 
 	GetFkTransforms();
 
