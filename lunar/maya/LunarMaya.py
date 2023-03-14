@@ -507,6 +507,29 @@ class LMFile():
 
 
 
+class LMObject():
+	"""Wrapper class with MObjects utils.
+	"""
+
+	log = logging.getLogger("MObjectUtils")
+
+
+	@classmethod
+	def getObjFromString(cls, object:str) -> om.MObject:
+		"""Gets the MObject from the given name.
+
+		"""
+		listSelection = om.MSelectionList()
+		listSelection.add(object)
+		mObject = om.MObject()
+		listSelection.getDependNode(0, mObject)
+
+		return mObject
+
+
+
+
+
 class LMScene():
 	"""Maya Scene wrapper class.
 
@@ -639,9 +662,32 @@ class LMMetaData():
 		cmds.setAttr(f"{self.name}.textColorG", value[1])
 		cmds.setAttr(f"{self.name}.textColorB", value[2])
 
+
 	def getText(self):
 		return cmds.getAttr(f"{self.name}.text")
 
+
+
+
+class LMNamespace():
+	"""Wrapper class with MObjects utils.
+	"""
+
+	log = logging.getLogger("LMNamespace")
+
+
+	@classmethod
+	def getObjWithNamespace(cls, object:str, namespace:str) -> om.MObject:
+		"""Returns the given object with the specified namesapce
+		Args:
+			object (str): Name of the node/object.
+			namespace (str): Name of the node/object.
+
+		Returns:
+			str: Name of the node with namespace if one was set while initiating the class.
+
+		"""
+		return f'{namespace}:{object}'
 
 
 
@@ -746,7 +792,7 @@ class LMAttribute():
 
 
 	@classmethod
-	def editLocked(cls, name:str, value:float) -> None:
+	def editLocked(cls, name:str, value:float, relock:bool=True) -> None:
 		"""Allows to edit a locked attribute.
 		
 		Unlocks the specified attribute, edits it and then locks it again.
@@ -758,6 +804,8 @@ class LMAttribute():
 		"""
 		cls.unlockIfLocked(name)
 		cmds.setAttr(name, value)
+		if relock: cmds.setAttr(name, lock=True)
+
 
 
 	@classmethod
@@ -881,23 +929,5 @@ class LMTransformUtils():
 
 
 
-class LMObject():
-	"""Wrapper class with MObjects utils.
-	"""
-
-	log = logging.getLogger("MObjectUtils")
-
-
-	@classmethod
-	def getObjFromString(cls, object:str) -> om.MObject:
-		"""Gets the MObject from the given name.
-
-		"""
-		listSelection = om.MSelectionList()
-		listSelection.add(object)
-		mObject = om.MObject()
-		listSelection.getDependNode(0, mObject)
-
-		return mObject
 	
 

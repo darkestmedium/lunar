@@ -1,3 +1,4 @@
+
 global proc hikConnectSkFromCharacterState(string $pState, string $pCharacter, int $bakeMode) {
 	// Note: ensure SK is not connected prior to call this proc
 

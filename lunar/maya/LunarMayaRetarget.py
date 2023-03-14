@@ -134,8 +134,8 @@ class LMHumanIk():
 		"""
 		if self.characterExists():
 			if self.isLocked():
-				self.properties = self.getPropertiesNode()
-				if self.properties:
+				self.nodeProperties = self.getPropertiesNode()
+				if self.nodeProperties:
 					self.valid = True
 					return self.valid
 
@@ -459,9 +459,9 @@ class LMHumanIk():
 
 		"""
 		self.character = mel.eval(f'hikCreateCharacter("{self.character}")')
-		self.properties = self.getPropertiesNode()
-		cmds.rename(self.properties, f'{self.character}Properties')
-		self.properties = self.getPropertiesNode()
+		self.nodeProperties = self.getPropertiesNode()
+		cmds.rename(self.nodeProperties, f'{self.character}Properties')
+		self.nodeProperties = self.getPropertiesNode()
 
 		return True
 
@@ -660,8 +660,8 @@ class LMHumanIk():
 			type=type
 		)
 		if len(connections) >= 1:
-			self.properties = connections[0]
-			return self.properties
+			self.nodeProperties = connections[0]
+			return self.nodeProperties
 		
 		return False
 
@@ -746,7 +746,7 @@ class LMHumanIk():
 
 		"""
 		if self.valid:
-			cmds.setAttr(f'{self.properties}.ForceActorSpace', value)
+			cmds.setAttr(f'{self.nodeProperties}.ForceActorSpace', value)
 			self.log.debug(f"Match source option was set to '{value}' for '{self.character}'")
 			return True
 		
@@ -765,7 +765,7 @@ class LMHumanIk():
 
 		"""
 		if self.isValid():
-			cmds.setAttr(f'{self.properties}.FloorContact', value)
+			cmds.setAttr(f'{self.nodeProperties}.FloorContact', value)
 			self.log.debug(f"Feet ground contact option was set to '{value}' for '{self.character}'")
 			return True
 
@@ -784,7 +784,7 @@ class LMHumanIk():
 
 		"""
 		if self.isValid():
-			cmds.setAttr(f'{self.properties}.Mirror', value)
+			cmds.setAttr(f'{self.nodeProperties}.Mirror', value)
 			self.log.debug(f"Mirror animation option was set to '{value}' for '{self.character}'")
 			return True
 
@@ -803,7 +803,7 @@ class LMHumanIk():
 
 		"""
 		if self.isValid():
-			cmds.setAttr(f'{self.properties}.ReachActorChest', value)
+			cmds.setAttr(f'{self.nodeProperties}.ReachActorChest', value)
 			self.log.debug(f"Reach actor chest attribute was set to '{value}' for '{self.character}'")
 			return True
 		
@@ -861,6 +861,48 @@ class LMHumanIk():
 		state2SKNode = self.getState2SkNode()
 		pairBlendNodes = cmds.listConnections(state2SKNode, type='pairBlend')
 		if pairBlendNodes: cmds.delete(pairBlendNodes)
+
+	
+	def connectSourceAndSaveAnimNew(self, pTransform:str, pSrcT:str="", pSrcR:str="", forcePairBlendCreation:bool=True):
+		"""Python override of the global proc connectSourceAndSaveAnimNew()
+
+		If nodes already has sources, create a pairblend to preserve the animation.
+
+		Note: 
+			pairBlends are just supporting T and R, not S, anim on S will be lost if $pSrcS is set.
+
+		Args:
+			pTransform (string): The transform for which the pairBlend node will be created.
+			pSrcT (string):	State2SK nodes output translation attribute.
+			pSrcR (string): State2SK nodes output rotation attribute.
+			forcePairBlendCreation (int): Whether or not we want to force creation of the pairBlend node.
+
+		"""
+		nbSrc = 0
+
+		if forcePairBlendCreation:
+			for attr in ["translate", "translateX", "translateY", "translateZ", "rotate",	"rotateX", "rotateY", "rotateZ"]:
+				connections = cmds.listConnections(f"{pTransform}.{attr}", destination=False, source=True)
+				if connections:	nbSrc += len(connections)
+
+		if forcePairBlendCreation or nbSrc:
+			animatableAttributes = [attr.split('.')[-1] for attr in cmds.listAnimatable(pTransform)]
+			pairBlend = cmds.pairBlend(node=pTransform, attribute=animatableAttributes)
+			if pSrcT != "":	cmds.connectAttr(pSrcT, f"{pairBlend}.inTranslate2")
+			if pSrcR != "":cmds.connectAttr(pSrcR, f"{pairBlend}.inRotate2")
+			cmds.setAttr(f"{pairBlend}.weight", True)
+			cmds.setAttr(f"{pairBlend}.currentDriver", True)
+
+		else:
+			if pSrcT != "":
+				if cmds.getAttr(f"{pTransform}.translateX", lock=True) == 0: cmds.connectAttr(f"{pSrcT}x", f"{pTransform}.translateX")
+				if cmds.getAttr(f"{pTransform}.translateY", lock=True) == 0: cmds.connectAttr(f"{pSrcT}y", f"{pTransform}.translateY")
+				if cmds.getAttr(f"{pTransform}.translateZ", lock=True) == 0: cmds.connectAttr(f"{pSrcT}z", f"{pTransform}.translateZ")
+
+			if pSrcR != "":
+				if cmds.getAttr(f"{pTransform}.translateX", lock=True) == 0: cmds.connectAttr(f"{pSrcR}x", f"{pTransform}.rotateX")
+				if cmds.getAttr(f"{pTransform}.translateY", lock=True) == 0: cmds.connectAttr(f"{pSrcR}y", f"{pTransform}.rotateY")
+				if cmds.getAttr(f"{pTransform}.translateZ", lock=True) == 0: cmds.connectAttr(f"{pSrcR}z", f"{pTransform}.rotateZ")
 
 
 	def setSourceAndBake(self, source, startFrame=None, endFrame=None,  oversamplingRate=1):
@@ -969,7 +1011,7 @@ class LMHumanIk():
 			if not cmds.referenceQuery(self.character, isNodeReferenced=True):
 				mel.eval(f'deleteCharacter("{self.character}")')
 				self.character = None
-				self.properties = None
+				self.nodeProperties = None
 				self.valid = False
 				self.log.debug(f"'{self.character}' character was successfully deleted.")
 				return True
@@ -1185,16 +1227,6 @@ class LMMannequinUe5(LMMetaHuman):
 	def setTPose(self):
 		"""Sets the character / creature in T-Pose."""
 		self.setPose(self.tPose)
-
-
-	def correctIkJoints(self) -> bool:
-		"""Turns off feet reach and rotation match."""
-
-		if self.properties and cmds.objExists(self.properties):
-			cmds.setAttr(f"{self.properties}.ReachActorLeftAnkle", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorRightAnkle", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorLeftAnkleRotationRotation", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorRightAnkleRotation", 0)
 
 
 	def importSetup(self):
@@ -1426,6 +1458,12 @@ class LMLunarCtrl(LMHumanIk):
 		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
 	]
 
+	ctrlIkEffectors = (
+		"arm_ik_l_ctrl", "arm_pv_l_ctrl",
+		"arm_ik_r_ctrl", "arm_pv_r_ctrl",
+		"leg_ik_l_ctrl", "leg_pv_l_ctrl",
+		"leg_ik_r_ctrl", "leg_pv_r_ctrl",
+	)
 	CtrlIkHandles = ["arm_ik_l_ctrl", "arm_ik_r_ctrl", "leg_ik_l_ctrl", "leg_ik_r_ctrl"]
 	CtrlFkHands = ["hand_l_ctrl", "hand_r_ctrl"]
 
@@ -1442,7 +1480,9 @@ class LMLunarCtrl(LMHumanIk):
 
 		self._initSetup()
 
-		self.properties = self.getPropertiesNode()
+		self.nodeProperties = self.getPropertiesNode()
+		self.nodeState2Sk = self.getState2SkNode()
+	
 		self.CtrlMain = self.getCtrlMain()
 		self.root = self.getRoot()
 		self.rootMotion = self.getRootMotion()
@@ -1495,16 +1535,6 @@ class LMLunarCtrl(LMHumanIk):
 		return True
 
 
-	def correctIkJoints(self) -> bool:
-		"""Turns off feet reach and rotation match."""
-
-		if self.properties and cmds.objExists(self.properties):
-			cmds.setAttr(f"{self.properties}.ReachActorLeftAnkle", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorRightAnkle", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorLeftAnkleRotationRotation", 0)
-			cmds.setAttr(f"{self.properties}.ReachActorRightAnkleRotation", 0)
-
-
 	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
 		"""Set source for the specified character.
 
@@ -1524,6 +1554,51 @@ class LMLunarCtrl(LMHumanIk):
 						self.setCtrlsIkToFk()
 
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
+
+						# Start override of hik setSource method
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[0]),
+							f"{self.nodeState2Sk}.LeftHandT",
+							f"{self.nodeState2Sk}.LeftHandR",
+						)
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[1]),
+							f"{self.nodeState2Sk}.LeftForeArmT",
+							# f"{self.nodeState2Sk}.LeftForeArmR",
+						)
+
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[2]),
+							f"{self.nodeState2Sk}.RightHandT",
+							f"{self.nodeState2Sk}.RightHandR",
+						)
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[3]),
+							f"{self.nodeState2Sk}.RightForeArmT",
+							# f"{self.nodeState2Sk}.RightForeArmR",
+						)
+	
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[4]),
+							f"{self.nodeState2Sk}.LeftFootT",
+							f"{self.nodeState2Sk}.LeftFootR",
+						)
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[5]),
+							f"{self.nodeState2Sk}.LeftLegT",
+							# f"{self.nodeState2Sk}.LeftLegR",
+						)
+
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[6]),
+							f"{self.nodeState2Sk}.RightFootT",
+							f"{self.nodeState2Sk}.RightFootR",
+						)
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors[7]),
+							f"{self.nodeState2Sk}.RightLegT",
+							# f"{self.nodeState2Sk}.RightLegR",
+						)
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
@@ -1629,9 +1704,6 @@ class LMLunarCtrl(LMHumanIk):
 
 				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
 				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
-
-				# Temp workaround for now
-				self.deleteAnimationOnIk()
 
 				# Needs one cpu cycle after import to properly move ik solvers
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
