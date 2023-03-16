@@ -895,7 +895,7 @@ class LMTransformUtils():
 				LMAttribute.copyTransformsToOPM(ctrl)
 				cls.reconnectSkin(jnt, ctrl)
 				if ctrl == "pelvis_rot_ctrl": continue
-				LMAttribute.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
+				# LMAttribute.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
 
 				if "twist" not in jnt:
 					distance = cls.getDistanceBetween(jnt)

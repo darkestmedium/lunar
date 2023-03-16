@@ -454,9 +454,9 @@ class Base():
 		self.ctrlMain = MainCtrl(parent=self.grpBase, localRotate=(90.0, 0.0, 0.0))
 		self.grpMesh = cmds.group(name="mesh_grp", empty=True, parent=self.grpBase)
 
-		self.__setupRigGroups()
+		self._setupRigGroups()
 
-		self.__setupVisibilityAttributesAndConnections()
+		self._setupVisibilityAttributesAndConnections()
 
 		cmds.setAttr(f"{self.grpBase}.rotateX", -90)
 
@@ -464,7 +464,7 @@ class Base():
 		[lm.LMAttribute.lockControlChannels(Object, ["translate", "scale", "visibility"]) for Object in [self.grpBase, self.grpMesh]]
 
 
-	def __setupRigGroups(self):
+	def _setupRigGroups(self):
 		"""Sets main rig groups: base, ctrl, mesh and export"""
 		# Extra attribute creation
 		rigNameAttr = "rigName"
@@ -475,7 +475,7 @@ class Base():
 		cmds.setAttr(f"{self.grpBase}.{sceneObjectTypeAttr}", self.sceneObjectType, type="string", lock=True)
 
 
-	def __setupVisibilityAttributesAndConnections(self):
+	def _setupVisibilityAttributesAndConnections(self):
 		"""Creates visibility and display type attributes on the main cotroller and connects them.
 		
 		"""
@@ -569,7 +569,7 @@ class PelvisComponent():
 		)
 
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisPos.transform)
-		lm.LMAttribute.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["rotate", "scale", "visibility", "offsetParentMatrix"])
+		lm.LMAttribute.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["rotate", "scale", "visibility"])
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisRot.transform)
 		lm.LMAttribute.lockControlChannels(self.CtrlPelvisRot.transform, lockChannels=["translate", "scale", "visibility"])
 
@@ -1339,10 +1339,10 @@ class Ik2bLimbComponent():
 
 		# Post setup
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlIk.transform)
-		lm.LMAttribute.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
+		# lm.LMAttribute.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
 		if poleVector:
 			lm.LMAttribute.copyTransformsToOPM(self.CtrlPoleVector.transform)
-			lm.LMAttribute.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
+			# lm.LMAttribute.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
 
 
 	def getCtrls(self):

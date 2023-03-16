@@ -80,8 +80,7 @@
 
 
 
-class Ik2bSolver : public MPxNode
-{
+class Ik2bSolver : public MPxNode {
 public:
 	// Public Data
 	static const MString typeName;

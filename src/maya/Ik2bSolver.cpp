@@ -201,8 +201,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 }
 
 
-double Ik2bSolver::GetLimbLength()
-{
+double Ik2bSolver::GetLimbLength() {
 	/* Calculates the limb length. */
 	MPoint pFkStart = (FnFkStart.rotatePivot(MSpace::kWorld));
 	MPoint pFkMid = (FnFkMid.rotatePivot(MSpace::kWorld));
@@ -212,18 +211,14 @@ double Ik2bSolver::GetLimbLength()
 }
 
 
-void Ik2bSolver::GetFkTransforms()
-{
+void Ik2bSolver::GetFkTransforms() {
 	// Position
 	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
 	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
 	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
 	PosFkHandle = PosFkEnd;
-	if (bIsPoleVectorConnected) {
-		PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
-	}	else {
-		PosFkPoleVector = MVector(matInPoleVector[3][0], matInPoleVector[3][1], matInPoleVector[3][2]);
-	}
+	if (bIsPoleVectorConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
+	else {PosFkPoleVector = MVector(matInPoleVector[3][0], matInPoleVector[3][1], matInPoleVector[3][2]);}
 
 	// Rotations
 	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
@@ -237,8 +232,7 @@ void Ik2bSolver::GetFkTransforms()
 }
 
 
-void Ik2bSolver::GetIkTransforms()
-{
+void Ik2bSolver::GetIkTransforms() {
 	// Position
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
 	PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
