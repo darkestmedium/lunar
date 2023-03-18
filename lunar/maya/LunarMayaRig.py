@@ -852,7 +852,7 @@ class FkLegComponent():
 
 	def getMainCtrls(self):
 		return (self.CtrlUpLeg, self.CtrlLeg,	self.CtrlFoot, self.CtrlToe)
-	
+
 
 	def getRollCtrls(self):
 		return (self.CtrlUpLegRoll1,  self.CtrlUpLegRoll2, self.CtrlLegRoll1, self.CtrlLegRoll2)
@@ -1237,7 +1237,6 @@ class FkHandComponent():
 			self.CtrlPinky2, self.CtrlPinky3,
 		)
 
-
 	def getInHandCtrls(self):
 		return (self.CtrlInHandIndex, self.CtrlInHandMiddle, self.CtrlInHandRing, self.CtrlInHandPinky)
 
@@ -1271,9 +1270,9 @@ class Ik2bLimbComponent():
 
 
 	def __init__(self,
-	  name, parent, translateTo, rotateTo, fkStart, fkMid, fkEnd, side="left", poleVector=True,
-	  # drawText=True,
-		textPosition=(0.0, 0.0, 0.0),
+	  name:str, parent:str, rotateTo:str,
+		fkStart:str, fkMid:str, fkEnd:str, poleVector:str="", side:str="left",
+		textPosition:tuple=(0.0, 0.0, 0.0),
 		) -> None:
 		"""Class constructor.
 
@@ -1281,6 +1280,7 @@ class Ik2bLimbComponent():
 			parent (string): Parent of the component to be parented to.
 
 		"""
+		self.poleVector = poleVector
 		if side == "center":
 			sideSuffix = ""
 			color = "yellow"
@@ -1300,42 +1300,33 @@ class Ik2bLimbComponent():
 			textPosition=textPosition,
 			color=color,
 		)
-		if poleVector:
+
+		if poleVector != "":
 			self.CtrlPoleVector = PoleVectorCtrl(
 				name=f"{name}_pv{sideSuffix}_ctrl",
 				parent=parent,
-				translateTo=translateTo,
+				translateTo=poleVector,
 				rotateTo=rotateTo,
 				localScale=(4.0, 4.0, 4.0),
 				lineWidth=2.0,
 				color=color,
 			)
-
-		# Make ik solver
-		self.NodeIk2bSolver = cmds.createNode("ik2bSolver", name=f"{name}{sideSuffix}_Ik2bSolver")
-		# cmds.setAttr(f"{self.NodeIk2bSolver}.fkIk", 0)
-		cmds.connectAttr(f"{fkEnd}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkEnd")
-		cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkMid")
-		cmds.connectAttr(f"{fkStart}.worldMatrix[0]", f"{self.NodeIk2bSolver}.fkStart")
-		cmds.connectAttr(f"{self.CtrlIk.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.ikHandle")
-
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkEnd}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkMid}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{fkStart}.rotatePivot")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlIk.transform}.rotatePivot")
-
-		if poleVector: 
-			cmds.connectAttr(f"{self.CtrlPoleVector.transform}.worldMatrix[0]", f"{self.NodeIk2bSolver}.poleVector")
-			cmds.connectAttr(f"{self.NodeIk2bSolver}.update", f"{self.CtrlPoleVector.transform}.rotatePivot")
-			cmds.connectAttr(f"{fkMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
-
-
-
-		# Connect time1
-		lm.LMAttribute.connectSceneTime(self.NodeIk2bSolver)
-
-		# # Rematch translation on the pole vector after connecting the solver to properly freeze the OPM
-		# cmds.matchTransform(self.CtrlPoleVector.transform, translateTo, position=True)
+			self.NodeIk2bSolver = cmds.ik(
+					name=f"{name}{sideSuffix}_Ik2bSolver",
+					fkStart=fkStart,
+					fkMid=fkMid,
+					fkEnd=fkEnd,
+					ikHandle=self.CtrlIk.transform,
+					poleVector=self.CtrlPoleVector.transform,
+			)[0]
+		else:
+			self.NodeIk2bSolver = cmds.ik(
+				name=f"{name}{sideSuffix}_Ik2bSolver",
+				fkStart=fkStart,
+				fkMid=fkMid,
+				fkEnd=fkEnd,
+				ikHandle=self.CtrlIk.transform,
+			)[0]
 
 		# Post setup
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlIk.transform)
@@ -1346,7 +1337,10 @@ class Ik2bLimbComponent():
 
 
 	def getCtrls(self):
-		return (self.CtrlIk, self.CtrlPoleVector)
+		if self.poleVector != "":
+			return (self.CtrlIk, self.CtrlPoleVector)
+		else:
+			return (self.CtrlIk)
 
 
 

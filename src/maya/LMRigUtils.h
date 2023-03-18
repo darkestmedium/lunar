@@ -59,9 +59,9 @@ namespace LMRigUtils {
 
 		double valScale = (vecStartEnd * vecMidEnd) / (vecStartEnd * vecStartEnd);
 		MVector vecProjection = (vecStartEnd * valScale) + posStart;
-		double LenLimb = (posMid - posStart).length() + vecMidEnd.length();
+		double lenLimb = (posMid - posStart).length() + vecMidEnd.length();
 
-		return (posMid - vecProjection).normal() * LenLimb + posMid;
+		return (posMid - vecProjection).normal() * lenLimb + posMid;
 	}
 };
 

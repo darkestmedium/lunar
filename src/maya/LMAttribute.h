@@ -67,23 +67,6 @@ namespace LMAttribute {
 	};
 
 
-	inline MStatus connectSceneTime(MObject& object, MString plug) {
-		/* Connects the scene's default time1 node to the given target.
-		 */
-		MFnDependencyNode fnDestinationtNode = object;
-		MPlug plugDestinationInTime = fnDestinationtNode.findPlug(plug, false);
-
-		MFnDependencyNode fnTimeNode = LMScene::getTimeNode();
-		MPlug plugTimeOutTime = fnTimeNode.findPlug("outTime", false);
-		
-		MDGModifier dgMod;
-		dgMod.connect(plugTimeOutTime, plugDestinationInTime);
-		dgMod.doIt();
-	
-		return MS::kSuccess;
-	};
-
-
 	inline MObject getSourceObjFromPlug(const MObject& object, const MObject& plug) {
 		/* Gets the object from the given plug if it is connected.
 

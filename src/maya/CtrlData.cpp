@@ -961,6 +961,7 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 	}
 }
 
+
 void CtrlData::getText(const MObject &obj) {
 	bDrawText = MPlug(obj, Ctrl::attrInDrawText).asBool();
 	posText = MPoint(

@@ -10,7 +10,8 @@ Attribute Ik2bSolver::inFkStartAttr;
 Attribute Ik2bSolver::inFkMidAttr;
 Attribute Ik2bSolver::inFkEndAttr;
 Attribute Ik2bSolver::inIkHandleAttr;
-Attribute Ik2bSolver::inPoleVectorAttr;
+// Attribute Ik2bSolver::inPoleVectorAttr;
+MObject Ik2bSolver::inPoleVectorAttr;
 Attribute Ik2bSolver::inTwistAttr;
 MObject Ik2bSolver::inSoftnessAttr;
 MObject Ik2bSolver::inFkIkAttr;
@@ -43,7 +44,9 @@ MStatus Ik2bSolver::initialize() {
 	createAttribute(inFkMidAttr, "fkMid", DefaultValue<MMatrix>());
 	createAttribute(inFkEndAttr, "fkEnd", DefaultValue<MMatrix>());
 	createAttribute(inIkHandleAttr, "ikHandle", DefaultValue<MMatrix>());
-	createAttribute(inPoleVectorAttr, "poleVector", DefaultValue<MMatrix>());
+	// createAttribute(inPoleVectorAttr, "poleVector", DefaultValue<MMatrix>());
+	inPoleVectorAttr = nAttr.createPoint("poleVector", "pv");
+
 	createAttribute(inTwistAttr, "twist", DefaultValue<MAngle>());
 
 	inSoftnessAttr = nAttr.create("softness", "sfns", MFnNumericData::kDouble, 0.0);
@@ -53,7 +56,7 @@ MStatus Ik2bSolver::initialize() {
 	nAttr.setMin(0.0);
 	nAttr.setMax(10.0);
 
-	inFkIkAttr = nAttr.create("fkIk", "fki", MFnNumericData::kDouble, 0.0);
+	inFkIkAttr = nAttr.create("fkIk", "fkik", MFnNumericData::kDouble, 0.0);
 	nAttr.setKeyable(true);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
@@ -139,7 +142,8 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	matInFkMid = dataBlock.inputValue(inFkMidAttr).asMatrix();
 	matInFkEnd = dataBlock.inputValue(inFkEndAttr).asMatrix();
 	matInIkHandle = dataBlock.inputValue(inIkHandleAttr).asMatrix();
-	matInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asMatrix();
+	// matInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asMatrix();
+	posInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asVector();
 
 	// Start fk controller
 	MDagPath pathFkStart;
@@ -218,7 +222,7 @@ void Ik2bSolver::GetFkTransforms() {
 	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
 	PosFkHandle = PosFkEnd;
 	if (bIsPoleVectorConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
-	else {PosFkPoleVector = MVector(matInPoleVector[3][0], matInPoleVector[3][1], matInPoleVector[3][2]);}
+	else {PosFkPoleVector = posInPoleVector;}
 
 	// Rotations
 	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
@@ -235,12 +239,14 @@ void Ik2bSolver::GetFkTransforms() {
 void Ik2bSolver::GetIkTransforms() {
 	// Position
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
-	PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
+
+	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
+	else {PosIkPoleVector = posInPoleVector;}
+	// PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
 }
 
 
-void Ik2bSolver::BlendFkIk()
-{
+void Ik2bSolver::BlendFkIk() {
 	// because we wantto use 0 - 100 in the channel box, yeah i know :|
 	double ScaledWeight = fkIk * 0.01;
 
@@ -436,6 +442,7 @@ void Ik2bSolver::SolveTwoBoneIk() {
 	MVector startIkVec = makeNonZero(PosIkHandle - PosFkStart);
 	// Pole vector - vector
 	MVector poleVectorVec = makeNonZero(PosFkPoleVector - PosFkStart);
+	// MVector poleVectorVec = makeNonZero(PosFkPoleVector);
 
 	MVector startEndVec = makeNonZero(PosFkEnd - PosFkStart);
 	MVector midStartVec = makeNonZero(PosFkStart - PosFkMid);
@@ -498,8 +505,7 @@ void Ik2bSolver::SolveTwoBoneIk() {
 }
 
 
-MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock)
-{	
+MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {	
 	/* Sets the outputs and data block clean.
 
 	Args:
@@ -571,8 +577,7 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 }
 
 
-MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs)
-{
+MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) {
 	/* Sets the relation between attributes and marks the specified plugs dirty.
 
 	Args:
@@ -598,8 +603,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 }
 
 
-void Ik2bSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const
-{
+void Ik2bSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
 	/* Disables Cached Playback support by default.
 
 	Built-in locators all enable Cached Playback by default, but plug-ins have to

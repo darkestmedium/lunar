@@ -48,7 +48,22 @@ namespace LMScene {
 	 * Lunar Maya Scene wrapper class.
 	 */
 
-	inline MObject getTimeNode() {return LMObject::getObjFromString("time1");}
+	inline MObject getTime1Node() {return LMObject::getObjFromString("time1");}
 
+	inline MStatus connectSceneTime(MObject& object, MString plug, MDGModifier& modDg) {
+		/* Connects the scene's default time1 node to the given target.
+		 */
+		MFnDependencyNode fnDestinationNode = object;
+		MPlug plugDestinationInTime = fnDestinationNode.findPlug(plug, false);
+
+		MFnDependencyNode fnTimeNode = getTime1Node();
+		MPlug plugTimeOutTime = fnTimeNode.findPlug("outTime", false);
+		
+		// MDGModifier dgMod;
+		modDg.connect(plugTimeOutTime, plugDestinationInTime);
+		// dgMod.doIt();
+	
+		return MS::kSuccess;
+	};
 
 }

@@ -48,6 +48,19 @@ namespace LMObject {
 	 */
 
 
+	inline MStatus objExists(MString& objectName) {
+		MStatus status;
+		MSelectionList listSelection;
+
+		status = listSelection.add(objectName);
+		if (status == MS::kSuccess)	{
+			return MS::kSuccess;
+		}
+
+		return MS::kFailure;
+	}
+
+
 	inline MObject getObjFromString(MString name) {
 		/* Gets the MObject from the given name.
 		 */
@@ -64,7 +77,7 @@ namespace LMObject {
 	}
 
 
-	inline MStatus getDagPathFromString(MString& objectName, MDagPath& path) {
+	inline MStatus getDagPathFromString(MString objectName, MDagPath& path) {
 		/* Gets the MDagPath from the given name.
 		 */
 		MStatus status;

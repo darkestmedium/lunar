@@ -91,7 +91,8 @@ public:
 	static Attribute inFkMidAttr;
 	static Attribute inFkEndAttr;
 	static Attribute inIkHandleAttr;
-	static Attribute inPoleVectorAttr;
+	// static Attribute inPoleVectorAttr;
+	static MObject inPoleVectorAttr;
 	static Attribute inTwistAttr;
 	static MObject inSoftnessAttr;
 	static MObject inFkIkAttr;
@@ -114,7 +115,8 @@ public:
 	MMatrix matInFkMid;
 	MMatrix matInFkEnd;
 	MMatrix matInIkHandle;
-	MMatrix matInPoleVector;
+	// MMatrix matInPoleVector;
+	MVector posInPoleVector;
 
 	// Helpers
 	MSelectionList listSel;

@@ -424,14 +424,14 @@ MStatus CtrlCommand::redoIt() {
 
 			// Visual flags
 			MPlug plugFillShape = shapeFn.findPlug("fillShape", false);
-			plugFillShape.setBool(bFillShape);
+			plugFillShape.setValue(bFillShape);
 
 			MPlug plugDrawLine = shapeFn.findPlug("drawLine", false);
-			plugDrawLine.setBool(bDrawLine);
+			plugDrawLine.setValue(bDrawLine);
 
 			// Text
 			MPlug plugDrawText = shapeFn.findPlug("drawText", false);
-			plugDrawText.setBool(bDrawText);
+			plugDrawText.setValue(bDrawText);
 			MPlug plugTextPositionX = shapeFn.findPlug("textPositionX", false);
 			plugTextPositionX.setValue(textPosition.x);
 			MPlug plugTextPositionY = shapeFn.findPlug("textPositionY", false);
