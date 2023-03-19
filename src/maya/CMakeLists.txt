@@ -1,5 +1,5 @@
 set(MAYA_FILES
-# Modules
+# Plugins
 	Ctrl.h
 	Ctrl.cpp
 	CtrlCommand.h
@@ -26,6 +26,7 @@ set(MAYA_FILES
 	LMObject.h
 	LMRigUtils.h
 	LMScene.h
+	LMSolve.h
 	LMText.h
 	MathUtility.h
 	Utils.h

@@ -133,7 +133,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	MStatus status;
 
 	// Ask for time value to force refresh on the node
-	TimeCurrent = dataBlock.inputValue(AttrInTime, &status).asTime();
+	timeCurrent = dataBlock.inputValue(AttrInTime, &status).asTime();
 	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
 	matInFkStart = dataBlock.inputValue(inFkStartAttr).asMatrix();
 	matInFkMid = dataBlock.inputValue(inFkMidAttr).asMatrix();
@@ -195,7 +195,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	InOutLinks.append(pathIkHandle);
 	InOutLinks.append(pathPoleVector);
 
-	LimbLength = GetLimbLength();
+	// LimbLength = GetLimbLength();
 
 	return MS::kSuccess;
 }
@@ -239,6 +239,7 @@ void Ik2bSolver::GetIkTransforms() {
 	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {PosIkPoleVector = posInPoleVector;}
 	// PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
+	FnIkHandle.getRotation(QuatIkEnd, MSpace::kWorld);
 }
 
 
@@ -261,11 +262,12 @@ MStatus Ik2bSolver::solve(MDagPathArray& InOutLinks) {
 	MStatus status;
 
 	GetFkTransforms();
+	GetIkTransforms();
 
 	solveLimb(InOutLinks);
 
 	// Cache time change
-	TimeCached = TimeCurrent;
+	timeCached = timeCurrent;
 
 	return MS::kSuccess;
 }
@@ -277,14 +279,14 @@ bool Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
 	Main fk / ik routing method. 
 
 	TODO:
-		Rework routing, we need to always solve and extract isolate the editing mode.
+		Rework routing, we need to always solve and extract / isolate the editing mode.
 
 	Args:
 		InOutLinks (MDagPathArray&): Array with path to the input transforms.
 
 	*/
 	// Editing
-	if (!LMAnimControl::timeChanged(AnimCtrl, TimeCached, TimeCurrent)) {
+	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
 		if (LMGLobal::currentToolIsTransformContext()) {
 			MGlobal::getActiveSelectionList(listSel);
 			// 1 If selection has fk solve fk
@@ -319,22 +321,6 @@ void Ik2bSolver::SolveFk() {
 	if (bIsPoleVectorConnected) {
 		FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
 	}
-
-	// Set ik transforms
-	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
-	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
-}
-
-
-void Ik2bSolver::solveFkWhileEditing() {
-	/* Set the fk transforms.
-
-	We don't actually solve fk - it's called like this just for consistency and readability.
-	The isEditing flag is reserved for editing the fk transforms where we move the pole vector by
-	a constant distance (limb length) calculated from the mid transform. 
-
-	*/
-	FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
 
 	// Set ik transforms
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
@@ -425,22 +411,23 @@ void Ik2bSolver::SolveStraightLimb() {
 
 
 void Ik2bSolver::solveTwoBoneIk() {
-	// https://github.com/chadmv/cmt/blob/master/src/ikRigNode.cpp
-	// https://theorangeduck.com/page/simple-two-joint
+	/* Calculates the ik for a two bone limb.
+	
+	Reference:
+		https://github.com/chadmv/cmt/blob/master/src/ikRigNode.cpp
+		https://theorangeduck.com/page/simple-two-joint
+
+	*/
 	MStatus status;
 
-	GetIkTransforms();
-	
-	// double eps = 0.000001;
+	// GetIkTransforms();
 
-	// START solveTwoBoneIk
 	// Position vectors
 	MVector vecA = PosFkStart;
 	MVector vecB = PosFkMid;
 	MVector vecC = PosFkEnd;
 	MVector vecT = PosIkHandle;
 	MVector vecPv = PosFkPoleVector;
-
 	// From to Vectors - reusable
 	MVector vecAB = vecB - vecA;
 	MVector vecAC = vecC - vecA;
@@ -485,12 +472,9 @@ void Ik2bSolver::solveTwoBoneIk() {
 	QuatIkStart *= r0 * r2 * r3 * quatTwist;
 	
 	// Mid rotation
-	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
-	QuatIkMid *= r1;
-	QuatIkMid *= r0 * r2 * r3 * quatTwist;
+	// QuatIkMid *= r1;
+	QuatIkMid *= r1 * r0 * r2 * r3 * quatTwist;
 
-	// End rotation
-	FnIkHandle.getRotation(QuatIkEnd, MSpace::kWorld);
 }
 
 

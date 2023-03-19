@@ -42,6 +42,7 @@
 #include "LMAttribute.h"
 #include "LMGlobal.h"
 #include "LMAnimControl.h"
+#include "LMSolve.h"
 #include "LMRigUtils.h"
 #include "Utils.h"
 #include "MathUtility.h"
@@ -91,40 +92,54 @@ public:
 	static Attribute inFkMidAttr;
 	static Attribute inFkEndAttr;
 	static Attribute inIkHandleAttr;
-	// static Attribute inPoleVectorAttr;
 	static MObject inPoleVectorAttr;
 	static Attribute inTwistAttr;
 	static MObject inSoftnessAttr;
 	static MObject inFkIkAttr;
 	static MObject AttrInTime;
 	// Nodes's Output Attributes
-	static Attribute AttrOutUpdateX;
-	static Attribute AttrOutUpdateY;
-	static Attribute AttrOutUpdateZ;
-	static Attribute AttrOutUpdate;
+	static Attribute AttrOutUpdateX, AttrOutUpdateY, AttrOutUpdateZ, AttrOutUpdate;
 
+	MObject objFkStart, objFkMid, objFkEnd, objIkhandle, objPoleVector;
+	// In data
+	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
+	MVector posInPoleVector;
+	double twist, softness, fkIk;
 	bool bIsPoleVectorConnected;
 
-	MObject objFkStart;
-	MObject objFkMid;
-	MObject objFkEnd;
-	MObject objIkhandle;
-	MObject objPoleVector;
+	double LimbLength;
+	double RootTargetDistance;
 
-	MMatrix matInFkStart;
-	MMatrix matInFkMid;
-	MMatrix matInFkEnd;
-	MMatrix matInIkHandle;
-	MVector posInPoleVector;
+	// Function sets
+	MFnTransform FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
+
+	// Position
+	// Fk
+	MVector PosFkStart, PosFkMid, PosFkEnd, PosFkHandle, PosFkPoleVector;
+	// Ik
+	MVector PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector;
+	// Out
+	MVector PosOutStart, PosOutMid, PosOutEnd, PosOutHandle, PosOutPoleVector;
+	// Quats
+	// Fk
+	MQuaternion QuatFkStart, QuatFkMid, QuatFkEnd;
+	// Ik
+	MQuaternion QuatIkStart, QuatIkMid, QuatIkEnd, QuatIkHandle;
+	// Out
+	MQuaternion QuatOutStart, QuatOutMid, QuatOutEnd, QuatOutHandle;
+
+	MTime timeCurrent, timeCached;
+
+	MObject SelfObj;
 
 	// Helpers
 	MSelectionList listSel;
+	MAnimControl ctrlAnim;
 
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
 		, bIsPoleVectorConnected(false)
-		, LimbLength(0.0)
 	{};
 	// Destructors
 	~Ik2bSolver() override {};
@@ -152,7 +167,6 @@ public:
 	MStatus solve(MDagPathArray& InOutLinks);
 	bool solveLimb(MDagPathArray& InOutLinks);
 	void SolveFk();
-	void solveFkWhileEditing();
 	void SolveBlendedIk();
 	void SolveIk();
 	void SolveStraightLimb();
@@ -160,66 +174,4 @@ public:
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);
-
-private:
-	// Private data
-	MObject SelfObj;
-
-	// Function sets
-	MFnTransform FnFkStart;
-	MFnTransform FnFkMid;
-	MFnTransform FnFkEnd;
-	MFnTransform FnIkHandle;
-	MFnTransform FnPoleVector;
-
-	// Position
-	// Fk
-	MVector PosFkStart;
-	MVector PosFkMid;
-	MVector PosFkEnd;
-	MVector PosFkHandle;
-	MVector PosFkPoleVector;
-
-	// Ik
-	MVector PosIkStart;
-	MVector PosIkMid;
-	MVector PosIkEnd;
-	MVector PosIkHandle;
-	MVector PosIkPoleVector;
-
-	// Out
-	MVector PosOutStart;
-	MVector PosOutMid;
-	MVector PosOutEnd;
-	MVector PosOutHandle;
-	MVector PosOutPoleVector;
-
-	// Quats
-	// Fk
-	MQuaternion QuatFkStart;
-	MQuaternion QuatFkMid;
-	MQuaternion QuatFkEnd;
-	// Ik
-	MQuaternion QuatIkStart;
-	MQuaternion QuatIkMid;
-	MQuaternion QuatIkEnd;
-	MQuaternion QuatIkHandle;
-
-	// Out
-	MQuaternion QuatOutStart;
-	MQuaternion QuatOutMid;
-	MQuaternion QuatOutEnd;
-	MQuaternion QuatOutHandle;
-
-	double LimbLength;
-	double RootTargetDistance;
-
-	double twist;
-	double softness;
-	double fkIk;
-
-	MTime TimeCurrent;
-	MTime TimeCached;
-
-	MAnimControl AnimCtrl;
 };
