@@ -115,7 +115,6 @@ public:
 	MMatrix matInFkMid;
 	MMatrix matInFkEnd;
 	MMatrix matInIkHandle;
-	// MMatrix matInPoleVector;
 	MVector posInPoleVector;
 
 	// Helpers
@@ -157,7 +156,7 @@ public:
 	void SolveBlendedIk();
 	void SolveIk();
 	void SolveStraightLimb();
-	void SolveTwoBoneIk();
+	void solveTwoBoneIk();
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);

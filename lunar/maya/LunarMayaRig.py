@@ -1312,7 +1312,7 @@ class Ik2bLimbComponent():
 				color=color,
 			)
 			self.NodeIk2bSolver = cmds.ik(
-					name=f"{name}{sideSuffix}_Ik2bSolver",
+					name=f"{name}{sideSuffix}_",
 					fkStart=fkStart,
 					fkMid=fkMid,
 					fkEnd=fkEnd,
@@ -1321,7 +1321,7 @@ class Ik2bLimbComponent():
 			)[0]
 		else:
 			self.NodeIk2bSolver = cmds.ik(
-				name=f"{name}{sideSuffix}_Ik2bSolver",
+				name=f"{name}{sideSuffix}_",
 				fkStart=fkStart,
 				fkMid=fkMid,
 				fkEnd=fkEnd,

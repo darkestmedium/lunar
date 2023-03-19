@@ -37,14 +37,12 @@ MStatus Ik2bSolver::initialize() {
 	MFnNumericAttribute nAttr;
 	MFnMatrixAttribute mAttr;
 	MFnUnitAttribute uAttr;
-	// MFnCompoundAttribute cAttr;
 
 	// Node's Input Attributes
 	createAttribute(inFkStartAttr, "fkStart", DefaultValue<MMatrix>());
 	createAttribute(inFkMidAttr, "fkMid", DefaultValue<MMatrix>());
 	createAttribute(inFkEndAttr, "fkEnd", DefaultValue<MMatrix>());
 	createAttribute(inIkHandleAttr, "ikHandle", DefaultValue<MMatrix>());
-	// createAttribute(inPoleVectorAttr, "poleVector", DefaultValue<MMatrix>());
 	inPoleVectorAttr = nAttr.createPoint("poleVector", "pv");
 
 	createAttribute(inTwistAttr, "twist", DefaultValue<MAngle>());
@@ -117,11 +115,10 @@ double Ik2bSolver::softenEdge(double hardEdge, double chainLength, double dsoft)
 }
 
 
-double Ik2bSolver::softenIk(double startIkLen, double startMidLen, double midEndLen, double startMidEndLen, double softness) {
+double Ik2bSolver::softenIk(double lenAT, double lenAB, double lenCB, double lenABC, double softness) {
 	// Wrapper method for softhening the ik solve
-	startIkLen = std::max(startIkLen, startMidLen - midEndLen);
-
-	return softenEdge(startIkLen, startMidEndLen, softness);
+	lenAT = std::max(lenAT, lenAB - lenCB);
+	return softenEdge(lenAT, lenABC, softness);
 }
 
 
@@ -142,7 +139,6 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	matInFkMid = dataBlock.inputValue(inFkMidAttr).asMatrix();
 	matInFkEnd = dataBlock.inputValue(inFkEndAttr).asMatrix();
 	matInIkHandle = dataBlock.inputValue(inIkHandleAttr).asMatrix();
-	// matInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asMatrix();
 	posInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asVector();
 
 	// Start fk controller
@@ -320,7 +316,9 @@ void Ik2bSolver::SolveFk() {
 	a constant distance (limb length) calculated from the mid transform. 
 
 	*/
-	FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
+	if (bIsPoleVectorConnected) {
+		FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
+	}
 
 	// Set ik transforms
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
@@ -349,7 +347,7 @@ void Ik2bSolver::SolveBlendedIk() {
 	*/
 	MStatus status;
 
-	SolveTwoBoneIk();
+	solveTwoBoneIk();
 
 	BlendFkIk();
 
@@ -367,7 +365,7 @@ void Ik2bSolver::SolveBlendedIk() {
 
 void Ik2bSolver::SolveIk() {
 	// Neat optimization though i couldn't get the single joint solve to work properley without flips
-	SolveTwoBoneIk();
+	solveTwoBoneIk();
 
 	// Get chain length
 	// GetLimbLength();
@@ -375,7 +373,7 @@ void Ik2bSolver::SolveIk() {
 	// if (RootTargetDistance >= LimbLength) {
 	// 	SolveStraightLimb();
 	// } else {
-	// 	SolveTwoBoneIk();
+	// 	solveTwoBoneIk();
 	// }
 
 	// Set fk rotations
@@ -396,7 +394,7 @@ void Ik2bSolver::SolveStraightLimb() {
 	MVector Direction = makeNonZero(IkHandleLocation - FkStartLocation).normal();
 
 	// compute cross products
-	// MVector dir = (PosFkMid - (PosFkStart + (ac * ((startMidVec) * ac)))).normal();
+	// MVector dir = (PosFkMid - (PosFkStart + (ac * ((vecAB) * ac)))).normal();
 
 	MVector Cross = Direction ^ PoleVector;
 	MVector UpVector = Cross ^ Direction;
@@ -426,71 +424,62 @@ void Ik2bSolver::SolveStraightLimb() {
 }
 
 
-void Ik2bSolver::SolveTwoBoneIk() {
-	// CHAD VERNON BASE
+void Ik2bSolver::solveTwoBoneIk() {
+	// https://github.com/chadmv/cmt/blob/master/src/ikRigNode.cpp
 	// https://theorangeduck.com/page/simple-two-joint
 	MStatus status;
 
 	GetIkTransforms();
+	
+	// double eps = 0.000001;
 
-	// makeNonZero approach would rather be for testing,
-	// Vector from start to mid fk
-	MVector startMidVec = makeNonZero(PosFkMid - PosFkStart);
-	// Vector from mid to end fk
-	MVector midEndVec = makeNonZero(PosFkMid - PosFkEnd);
-	// Vector from start to ik handle
-	MVector startIkVec = makeNonZero(PosIkHandle - PosFkStart);
-	// Pole vector - vector
-	MVector poleVectorVec = makeNonZero(PosFkPoleVector - PosFkStart);
-	// MVector poleVectorVec = makeNonZero(PosFkPoleVector);
+	// START solveTwoBoneIk
+	// Position vectors
+	MVector vecA = PosFkStart;
+	MVector vecB = PosFkMid;
+	MVector vecC = PosFkEnd;
+	MVector vecT = PosIkHandle;
+	MVector vecPv = PosFkPoleVector;
 
-	MVector startEndVec = makeNonZero(PosFkEnd - PosFkStart);
-	MVector midStartVec = makeNonZero(PosFkStart - PosFkMid);
-	MVector endMidVec = makeNonZero(PosFkEnd - PosFkMid);
-
+	// From to Vectors - reusable
+	MVector vecAB = vecB - vecA;
+	MVector vecAC = vecC - vecA;
+	MVector vecAT = vecT - vecA;
+	// Direction vector
+	MVector vecD = (vecB - (vecA + (vecAC * (vecAB * vecAC)))).normal();
 	// Lengths
-	double startMidLen = startMidVec.length();
-	double midEndLen = midEndVec.length();
-	double startIkLen = startIkVec.length();
-	double limbLength = startMidLen + midEndLen;
-	
-	double eps = 0.0001;
-	
+	double lenAB = vecAB.length();
+	double lenCB = (vecB - vecC).length();
+	double lenABC = lenAB + lenCB;
+	double lenAT = clamp(vecAT.length(), kEpsilon, lenABC - kEpsilon);
 
 	// Soften the edge if required
-	if (softness > 0.0) {startIkLen = softenIk(startIkLen, startMidLen, midEndLen, limbLength, softness);}
+	if (softness > 0.0) {lenAT = softenIk(lenAT, lenAB, lenCB, lenABC, softness);}
 
+	// Get current interior angles of start and mid
+	double ac_ab_0 = acos(clamp((vecAC).normal() * (vecAB).normal(), -1.0, 1.0));
+	double ba_bc_0 = acos(clamp((vecA - vecB).normal() * (vecC - vecB).normal(), -1.0, 1.0));
+	double ac_at_0 = acos(clamp((vecAC).normal() * (vecAT).normal(), -1.0, 1.0));
+	// Get desired interior angles
+	double ac_ab_1 = acos(clamp((lenCB * lenCB - lenAB * lenAB - lenAT * lenAT) / (-2 * lenAB * lenAT), -1.0, 1.0));
+	double ba_bc_1 = acos(clamp((lenAT * lenAT - lenAB * lenAB - lenCB * lenCB) / (-2 * lenAB * lenCB), -1.0, 1.0));
 
-	double ac_ab_0 = acos(clamp((startEndVec).normal() * (startMidVec).normal(), -1.0, 1.0));
-	double ba_bc_0 = acos(clamp((midStartVec).normal() * (endMidVec).normal(), -1.0, 1.0));
-	double ac_at_0 = acos(clamp((startEndVec).normal() * (startIkVec).normal(), -1.0, 1.0));
-
-	//midEndLen -> lcb
-	//startMidLen -> lab
-	//startIkLen - > lat
-	double lat = clamp(startIkLen, eps, limbLength - eps);
-	
-	double ac_ab_1 = acos(clamp((midEndLen * midEndLen - startMidLen * startMidLen - lat * lat) / (-2 * startMidLen * lat), -1.0, 1.0));
-	double ba_bc_1 = acos(clamp((lat * lat - startMidLen * startMidLen - midEndLen * midEndLen) / (-2 * startMidLen * midEndLen), -1.0, 1.0));
-	
-
-	MVector ac = (startEndVec).normal();
-	
-	MVector direction = (PosFkMid - (PosFkStart + (ac * ((startMidVec) * ac)))).normal();
-
-	MVector axis0 = ((startEndVec) ^ direction).normal();
-	MVector axis1 = (startEndVec ^ startIkVec).normal();
+	MVector axis0 = (vecAC ^ vecD).normal();
+	MVector axis1 = (vecAC ^ vecAT).normal();
 
 	MQuaternion r0(ac_ab_1 - ac_ab_0, axis0);
 	MQuaternion r1(ba_bc_1 - ba_bc_0, axis0);
 	MQuaternion r2(ac_at_0, axis1);
 
-	MVector n1 = ((startEndVec) ^ (startMidVec)).normal().rotateBy(r0).rotateBy(r2);
-	MVector n2 = ((startIkVec) ^ (poleVectorVec)).normal();
+	// Pole vector rotation
+  // Determine the rotation used to rotate the normal of the triangle formed by
+  // a.b.c post r0*r2 rotation to the normal of the triangle formed by triangle a.pv.t
+	MVector n1 = (vecAC ^ vecAB).normal().rotateBy(r0).rotateBy(r2);
+	MVector n2 = (vecAT ^ (vecPv - vecA)).normal();
 	MQuaternion r3 = n1.rotateTo(n2);
 	
 	// Rotation cross vectors and twist
-	MQuaternion quatTwist(twist, startIkVec);
+	MQuaternion quatTwist(twist, vecAT);
 
 	// Start rotation
 	QuatIkStart *= r0 * r2 * r3 * quatTwist;
@@ -519,9 +508,9 @@ MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	MDataHandle DhOutUpdate = dataBlock.outputValue(AttrOutUpdate, &status);
-	DhOutUpdate.set3Double(0.0, 0.0, 0.0);
-	DhOutUpdate.setClean();
+	MDataHandle dhOutUpdate = dataBlock.outputValue(AttrOutUpdate, &status);
+	dhOutUpdate.set3Double(0.0, 0.0, 0.0);
+	dhOutUpdate.setClean();
 
 	dataBlock.setClean(plug);
 

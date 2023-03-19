@@ -34,7 +34,7 @@
 
 
 
-#define kEpsilon 1.0e-5
+#define kEpsilon 0.000001
 #define absoluteValue(x) ((x) < 0 ? (-(x)) : (x))
 
 
