@@ -108,20 +108,6 @@ bool Ik2bSolver::isPassiveOutput(const MPlug& plug) const {
 }
 
 
-double Ik2bSolver::softenEdge(double hardEdge, double chainLength, double dsoft) {
-  double da = chainLength - dsoft;
-  double softEdge = da + dsoft * (1.0 - std::exp((da-hardEdge)/dsoft));
-  return (hardEdge > da && da > 0.0) ? softEdge : hardEdge;
-}
-
-
-double Ik2bSolver::softenIk(double lenAT, double lenAB, double lenCB, double lenABC, double softness) {
-	// Wrapper method for softhening the ik solve
-	lenAT = std::max(lenAT, lenAB - lenCB);
-	return softenEdge(lenAT, lenABC, softness);
-}
-
-
 MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks) {
 	/* Parse the data block and get all inputs.
 	 *
@@ -143,7 +129,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 
 	// Start fk controller
 	MDagPath pathFkStart;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkStartAttr).attribute()), pathFkStart);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkStartAttr).attribute()), pathFkStart);
 	if (status == MS::kSuccess) {
 		FnFkStart.setObject(pathFkStart);
 	} else {
@@ -151,7 +137,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Mid fk controller
 	MDagPath pathFkMid;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkMidAttr).attribute()), pathFkMid);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkMidAttr).attribute()), pathFkMid);
 	if (status == MS::kSuccess) {
 		FnFkMid.setObject(pathFkMid);
 	} else {
@@ -159,7 +145,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// End fk controller
 	MDagPath pathFkEnd;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inFkEndAttr).attribute()), pathFkEnd);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkEndAttr).attribute()), pathFkEnd);
 	if (status == MS::kSuccess) {
 		FnFkEnd.setObject(pathFkEnd);
 	} else {
@@ -167,7 +153,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Ik handle
 	MDagPath pathIkHandle;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inIkHandleAttr).attribute()), pathIkHandle);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inIkHandleAttr).attribute()), pathIkHandle);
 	if (status == MS::kSuccess) {
 		FnIkHandle.setObject(pathIkHandle);
 	} else {
@@ -175,7 +161,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Pole vector
 	MDagPath pathPoleVector;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(SelfObj, dataBlock.inputValue(inPoleVectorAttr).attribute()), pathPoleVector);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inPoleVectorAttr).attribute()), pathPoleVector);
 	if (status == MS::kSuccess) {
 		FnPoleVector.setObject(pathPoleVector);
 		bIsPoleVectorConnected = true;
@@ -244,7 +230,7 @@ void Ik2bSolver::GetIkTransforms() {
 
 
 void Ik2bSolver::BlendFkIk() {
-	// because we wantto use 0 - 100 in the channel box, yeah i know :|
+	// because we want to use 0 - 100 in the channel box, yeah i know :|
 	double ScaledWeight = fkIk * 0.01;
 
 	QuatOutStart = slerp(QuatFkStart, QuatIkStart, ScaledWeight);
@@ -333,7 +319,8 @@ void Ik2bSolver::SolveBlendedIk() {
 	*/
 	MStatus status;
 
-	solveTwoBoneIk();
+	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	// solveTwoBoneIk();
 
 	BlendFkIk();
 
@@ -351,7 +338,9 @@ void Ik2bSolver::SolveBlendedIk() {
 
 void Ik2bSolver::SolveIk() {
 	// Neat optimization though i couldn't get the single joint solve to work properley without flips
-	solveTwoBoneIk();
+	
+	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	// solveTwoBoneIk();
 
 	// Get chain length
 	// GetLimbLength();
@@ -407,74 +396,6 @@ void Ik2bSolver::SolveStraightLimb() {
 	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
 	FnFkMid.setRotation(QuatIkMid, MSpace::kWorld);
 	FnFkEnd.setRotation(QuatIkEnd, MSpace::kWorld);
-}
-
-
-void Ik2bSolver::solveTwoBoneIk() {
-	/* Calculates the ik for a two bone limb.
-	
-	Reference:
-		https://github.com/chadmv/cmt/blob/master/src/ikRigNode.cpp
-		https://theorangeduck.com/page/simple-two-joint
-
-	*/
-	MStatus status;
-
-	// GetIkTransforms();
-
-	// Position vectors
-	MVector vecA = PosFkStart;
-	MVector vecB = PosFkMid;
-	MVector vecC = PosFkEnd;
-	MVector vecT = PosIkHandle;
-	MVector vecPv = PosFkPoleVector;
-	// From to Vectors - reusable
-	MVector vecAB = vecB - vecA;
-	MVector vecAC = vecC - vecA;
-	MVector vecAT = vecT - vecA;
-	// Direction vector
-	MVector vecD = (vecB - (vecA + (vecAC * (vecAB * vecAC)))).normal();
-	// Lengths
-	double lenAB = vecAB.length();
-	double lenCB = (vecB - vecC).length();
-	double lenABC = lenAB + lenCB;
-	double lenAT = clamp(vecAT.length(), kEpsilon, lenABC - kEpsilon);
-
-	// Soften the edge if required
-	if (softness > 0.0) {lenAT = softenIk(lenAT, lenAB, lenCB, lenABC, softness);}
-
-	// Get current interior angles of start and mid
-	double ac_ab_0 = acos(clamp((vecAC).normal() * (vecAB).normal(), -1.0, 1.0));
-	double ba_bc_0 = acos(clamp((vecA - vecB).normal() * (vecC - vecB).normal(), -1.0, 1.0));
-	double ac_at_0 = acos(clamp((vecAC).normal() * (vecAT).normal(), -1.0, 1.0));
-	// Get desired interior angles
-	double ac_ab_1 = acos(clamp((lenCB * lenCB - lenAB * lenAB - lenAT * lenAT) / (-2 * lenAB * lenAT), -1.0, 1.0));
-	double ba_bc_1 = acos(clamp((lenAT * lenAT - lenAB * lenAB - lenCB * lenCB) / (-2 * lenAB * lenCB), -1.0, 1.0));
-
-	MVector axis0 = (vecAC ^ vecD).normal();
-	MVector axis1 = (vecAC ^ vecAT).normal();
-
-	MQuaternion r0(ac_ab_1 - ac_ab_0, axis0);
-	MQuaternion r1(ba_bc_1 - ba_bc_0, axis0);
-	MQuaternion r2(ac_at_0, axis1);
-
-	// Pole vector rotation
-  // Determine the rotation used to rotate the normal of the triangle formed by
-  // a.b.c post r0*r2 rotation to the normal of the triangle formed by triangle a.pv.t
-	MVector n1 = (vecAC ^ vecAB).normal().rotateBy(r0).rotateBy(r2);
-	MVector n2 = (vecAT ^ (vecPv - vecA)).normal();
-	MQuaternion r3 = n1.rotateTo(n2);
-	
-	// Rotation cross vectors and twist
-	MQuaternion quatTwist(twist, vecAT);
-
-	// Start rotation
-	QuatIkStart *= r0 * r2 * r3 * quatTwist;
-	
-	// Mid rotation
-	// QuatIkMid *= r1;
-	QuatIkMid *= r1 * r0 * r2 * r3 * quatTwist;
-
 }
 
 
@@ -569,7 +490,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		|| plugBeingDirtied == inFkIkAttr
 		|| plugBeingDirtied == AttrInTime
 	)	{
-		affectedPlugs.append(MPlug(SelfObj, AttrOutUpdate));
+		affectedPlugs.append(MPlug(objSelf, AttrOutUpdate));
 	}
 
 	return MS::kSuccess;
@@ -608,5 +529,5 @@ void Ik2bSolver::postConstructor() {
 	Reimplemented in MPxTransform, and MPxPolyTrg.
 
 	*/
-	SelfObj = thisMObject();
+	objSelf = thisMObject();
 }

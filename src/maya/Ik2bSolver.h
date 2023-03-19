@@ -50,37 +50,6 @@
 
 
 
-// class MLimbLink
-// {
-// public:
-// 	// MDagPath DagPath;
-// 	MFnTransform FnTransform;
-// 	// Location of bone in component (or world?) space.
-// 	MVector Location;
-
-// 	// Distance to its parent
-// 	float Length;
-
-// 	// Axis utilites
-// 	MVector LinkAxisZ;
-// 	MVector RealBendDir;
-// 	MVector BaseBendDir;
-
-// 	// Constructors
-// 	MLimbLink(const MDagPath& DagPath)
-// 		: FnTransform(DagPath)
-// 		, Location(GetLocation())
-// 		, Length(0.f)
-// 		, LinkAxisZ(MVector::zero)
-// 		, RealBendDir(MVector::zero)
-// 		, BaseBendDir(MVector::zero)
-// 	{};
-
-// 	MVector GetLocation() {return MVector(FnTransform.rotatePivot(MSpace::kWorld));}
-// };
-
-
-
 class Ik2bSolver : public MPxNode {
 public:
 	// Public Data
@@ -130,7 +99,7 @@ public:
 
 	MTime timeCurrent, timeCached;
 
-	MObject SelfObj;
+	MObject objSelf;
 
 	// Helpers
 	MSelectionList listSel;
@@ -155,22 +124,19 @@ public:
 	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
 
 	// Custom solver methods
-	double softenEdge(double hardEdge, double chainLength, double dsoft);
-	double softenIk(double startIkLen, double startMidLen, double midEndLen, double startMidEndLen, double softness);
-
 	double GetLimbLength();
-	void BlendFkIk();
 
 	void GetFkTransforms();
 	void GetIkTransforms();
 
 	MStatus solve(MDagPathArray& InOutLinks);
+
 	bool solveLimb(MDagPathArray& InOutLinks);
 	void SolveFk();
 	void SolveBlendedIk();
 	void SolveIk();
 	void SolveStraightLimb();
-	void solveTwoBoneIk();
+	void BlendFkIk();
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);

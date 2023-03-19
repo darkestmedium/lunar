@@ -48,11 +48,25 @@ namespace LMSolve {
 	 * Lunar Maya Solver utiliteis
 	 */
 
+	inline double softenEdge(double hardEdge, double chainLength, double dsoft) {
+		double da = chainLength - dsoft;
+		double softEdge = da + dsoft * (1.0 - std::exp((da-hardEdge)/dsoft));
+		return (hardEdge > da && da > 0.0) ? softEdge : hardEdge;
+	}
+
+
+	inline double softenIk(double lenAT, double lenAB, double lenCB, double lenABC, double softness) {
+		// Wrapper method for softhening the ik solve
+		lenAT = std::max(lenAT, lenAB - lenCB);
+		return softenEdge(lenAT, lenABC, softness);
+	}
+
+
 	inline MStatus twoBoneIk(
 		const MVector& vecA, const MVector& vecB, const MVector& vecC, const MVector& vecT, const MVector& vecPv,
 		double twist, double softness, 
-		MQuaternion& QuatIkStart, MQuaternion& QuatIkMid
-	) {
+		MQuaternion& quatIkStart, MQuaternion& quatIkMid
+		) {
 
 		/* Calculates the ik for a two bone limb.
 		
@@ -62,8 +76,6 @@ namespace LMSolve {
 
 		*/
 		MStatus status;
-
-		// GetIkTransforms();
 
 		// From to Vectors - reusable
 		MVector vecAB = vecB - vecA;
@@ -78,7 +90,7 @@ namespace LMSolve {
 		double lenAT = clamp(vecAT.length(), kEpsilon, lenABC - kEpsilon);
 
 		// Soften the edge if required
-		// if (softness > 0.0) {lenAT = softenIk(lenAT, lenAB, lenCB, lenABC, softness);}
+		if (softness > 0.0) {lenAT = softenIk(lenAT, lenAB, lenCB, lenABC, softness);}
 
 		// Get current interior angles of start and mid
 		double ac_ab_0 = acos(clamp((vecAC).normal() * (vecAB).normal(), -1.0, 1.0));
@@ -105,12 +117,9 @@ namespace LMSolve {
 		// Rotation cross vectors and twist
 		MQuaternion quatTwist(twist, vecAT);
 
-		// Start rotation
-		QuatIkStart *= r0 * r2 * r3 * quatTwist;
-		
-		// Mid rotation
-		QuatIkMid *= r1;
-		QuatIkMid *= r0 * r2 * r3 * quatTwist;
+		quatIkStart *= r0 * r2 * r3 * quatTwist;
+
+		quatIkMid *= r1 * r0 * r2 * r3 * quatTwist;
 
 		return MS::kSuccess;
 	}
