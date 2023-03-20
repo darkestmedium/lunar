@@ -233,7 +233,7 @@ MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
 	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
 		if (LMGLobal::currentToolIsTransformContext()) {
 			MGlobal::getActiveSelectionList(listSel);
-			// 1 If selection has fk solve fk
+			// If selection has any fk ctrl, solve fk
 			if (listSel.hasItem(InOutLinks[0]) || listSel.hasItem(InOutLinks[1]) || listSel.hasItem(InOutLinks[2])) {
 				solveFk();
 			} else {
@@ -246,7 +246,7 @@ MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
 	if (fkIk == 0.0) {
 		solveFk();
 	}	else if (fkIk > 0.0 && fkIk < 100.0) {
-		solveBlendedIk();
+		solveFkIk();
 	} else if (fkIk == 100.0) {
 		solveIk();
 	}
@@ -276,7 +276,8 @@ void Ik2bSolver::solveFk() {
 
 
 void Ik2bSolver::solveIk() {
-	// Neat optimization though i couldn't get the single joint solve to work properley without flips
+	/* Calculates the ik solution for a two bone limb.
+	*/
 	getIkTransforms();
 
 	LMSolve::twoBoneIk(PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
@@ -302,7 +303,7 @@ void Ik2bSolver::blendFkIk() {
 }
 
 
-void Ik2bSolver::solveBlendedIk() {
+void Ik2bSolver::solveFkIk() {
 	/* So kind of does what the name says but not really.
 	*/
 	getFkTransforms();

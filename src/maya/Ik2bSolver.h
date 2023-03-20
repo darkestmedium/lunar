@@ -121,8 +121,6 @@ public:
 	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
 
 	// Custom solver methods
-	double GetLimbLength();
-
 	void getFkTransforms();
 	void getIkTransforms();
 
@@ -130,7 +128,7 @@ public:
 	void solveFk();
 	void solveIk();
 	void blendFkIk();
-	void solveBlendedIk();
+	void solveFkIk();
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);
