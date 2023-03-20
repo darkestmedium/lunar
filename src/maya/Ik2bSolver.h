@@ -123,14 +123,14 @@ public:
 	// Custom solver methods
 	double GetLimbLength();
 
-	void GetFkTransforms();
-	void GetIkTransforms();
+	void getFkTransforms();
+	void getIkTransforms();
 
 	MStatus solveLimb(MDagPathArray& InOutLinks);
-	void SolveFk();
-	void SolveBlendedIk();
-	void SolveIk();
-	void BlendFkIk();
+	void solveFk();
+	void solveIk();
+	void blendFkIk();
+	void solveBlendedIk();
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);

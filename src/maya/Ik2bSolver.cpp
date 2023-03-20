@@ -185,7 +185,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 }
 
 
-void Ik2bSolver::GetFkTransforms() {
+void Ik2bSolver::getFkTransforms() {
 	// Position
 	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
 	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
@@ -202,11 +202,11 @@ void Ik2bSolver::GetFkTransforms() {
 }
 
 
-void Ik2bSolver::GetIkTransforms() {
+void Ik2bSolver::getIkTransforms() {
 	// Position
-	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
-	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
-	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
+	PosIkStart = FnFkStart.rotatePivot(MSpace::kWorld);
+	PosIkMid = FnFkMid.rotatePivot(MSpace::kWorld);
+	PosIkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
 	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {PosIkPoleVector = posInPoleVector;}
@@ -229,35 +229,32 @@ MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
 		InOutLinks (MDagPathArray&): Array with path to the input transforms.
 
 	*/
-	GetFkTransforms();
-	GetIkTransforms();
-
 	// Editing
 	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
 		if (LMGLobal::currentToolIsTransformContext()) {
 			MGlobal::getActiveSelectionList(listSel);
 			// 1 If selection has fk solve fk
 			if (listSel.hasItem(InOutLinks[0]) || listSel.hasItem(InOutLinks[1]) || listSel.hasItem(InOutLinks[2])) {
-				SolveFk();
+				solveFk();
 			} else {
-				SolveIk();
+				solveIk();
 			}
 			return MS::kSuccess;
 		}
 	}
 	// Solve for playback and all other possible cases - just solve something
 	if (fkIk == 0.0) {
-		SolveFk();
+		solveFk();
 	}	else if (fkIk > 0.0 && fkIk < 100.0) {
-		SolveBlendedIk();
+		solveBlendedIk();
 	} else if (fkIk == 100.0) {
-		SolveIk();
+		solveIk();
 	}
 	return MS::kSuccess;
 }
 
 
-void Ik2bSolver::SolveFk() {
+void Ik2bSolver::solveFk() {
 	/* Set the fk transforms.
 
 	We don't actually solve fk - it's called like this just for consistency and readability.
@@ -265,6 +262,8 @@ void Ik2bSolver::SolveFk() {
 	a constant distance (limb length) calculated from the mid transform. 
 
 	*/
+	getFkTransforms();
+
 	// Position
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
 	if (bIsPoleVectorConnected) {
@@ -276,10 +275,11 @@ void Ik2bSolver::SolveFk() {
 }
 
 
-void Ik2bSolver::SolveIk() {
+void Ik2bSolver::solveIk() {
 	// Neat optimization though i couldn't get the single joint solve to work properley without flips
-	
-	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	getIkTransforms();
+
+	LMSolve::twoBoneIk(PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
 
 	// Set fk rotations
 	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
@@ -288,7 +288,7 @@ void Ik2bSolver::SolveIk() {
 }
 
 
-void Ik2bSolver::BlendFkIk() {
+void Ik2bSolver::blendFkIk() {
 	// because we want to use 0 - 100 in the channel box, yeah i know :|
 	double ScaledWeight = fkIk * 0.01;
 
@@ -302,13 +302,15 @@ void Ik2bSolver::BlendFkIk() {
 }
 
 
-void Ik2bSolver::SolveBlendedIk() {
+void Ik2bSolver::solveBlendedIk() {
 	/* So kind of does what the name says but not really.
 	*/
+	getFkTransforms();
+	getIkTransforms();
 
-	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	LMSolve::twoBoneIk(PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
 
-	BlendFkIk();
+	blendFkIk();
 
 	// Set rotations
 	FnFkStart.setRotation(QuatOutStart, MSpace::kWorld);
