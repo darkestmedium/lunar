@@ -10,8 +10,12 @@ Attribute Ik2bSolver::inFkStartAttr;
 Attribute Ik2bSolver::inFkMidAttr;
 Attribute Ik2bSolver::inFkEndAttr;
 Attribute Ik2bSolver::inIkHandleAttr;
-// Attribute Ik2bSolver::inPoleVectorAttr;
-MObject Ik2bSolver::inPoleVectorAttr;
+
+MObject Ik2bSolver::attrInPvX;
+MObject Ik2bSolver::attrInPvY;
+MObject Ik2bSolver::attrInPvZ;
+MObject Ik2bSolver::attrInPv;
+
 Attribute Ik2bSolver::inTwistAttr;
 MObject Ik2bSolver::inSoftnessAttr;
 MObject Ik2bSolver::inFkIkAttr;
@@ -43,7 +47,11 @@ MStatus Ik2bSolver::initialize() {
 	createAttribute(inFkMidAttr, "fkMid", DefaultValue<MMatrix>());
 	createAttribute(inFkEndAttr, "fkEnd", DefaultValue<MMatrix>());
 	createAttribute(inIkHandleAttr, "ikHandle", DefaultValue<MMatrix>());
-	inPoleVectorAttr = nAttr.createPoint("poleVector", "pv");
+
+	attrInPvX = nAttr.create("poleVectorX", "pvX", MFnNumericData::kDouble, 0.0);
+	attrInPvY = nAttr.create("poleVectorY", "pvY", MFnNumericData::kDouble, 0.0);
+	attrInPvZ = nAttr.create("poleVectorZ", "pvZ", MFnNumericData::kDouble, 0.0);
+	attrInPv = nAttr.create("poleVector", "pv", attrInPvX, attrInPvY, attrInPvZ);
 
 	createAttribute(inTwistAttr, "twist", DefaultValue<MAngle>());
 
@@ -75,7 +83,7 @@ MStatus Ik2bSolver::initialize() {
 	// Add attributes
 	addAttributes(
 		inFkStartAttr, inFkMidAttr,	inFkEndAttr,
-		inIkHandleAttr,	inPoleVectorAttr,
+		inIkHandleAttr,	attrInPv,
 		inTwistAttr, inSoftnessAttr, inFkIkAttr,
 		AttrInTime,
 		AttrOutUpdate
@@ -125,7 +133,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	matInFkMid = dataBlock.inputValue(inFkMidAttr).asMatrix();
 	matInFkEnd = dataBlock.inputValue(inFkEndAttr).asMatrix();
 	matInIkHandle = dataBlock.inputValue(inIkHandleAttr).asMatrix();
-	posInPoleVector = dataBlock.inputValue(inPoleVectorAttr).asVector();
+	posInPoleVector = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
 	// Start fk controller
 	MDagPath pathFkStart;
@@ -161,7 +169,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Pole vector
 	MDagPath pathPoleVector;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inPoleVectorAttr).attribute()), pathPoleVector);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInPv).attribute()), pathPoleVector);
 	if (status == MS::kSuccess) {
 		FnPoleVector.setObject(pathPoleVector);
 		bIsPoleVectorConnected = true;
@@ -188,35 +196,38 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 void Ik2bSolver::getFkTransforms() {
 	// Position
 	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
+	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
+
 	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
+	FnFkMid.getRotation(QuatFkMid, MSpace::kWorld);
+
 	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
+	FnFkEnd.getRotation(QuatFkEnd, MSpace::kWorld);
+
 	PosFkHandle = PosFkEnd;
+	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
+
 	if (bIsPoleVectorConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {PosFkPoleVector = posInPoleVector;}
-
-	// Rotations
-	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
-	FnFkMid.getRotation(QuatFkMid, MSpace::kWorld);
-	FnFkEnd.getRotation(QuatFkEnd, MSpace::kWorld);
-	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
 }
 
 
 void Ik2bSolver::getIkTransforms() {
 	// Position
 	PosIkStart = FnFkStart.rotatePivot(MSpace::kWorld);
+	FnFkStart.getRotation(QuatIkStart, MSpace::kWorld);
+
 	PosIkMid = FnFkMid.rotatePivot(MSpace::kWorld);
+	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
+
 	PosIkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
+	FnFkEnd.getRotation(QuatIkEnd, MSpace::kWorld);
+
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
+	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
+
 	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {PosIkPoleVector = posInPoleVector;}
-
-	// Rotation
-	// Init ik quats to get vectors and orients etc to prevent pops and flips on the ik
-	FnFkStart.getRotation(QuatIkStart, MSpace::kWorld);
-	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
-	FnFkEnd.getRotation(QuatIkEnd, MSpace::kWorld);
-	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
 }
 
 
@@ -410,7 +421,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		|| plugBeingDirtied == inFkMidAttr
 		|| plugBeingDirtied == inFkStartAttr
 		|| plugBeingDirtied == inIkHandleAttr
-		|| plugBeingDirtied == inPoleVectorAttr
+		|| plugBeingDirtied == attrInPv
 		|| plugBeingDirtied == inTwistAttr
 		|| plugBeingDirtied == inSoftnessAttr
 		|| plugBeingDirtied == inFkIkAttr

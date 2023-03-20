@@ -71,7 +71,7 @@ namespace LMSolve {
 			https://theorangeduck.com/page/simple-two-joint
 
 		*/
-		MStatus status;
+		// MStatus status;
 
 		// From to Vectors - reusable
 		MVector vecAB = vecB - vecA;

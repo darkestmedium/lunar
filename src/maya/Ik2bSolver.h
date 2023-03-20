@@ -61,7 +61,7 @@ public:
 	static Attribute inFkMidAttr;
 	static Attribute inFkEndAttr;
 	static Attribute inIkHandleAttr;
-	static MObject inPoleVectorAttr;
+	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
 	static Attribute inTwistAttr;
 	static MObject inSoftnessAttr;
 	static MObject inFkIkAttr;
