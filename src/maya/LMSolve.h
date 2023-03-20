@@ -48,17 +48,14 @@ namespace LMSolve {
 	 * Lunar Maya Solver utiliteis
 	 */
 
-	inline double softenEdge(double hardEdge, double chainLength, double dsoft) {
-		double da = chainLength - dsoft;
-		double softEdge = da + dsoft * (1.0 - std::exp((da-hardEdge)/dsoft));
-		return (hardEdge > da && da > 0.0) ? softEdge : hardEdge;
-	}
 
-
-	inline double softenIk(double lenAT, double lenAB, double lenCB, double lenABC, double softness) {
-		// Wrapper method for softhening the ik solve
-		lenAT = std::max(lenAT, lenAB - lenCB);
-		return softenEdge(lenAT, lenABC, softness);
+	inline double softenIk(double lenAT, double lenAB, double vecBC, double lenABC, double softness) {
+		/* Softness the AT length if required.
+		*/
+		lenAT = std::max(lenAT, lenAB - vecBC);
+		double da = lenABC - softness;
+		double softAT = da + softness * (1.0 - std::exp((da-lenAT)/softness));
+		return (lenAT > da && da > 0.0) ? softAT : lenAT;
 	}
 
 
@@ -80,6 +77,7 @@ namespace LMSolve {
 		MVector vecAB = vecB - vecA;
 		MVector vecAC = vecC - vecA;
 		MVector vecAT = vecT - vecA;
+		MVector vecBC = vecC - vecB;
 		// Direction vector
 		MVector vecD = (vecB - (vecA + (vecAC * (vecAB * vecAC)))).normal();
 		// Lengths
@@ -89,11 +87,11 @@ namespace LMSolve {
 		double lenAT = clamp(vecAT.length(), kEpsilon, lenABC - kEpsilon);
 
 		// Soften the edge if required
-		if (softness > 0.0) {lenAT = softenIk(lenAT, lenAB, lenCB, lenABC, softness);}
+		if (softness > 0.0) {lenAT = softenIk(vecAT.length(), lenAB, vecBC.length(), lenABC, softness);}
 
 		// Get current interior angles of start and mid
 		double ac_ab_0 = acos(clamp((vecAC).normal() * (vecAB).normal(), -1.0, 1.0));
-		double ba_bc_0 = acos(clamp((vecA - vecB).normal() * (vecC - vecB).normal(), -1.0, 1.0));
+		double ba_bc_0 = acos(clamp((vecA - vecB).normal() * vecBC.normal(), -1.0, 1.0));
 		double ac_at_0 = acos(clamp((vecAC).normal() * (vecAT).normal(), -1.0, 1.0));
 		// Get desired interior angles
 		double ac_ab_1 = acos(clamp((lenCB * lenCB - lenAB * lenAB - lenAT * lenAT) / (-2 * lenAB * lenAT), -1.0, 1.0));
