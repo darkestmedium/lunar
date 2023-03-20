@@ -181,19 +181,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	InOutLinks.append(pathIkHandle);
 	InOutLinks.append(pathPoleVector);
 
-	// LimbLength = GetLimbLength();
-
 	return MS::kSuccess;
-}
-
-
-double Ik2bSolver::GetLimbLength() {
-	/* Calculates the limb length. */
-	MPoint pFkStart = (FnFkStart.rotatePivot(MSpace::kWorld));
-	MPoint pFkMid = (FnFkMid.rotatePivot(MSpace::kWorld));
-	MPoint pFkEnd = (FnFkEnd.rotatePivot(MSpace::kWorld));
-
-	return pFkStart.distanceTo(pFkMid) + pFkMid.distanceTo(pFkEnd);
 }
 
 
@@ -210,22 +198,93 @@ void Ik2bSolver::GetFkTransforms() {
 	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
 	FnFkMid.getRotation(QuatFkMid, MSpace::kWorld);
 	FnFkEnd.getRotation(QuatFkEnd, MSpace::kWorld);
-
-	// Init ik quats to get vectors and orients etc to prevent pops and flips on the ik
-	QuatIkStart = QuatFkStart;
-	QuatIkMid = QuatFkMid;
-	QuatIkEnd = QuatFkEnd;
+	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
 }
 
 
 void Ik2bSolver::GetIkTransforms() {
 	// Position
+	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
+	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
+	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
-
 	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {PosIkPoleVector = posInPoleVector;}
-	// PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);
-	FnIkHandle.getRotation(QuatIkEnd, MSpace::kWorld);
+
+	// Rotation
+	// Init ik quats to get vectors and orients etc to prevent pops and flips on the ik
+	FnFkStart.getRotation(QuatIkStart, MSpace::kWorld);
+	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
+	FnFkEnd.getRotation(QuatIkEnd, MSpace::kWorld);
+	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
+}
+
+
+MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
+	/* Solves the limb. 
+
+	Main fk / ik routing method. 
+
+	Args:
+		InOutLinks (MDagPathArray&): Array with path to the input transforms.
+
+	*/
+	GetFkTransforms();
+	GetIkTransforms();
+
+	// Editing
+	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
+		if (LMGLobal::currentToolIsTransformContext()) {
+			MGlobal::getActiveSelectionList(listSel);
+			// 1 If selection has fk solve fk
+			if (listSel.hasItem(InOutLinks[0]) || listSel.hasItem(InOutLinks[1]) || listSel.hasItem(InOutLinks[2])) {
+				SolveFk();
+			} else {
+				SolveIk();
+			}
+			return MS::kSuccess;
+		}
+	}
+	// Solve for playback and all other possible cases - just solve something
+	if (fkIk == 0.0) {
+		SolveFk();
+	}	else if (fkIk > 0.0 && fkIk < 100.0) {
+		SolveBlendedIk();
+	} else if (fkIk == 100.0) {
+		SolveIk();
+	}
+	return MS::kSuccess;
+}
+
+
+void Ik2bSolver::SolveFk() {
+	/* Set the fk transforms.
+
+	We don't actually solve fk - it's called like this just for consistency and readability.
+	The isEditing flag is reserved for editing the fk transforms where we move the pole vector by
+	a constant distance (limb length) calculated from the mid transform. 
+
+	*/
+	// Position
+	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
+	if (bIsPoleVectorConnected) {
+		FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
+	}
+
+	// Rotation
+	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
+}
+
+
+void Ik2bSolver::SolveIk() {
+	// Neat optimization though i couldn't get the single joint solve to work properley without flips
+	
+	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+
+	// Set fk rotations
+	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
+	FnFkMid.setRotation(QuatIkMid, MSpace::kWorld);
+	FnFkEnd.setRotation(QuatIkHandle, MSpace::kWorld);
 }
 
 
@@ -243,84 +302,11 @@ void Ik2bSolver::BlendFkIk() {
 }
 
 
-MStatus Ik2bSolver::solve(MDagPathArray& InOutLinks) {
-	/* */
-	MStatus status;
-
-	GetFkTransforms();
-	GetIkTransforms();
-
-	solveLimb(InOutLinks);
-
-	// Cache time change
-	timeCached = timeCurrent;
-
-	return MS::kSuccess;
-}
-
-
-bool Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
-	/* Solves the limb. 
-
-	Main fk / ik routing method. 
-
-	TODO:
-		Rework routing, we need to always solve and extract / isolate the editing mode.
-
-	Args:
-		InOutLinks (MDagPathArray&): Array with path to the input transforms.
-
-	*/
-	// Editing
-	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
-		if (LMGLobal::currentToolIsTransformContext()) {
-			MGlobal::getActiveSelectionList(listSel);
-			// 1 If selection has fk solve fk
-			if (listSel.hasItem(InOutLinks[0]) || listSel.hasItem(InOutLinks[1]) || listSel.hasItem(InOutLinks[2])) {
-				SolveFk();
-			} else {
-				SolveIk();
-			}
-			return true;
-		}
-	}
-	// Solve for playback and all other possible cases - just solve something
-	if (fkIk == 0.0) {
-		SolveFk();
-	}	else if (fkIk > 0.0 && fkIk < 100.0) {
-		SolveBlendedIk();
-	} else if (fkIk == 100.0) {
-		SolveIk();
-	}
-	return true;
-}
-
-
-void Ik2bSolver::SolveFk() {
-	/* Set the fk transforms.
-
-	We don't actually solve fk - it's called like this just for consistency and readability.
-	The isEditing flag is reserved for editing the fk transforms where we move the pole vector by
-	a constant distance (limb length) calculated from the mid transform. 
-
-	*/
-	if (bIsPoleVectorConnected) {
-		FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
-	}
-
-	// Set ik transforms
-	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
-	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
-}
-
-
 void Ik2bSolver::SolveBlendedIk() {
 	/* So kind of does what the name says but not really.
 	*/
-	MStatus status;
 
 	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
-	// solveTwoBoneIk();
 
 	BlendFkIk();
 
@@ -333,69 +319,6 @@ void Ik2bSolver::SolveBlendedIk() {
 	// Sync the ik ctrl to the fk end bone due to differences in fk / ik blending
 	FnIkHandle.setTranslation(PosOutHandle, MSpace::kWorld);
 	FnPoleVector.setTranslation(PosOutPoleVector, MSpace::kWorld);
-}
-
-
-void Ik2bSolver::SolveIk() {
-	// Neat optimization though i couldn't get the single joint solve to work properley without flips
-	
-	LMSolve::twoBoneIk(PosFkStart, PosFkMid, PosFkEnd, PosIkHandle, PosFkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
-	// solveTwoBoneIk();
-
-	// Get chain length
-	// GetLimbLength();
-
-	// if (RootTargetDistance >= LimbLength) {
-	// 	SolveStraightLimb();
-	// } else {
-	// 	solveTwoBoneIk();
-	// }
-
-	// Set fk rotations
-	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
-	FnFkMid.setRotation(QuatIkMid, MSpace::kWorld);
-	FnFkEnd.setRotation(QuatIkEnd, MSpace::kWorld);
-}
-
-
-void Ik2bSolver::SolveStraightLimb() {
-	MVector FkEndLocation = FnFkEnd.rotatePivot(MSpace::kWorld);
-	MVector FkMidLocation = FnFkMid.rotatePivot(MSpace::kWorld);
-	MVector FkStartLocation = FnFkStart.rotatePivot(MSpace::kWorld);
-	MVector IkHandleLocation = FnIkHandle.rotatePivot(MSpace::kWorld);
-	MVector PoleVectorLocation = FnPoleVector.rotatePivot(MSpace::kWorld);
-
-	MVector PoleVector = makeNonZero(PoleVectorLocation - FkStartLocation).normal();
-	MVector Direction = makeNonZero(IkHandleLocation - FkStartLocation).normal();
-
-	// compute cross products
-	// MVector dir = (PosFkMid - (PosFkStart + (ac * ((vecAB) * ac)))).normal();
-
-	MVector Cross = Direction ^ PoleVector;
-	MVector UpVector = Cross ^ Direction;
-
-	double ArrayRotation[4][4] = {
-		{Direction.x, Direction.y, Direction.z, 0},
-		{UpVector.x, UpVector.y, UpVector.z, 0}, 
-		{Cross.x, Cross.y, Cross.z, 0}, 
-		{FkStartLocation.x, FkStartLocation.y, FkStartLocation.z, 1}
-	};
-	const MMatrix MatrixRotation(ArrayRotation);
-	MTransformationMatrix FnMatrixRotation(MatrixRotation);
-
-	QuatIkStart = FnMatrixRotation.rotation();
-
-	MQuaternion QuatTwist(twist, Direction);
-
-	QuatIkStart *= QuatTwist;
-
-	QuatIkMid *= QuatIkStart;
-
-	FnIkHandle.getRotation(QuatIkEnd, MSpace::kWorld);
-
-	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
-	FnFkMid.setRotation(QuatIkMid, MSpace::kWorld);
-	FnFkEnd.setRotation(QuatIkEnd, MSpace::kWorld);
 }
 
 
@@ -454,18 +377,18 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	// Check if all inputs are connected and parse the data block
 	MDagPathArray InOutLinks;
 	status = parseDataBlock(dataBlock, InOutLinks);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	// Solve the limb
-	status = solve(InOutLinks);
+	status = solveLimb(InOutLinks);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	// Set the output and data block clean
 	status = updateOutput(plug, dataBlock);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	// Cache time change
+	timeCached = timeCurrent;
 
 	return MS::kSuccess;
 }

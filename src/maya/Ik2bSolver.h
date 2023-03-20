@@ -76,9 +76,6 @@ public:
 	double twist, softness, fkIk;
 	bool bIsPoleVectorConnected;
 
-	double LimbLength;
-	double RootTargetDistance;
-
 	// Function sets
 	MFnTransform FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
 
@@ -91,7 +88,7 @@ public:
 	MVector PosOutStart, PosOutMid, PosOutEnd, PosOutHandle, PosOutPoleVector;
 	// Quats
 	// Fk
-	MQuaternion QuatFkStart, QuatFkMid, QuatFkEnd;
+	MQuaternion QuatFkStart, QuatFkMid, QuatFkEnd, QuaFkHandle;
 	// Ik
 	MQuaternion QuatIkStart, QuatIkMid, QuatIkEnd, QuatIkHandle;
 	// Out
@@ -129,13 +126,10 @@ public:
 	void GetFkTransforms();
 	void GetIkTransforms();
 
-	MStatus solve(MDagPathArray& InOutLinks);
-
-	bool solveLimb(MDagPathArray& InOutLinks);
+	MStatus solveLimb(MDagPathArray& InOutLinks);
 	void SolveFk();
 	void SolveBlendedIk();
 	void SolveIk();
-	void SolveStraightLimb();
 	void BlendFkIk();
 
 	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
