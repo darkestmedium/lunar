@@ -48,20 +48,24 @@ namespace LMRigUtils {
 	 * Lunar Maya Rig Utilities
 	 */
 
-	inline MVector getPoleVectorPosition(MVector& posStart, MVector& posMid, MVector& posEnd) {
-		/* Calculates the perfect pole vector position for ik solving.
+	inline MVector getPvPosition(MVector& vecA, MVector& vecB, MVector& vecC, MString space="world") {
+		/* Gets the pole vector position from the input of three vectors.
 
 		From Greg's Hendrix tutorial https://www.youtube.com/watch?v=bB_HL1tBVHY
 
 		*/
-		MVector vecStartEnd(posEnd - posStart);
-		MVector vecMidEnd(posEnd - posMid);
+		MVector vecAC = vecC - vecA;
+		MVector vecAB = vecB - vecA;
+		MVector vecBC = vecC - vecB;
 
-		double valScale = (vecStartEnd * vecMidEnd) / (vecStartEnd * vecStartEnd);
-		MVector vecProjection = (vecStartEnd * valScale) + posStart;
-		double lenLimb = (posMid - posStart).length() + vecMidEnd.length();
+		double valScale = (vecAC * vecAB) / (vecAC * vecAC);
+		MVector vecProjection = vecAC * valScale + vecA;
+		double lenABC = vecAB.length() + vecBC.length();
 
-		return (posMid - vecProjection).normal() * lenLimb + posMid;
+		MVector posPv((vecB - vecProjection).normal() * lenABC);
+
+		if (space == "world") {return posPv + vecB;}
+		return posPv;
 	}
 };
 

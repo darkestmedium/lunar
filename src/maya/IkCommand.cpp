@@ -272,7 +272,7 @@ MStatus IkCommand::redoIt() {
 			MVector posFkStart = fnFkStart.rotatePivot(MSpace::kWorld);
 			MVector posFkMid = fnFkMid.rotatePivot(MSpace::kWorld);
 			MVector posFkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
-			MVector posPoleVector = LMRigUtils::getPoleVectorPosition(posFkStart, posFkMid, posFkEnd);
+			MVector posPoleVector = LMRigUtils::getPvPosition(posFkStart, posFkMid, posFkEnd, "local");
 
 			plugInPoleVectorX.setValue(posPoleVector.x);
 			plugInPoleVectorY.setValue(posPoleVector.y);

@@ -529,7 +529,6 @@ class LMObject():
 
 
 
-
 class LMScene():
 	"""Maya Scene wrapper class.
 
@@ -902,33 +901,3 @@ class LMTransformUtils():
 					if distance:
 						LMAttribute.editLocked(f"{ctrl}Shape.localScaleX", distance*0.7)
 						LMAttribute.editLocked(f"{ctrl}Shape.localPositionX", distance*0.5)
-
-
-	@classmethod
-	def getPoleVectorPosition(cls, start:str, mid:str, end:str) -> om.MVector:
-		"""Gets the best pole vector position from the input of three nodes.
-		"""
-		# Get world position from strings
-		PosStart = cmds.xform(start, q=True, ws=True, t=True)
-		PosMid = cmds.xform(mid, q=True, ws=True, t=True)
-		PosEnd = cmds.xform(end, q=True, ws=True, t=True)
-
-		# Get vectors
-		PosFkStart = om.MVector(PosStart[0], PosStart[1], PosStart[2])
-		PosFkMid = om.MVector(PosMid[0], PosMid[1], PosMid[2])
-		PosFkEnd = om.MVector(PosEnd[0], PosEnd[1], PosEnd[2])
-
-		VecStartEnd = (PosFkEnd - PosFkStart)
-		VecMidEnd = (PosFkEnd - PosFkMid)
-
-		ValScale = (VecStartEnd * VecMidEnd) / (VecStartEnd * VecStartEnd)
-		VecProjection = (VecStartEnd * ValScale) + PosFkStart
-		LenLimb = (PosFkMid - PosFkStart).length() + VecMidEnd.length()
-
-		return (PosFkMid - VecProjection).normal() * LenLimb + PosFkMid
-
-
-
-
-	
-

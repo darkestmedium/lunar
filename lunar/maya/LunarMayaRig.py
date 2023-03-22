@@ -1352,6 +1352,41 @@ class Ik2bLimbComponent():
 
 
 
+class LMRigUtils():
+	"""Wrapper class for rig utilities.
+	"""
+
+	log = logging.getLogger("LMRigUtils")
+
+
+	@classmethod
+	def getPoleVectorPosition(cls, start:str, mid:str, end:str, space:str="world") -> om.MVector:
+		"""Gets the pole vector position from the input of three objects.
+		"""
+		# Get world position from strings
+		posStart = cmds.xform(start, q=True, ws=True, t=True)
+		posMid = cmds.xform(mid, q=True, ws=True, t=True)
+		posEnd = cmds.xform(end, q=True, ws=True, t=True)
+		# Get vectors
+		vecA = om.MVector(posStart[0], posStart[1], posStart[2])
+		vecB = om.MVector(posMid[0], posMid[1], posMid[2])
+		vecC = om.MVector(posEnd[0], posEnd[1], posEnd[2])
+
+		vecAC = vecC - vecA
+		vecAB = vecB - vecA
+		vecBC = vecC - vecB
+
+		valScale = (vecAC * vecAB) / (vecAC * vecAC)
+		vecProjection = vecAC * valScale + vecA
+		lenABC = vecAB.length() + vecBC.length()
+
+		posPv = ((vecB - vecProjection).normal() * lenABC)
+
+		if space == "world": return posPv + vecB
+		return posPv
+
+
+
 class MMetaHumanUtils():
 	"""Wrapper class for utils related to the meta human rig in maya.
 	"""

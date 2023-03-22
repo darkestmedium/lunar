@@ -70,6 +70,7 @@ public:
 	static Attribute AttrOutUpdateX, AttrOutUpdateY, AttrOutUpdateZ, AttrOutUpdate;
 
 	MObject objFkStart, objFkMid, objFkEnd, objIkhandle, objPoleVector;
+	MDagPathArray InOutLinks;
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPoleVector;
@@ -105,7 +106,7 @@ public:
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
-		, bIsPoleVectorConnected(false)
+		// , bIsPoleVectorConnected(false)
 	{};
 	// Destructors
 	~Ik2bSolver() override {};

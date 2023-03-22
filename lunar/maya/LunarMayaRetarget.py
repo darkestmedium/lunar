@@ -2370,10 +2370,10 @@ if __name__ == "__main__":
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
-			"/Users/luky/Desktop/testInput",
+			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/crouch-transition/anton-mm-crouch^run-bkwd-135-l.fbx",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/OUT",
+		outputDirectory="/Users/luky/Desktop/crouch",
 		# sourceNameSpace="Anton",
 		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe5",

@@ -208,7 +208,9 @@ void Ik2bSolver::getFkTransforms() {
 	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
 
 	if (bIsPoleVectorConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
-	else {PosFkPoleVector = posInPoleVector;}
+	else {
+		PosIkPoleVector = posInPoleVector + PosIkStart;
+	}
 }
 
 
@@ -227,7 +229,17 @@ void Ik2bSolver::getIkTransforms() {
 	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
 
 	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
-	else {PosIkPoleVector = posInPoleVector;}
+	else {
+		// MGlobal::displayWarning(MString("vecInX ") + std::to_string(posInPoleVector.x).c_str());
+		// MGlobal::displayWarning(MString("vecInX ") + std::to_string(posInPoleVector.y).c_str());
+		// MGlobal::displayWarning(MString("vecInY ") + std::to_string(posInPoleVector.z).c_str());
+
+		PosIkPoleVector = posInPoleVector + PosIkStart;
+
+		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.x).c_str());
+		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.y).c_str());
+		// MGlobal::displayWarning(MString("vecOutY ") + std::to_string(PosIkPoleVector.z).c_str());
+	}
 }
 
 
@@ -275,14 +287,12 @@ void Ik2bSolver::solveFk() {
 	*/
 	getFkTransforms();
 
-	// Position
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
-	if (bIsPoleVectorConnected) {
-		FnPoleVector.setTranslation(LMRigUtils::getPoleVectorPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
-	}
-
-	// Rotation
 	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
+
+	if (bIsPoleVectorConnected) {
+		FnPoleVector.setTranslation(LMRigUtils::getPvPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
+	}
 }
 
 
@@ -391,7 +401,7 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	MDagPathArray InOutLinks;
+	// MDagPathArray InOutLinks;
 	status = parseDataBlock(dataBlock, InOutLinks);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
