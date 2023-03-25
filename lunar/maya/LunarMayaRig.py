@@ -181,17 +181,17 @@ class RootMotionCtrl(Ctrl):
 
 
 
-class PelvisPosCtrl(Ctrl):
+class PelvisCtrl(Ctrl):
 	"""Class for building the center of graivty controller.
 	"""
 	def __init__(self,
-		name="pelvis_pos_ctrl",
+		name="pelvis_ctrl",
 		parent="",
 		translateTo="",
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
 		localRotate=(0.0, 0.0, 0.0),
-		localScale=(20.0, 20.0, 30.0),
+		localScale=(30.0, 30.0, 30.0),
 		shape="square",
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
@@ -351,8 +351,8 @@ class PoleVectorCtrl():
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
 		localRotate=(0.0, 0.0, 0.0),
-		localScale=(6.0, 6.0, 6.0),
-		shape="diamond",
+		localScale=(8.0, 8.0, 8.0),
+		shape="locator",
 		fillShape=False,
 		drawLine=True,
 		fillTransparency=Ctrl.defaultTransparency,
@@ -510,6 +510,13 @@ class Base():
 
 		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "_____")
 
+		# Head
+		self.AttrHeadFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "headFkIk")
+		self.AttrHeadSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "headSoftness", 0, 10)
+		self.AttrHeadTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "headTwist")
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "______")
+
 		# Visibility
 		# Main Ctrls
 		self.AttrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
@@ -527,7 +534,7 @@ class Base():
 		self.AttrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
 		cmds.connectAttr(self.AttrHideCtrlsOnPlayback, f"{self.ctrlMain.shape}.hideOnPlayback")
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "______")
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "_______")
 
 		# Diplay Type Overrides
 		# Main Ctrls 
@@ -556,7 +563,7 @@ class PelvisComponent():
 
 		"""
 		# Main chain
-		self.CtrlPelvisPos = PelvisPosCtrl(
+		self.CtrlPelvisPos = PelvisCtrl(
 			parent=parent,
 			translateTo=listJoints["Spine"]["Pelvis"],
 			rotateTo=listJoints["Spine"]["Pelvis"],
@@ -569,7 +576,7 @@ class PelvisComponent():
 		)
 
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisPos.transform)
-		lm.LMAttribute.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["rotate", "scale", "visibility"])
+		lm.LMAttribute.lockControlChannels(self.CtrlPelvisPos.transform, lockChannels=["scale", "visibility"])
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlPelvisRot.transform)
 		lm.LMAttribute.lockControlChannels(self.CtrlPelvisRot.transform, lockChannels=["translate", "scale", "visibility"])
 
@@ -1307,7 +1314,7 @@ class Ik2bLimbComponent():
 				parent=parent,
 				translateTo=poleVector,
 				rotateTo=rotateTo,
-				localScale=(4.0, 4.0, 4.0),
+				# localScale=(4.0, 4.0, 4.0),
 				lineWidth=2.0,
 				color=color,
 			)

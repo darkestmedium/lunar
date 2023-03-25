@@ -1444,7 +1444,6 @@ class LMLunarCtrl(LMHumanIk):
 		Sync with other modules / classes
 	
 	"""
-	minimalDefinition = lmrrlc.templateLC["minimalDefinition"]
 	definition = lmrrlc.templateLC["definition"]
 	tPose = lmrrlc.templateLC["tPose"]
 	aPose = lmrrlc.templateLC["aPose"]
@@ -1456,18 +1455,24 @@ class LMLunarCtrl(LMHumanIk):
 	CtrlIk = [
 		"arm_ik_l_ctrl", "arm_ik_r_ctrl", "arm_pv_l_ctrl", "arm_pv_r_ctrl",
 		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
+		"head_ik_ctrl",
 	]
 
-	ctrlIkEffectors = (
-		"arm_ik_l_ctrl", "arm_pv_l_ctrl",
-		"arm_ik_r_ctrl", "arm_pv_r_ctrl",
-		"leg_ik_l_ctrl", "leg_pv_l_ctrl",
-		"leg_ik_r_ctrl", "leg_pv_r_ctrl",
-	)
+	ctrlIkEffectors = {
+		"LeftArmHandle":		"arm_ik_l_ctrl",
+		"LeftArmPv": 				"arm_pv_l_ctrl",
+		"RightArmHandle": 	"arm_ik_r_ctrl",
+		"RightArmPv": 			"arm_pv_r_ctrl",
+		"LeftLegHandle": 		"leg_ik_l_ctrl",
+		"LeftLegPv": 				"leg_pv_l_ctrl",
+		"RightLegHandle": 	"leg_ik_r_ctrl",
+		"RightLegPv": 			"leg_pv_r_ctrl",
+		"HeadHandle": 			"head_ik_ctrl",
+	}
 	CtrlIkHandles = ["arm_ik_l_ctrl", "arm_ik_r_ctrl", "leg_ik_l_ctrl", "leg_ik_r_ctrl"]
 	CtrlFkHands = ["hand_l_ctrl", "hand_r_ctrl"]
 
-	AttrIk = ["leftArmFkIk", "rightArmFkIk", "leftLegFkIk", "rightLegFkIk"]
+	AttrIk = ["headFkIk", "leftArmFkIk", "rightArmFkIk", "leftLegFkIk", "rightLegFkIk"]
 
 
 	def __init__(self, name="HiK") -> None:
@@ -1550,54 +1555,58 @@ class LMLunarCtrl(LMHumanIk):
 				if self._isSourceValid(source):
 					if self.active != self.character: self.setActive()
 					if source != self.source():
+						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
 
 						self.setCtrlsIkToFk()
 
-						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
-
 						# Start override of hik setSource method
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[0]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmHandle"]),
 							f"{self.nodeState2Sk}.LeftHandT",
 							f"{self.nodeState2Sk}.LeftHandR",
 						)
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[1]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmPv"]),
 							f"{self.nodeState2Sk}.LeftForeArmT",
 							# f"{self.nodeState2Sk}.LeftForeArmR",
 						)
 
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[2]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmHandle"]),
 							f"{self.nodeState2Sk}.RightHandT",
 							f"{self.nodeState2Sk}.RightHandR",
 						)
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[3]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmPv"]),
 							f"{self.nodeState2Sk}.RightForeArmT",
 							# f"{self.nodeState2Sk}.RightForeArmR",
 						)
 	
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[4]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegHandle"]),
 							f"{self.nodeState2Sk}.LeftFootT",
 							f"{self.nodeState2Sk}.LeftFootR",
 						)
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[5]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegPv"]),
 							f"{self.nodeState2Sk}.LeftLegT",
 							# f"{self.nodeState2Sk}.LeftLegR",
 						)
 
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[6]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegHandle"]),
 							f"{self.nodeState2Sk}.RightFootT",
 							f"{self.nodeState2Sk}.RightFootR",
 						)
 						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors[7]),
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegPv"]),
 							f"{self.nodeState2Sk}.RightLegT",
 							# f"{self.nodeState2Sk}.RightLegR",
+						)
+						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace(self.ctrlIkEffectors["HeadHandle"]),
+							f"{self.nodeState2Sk}.HeadT",
+							f"{self.nodeState2Sk}.HeadR",
 						)
 
 						# Root motion setup outside Hik feautres. (Manual override)
@@ -2370,10 +2379,10 @@ if __name__ == "__main__":
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
-			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/crouch-transition/anton-mm-crouch^run-bkwd-135-l.fbx",
+			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/anim-player-movement-push-pull",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/crouch",
+		outputDirectory="/Users/luky/Desktop/push_pull",
 		# sourceNameSpace="Anton",
 		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe5",

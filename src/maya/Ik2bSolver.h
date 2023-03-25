@@ -77,8 +77,9 @@ public:
 	double twist, softness, fkIk;
 	bool bIsPoleVectorConnected;
 
+	MDagPath pathFkStartParent;
 	// Function sets
-	MFnTransform FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
+	MFnTransform FnFkStartParent, FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
 
 	// Position
 	// Fk
