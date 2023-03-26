@@ -172,10 +172,10 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInPv).attribute()), pathPoleVector);
 	if (status == MS::kSuccess) {
 		FnPoleVector.setObject(pathPoleVector);
-		bIsPoleVectorConnected = true;
+		bIsPvConnected = true;
 	} else {
 		FnPoleVector.setObject(MObject::kNullObj);
-		bIsPoleVectorConnected = false;
+		bIsPvConnected = false;
 		// Get fk start parent
 		// MDagPath pathParent;
 		status = MDagPath::getAPathTo(FnFkStart.parent(0), pathFkStartParent);
@@ -215,9 +215,9 @@ void Ik2bSolver::getFkTransforms() {
 	PosFkHandle = PosFkEnd;
 	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
 
-	if (bIsPoleVectorConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
+	if (bIsPvConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {
-		PosIkPoleVector = posInPoleVector;
+		PosFkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;
 	}
 }
 
@@ -236,21 +236,9 @@ void Ik2bSolver::getIkTransforms() {
 	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
 	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
 
-	if (bIsPoleVectorConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
+	if (bIsPvConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {
-		// MVector posRoot = FnRoot.rotatePivot(MSpace::kWorld);
-		// MGlobal::displayInfo(FnRoot.name());
-
-		// MGlobal::displayWarning(MString("rootInX ") + std::to_string(posRoot.x).c_str());
-		// MGlobal::displayWarning(MString("rootInX ") + std::to_string(posRoot.y).c_str());
-		// MGlobal::displayWarning(MString("rootInY ") + std::to_string(posRoot.z).c_str());
-
-		// MGlobal::displayWarning(MString("vecInX ") + std::to_string(posInPoleVector.x).c_str());
-		// MGlobal::displayWarning(MString("vecInX ") + std::to_string(posInPoleVector.y).c_str());
-		// MGlobal::displayWarning(MString("vecInY ") + std::to_string(posInPoleVector.z).c_str());
-
-		// PosIkPoleVector = (posInPoleVector - PosIkStart) * dpRoot.inclusiveMatrix() + PosIkStart;
-		PosIkPoleVector = posInPoleVector * pathFkStartParent.exclusiveMatrix() + PosIkStart;
+		PosIkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;
 
 		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.x).c_str());
 		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.y).c_str());
@@ -306,9 +294,7 @@ void Ik2bSolver::solveFk() {
 	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
 	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
 
-	if (bIsPoleVectorConnected) {
-		FnPoleVector.setTranslation(LMRigUtils::getPvPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);
-	}
+	if (bIsPvConnected) {FnPoleVector.setTranslation(LMRigUtils::getPvPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);}
 }
 
 

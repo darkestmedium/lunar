@@ -45,7 +45,7 @@ class Ctrl():
 		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=defaultTransparency,
 		lineWidth=defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
 	):
@@ -101,7 +101,7 @@ class MainCtrl(Ctrl):
 		fillShape=False,
 		fillTransparency=0.0,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=[]
 	):
@@ -157,7 +157,7 @@ class RootMotionCtrl(Ctrl):
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
 	):
@@ -196,7 +196,7 @@ class PelvisCtrl(Ctrl):
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
 	):
@@ -235,7 +235,7 @@ class RollCtrl(Ctrl):
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale"]
 	):
@@ -315,7 +315,7 @@ class IkCtrl():
 		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="magenta",
+		color="yellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
 	):
@@ -357,7 +357,7 @@ class PoleVectorCtrl():
 		drawLine=True,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
 	):
@@ -397,7 +397,7 @@ class CorrectiveCtrl():
 		fillShape=True,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
-		color="yellow",
+		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=[]
 	):

@@ -143,7 +143,7 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		strHelp += "   -tp   -textPosition         Double3    Local Position of the text that will be displayed.\n";
 		strHelp += "   -ft   -fillTransparency     Double     Controls the transparency of the fill shape.\n";
 		strHelp += "   -fw   -lineWidth            Double     Controls the line width of the outline.\n";
-		strHelp += "   -cl   -color                String     Viewport display color of the controller: 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
+		strHelp += "   -cl   -color                String     Viewport display color of the controller: 'lightyellow' 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
 		strHelp += "   -lsa  -lockShapeAttributes  Bool       Locks all the shpae attributes on the shape node after creation.\n";
 		strHelp += "   -hop  -hideOnPlayback       Bool       Wheter or not to hide the ctrl shapes on playback.\n";
 		strHelp += "   -h    -help                 N/A        Display this text.\n";
@@ -279,8 +279,10 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 	if (argData.isFlagSet(colorFlagShort)) {
 		strColor = argData.flagArgumentString(colorFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
-		if (strColor == "yellow")	{
+		if (strColor == "lightyellow")	{
 			colorOverride.r = 1.0; colorOverride.g = 1.0; colorOverride.b = 0.25;
+		} else if (strColor == "yellow") {
+			colorOverride.r = 1.0; colorOverride.g = 0.6;	colorOverride.b = 0.1;
 		} else if (strColor == "lightorange") {
 			colorOverride.r = 1.0; colorOverride.g = 0.467;	colorOverride.b = 0.2;
 		} else if (strColor == "orange") {

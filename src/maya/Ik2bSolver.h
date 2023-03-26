@@ -75,7 +75,7 @@ public:
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPoleVector;
 	double twist, softness, fkIk;
-	bool bIsPoleVectorConnected;
+	bool bIsPvConnected;
 
 	MDagPath pathFkStartParent;
 	// Function sets
