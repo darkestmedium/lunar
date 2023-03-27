@@ -418,7 +418,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 			to this list.
 
 	*/
-	if ( plugBeingDirtied == attrInFkMid
+	if ( plugBeingDirtied == attrInFkStart
 		|| plugBeingDirtied == attrInFkMid
 		|| plugBeingDirtied == attrInFkEnd
 		|| plugBeingDirtied == attrInIkHandle
