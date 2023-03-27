@@ -53,7 +53,7 @@ MStatus Ik2bSolver::initialize() {
 	attrInPvZ = nAttr.create("poleVectorZ", "pvZ", MFnNumericData::kDouble, 0.0);
 	attrInPv = nAttr.create("poleVector", "pv", attrInPvX, attrInPvY, attrInPvZ);
 
-	createAttribute(inTwistAttr, "twist", DefaultValue<MAngle>());
+	createAttribute(inTwistAttr, "twist", DefaultValue<double>());
 
 	inSoftnessAttr = nAttr.create("softness", "sfns", MFnNumericData::kDouble, 0.0);
 	nAttr.setKeyable(true);
@@ -187,7 +187,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 
 	// Additional attributes
-	twist = dataBlock.inputValue(inTwistAttr).asDouble();
+	twist = MAngle(dataBlock.inputValue(inTwistAttr).asDouble(), MAngle::uiUnit());
 	softness = dataBlock.inputValue(inSoftnessAttr).asDouble();
 	fkIk = dataBlock.inputValue(inFkIkAttr).asDouble();
 

@@ -1561,6 +1561,12 @@ class LMLunarCtrl(LMHumanIk):
 
 						# Start override of hik setSource method
 						self.connectSourceAndSaveAnimNew(
+							self.returnNodeWithNameSpace("pelvis_rot_ctrl"),
+							f"{self.nodeState2Sk}.HipsR",
+							# f"{self.nodeState2Sk}.LeftHandR",
+						)
+		
+						self.connectSourceAndSaveAnimNew(
 							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmHandle"]),
 							f"{self.nodeState2Sk}.LeftHandT",
 							f"{self.nodeState2Sk}.LeftHandR",

@@ -61,7 +61,7 @@ namespace LMSolve {
 
 	inline MStatus twoBoneIk(
 		const MVector& vecA, const MVector& vecB, const MVector& vecC, const MVector& vecT, const MVector& vecPv,
-		double twist, double softness, 
+		MAngle& twist, double softness, 
 		MQuaternion& quatA, MQuaternion& quatB
 		) {
 		/* Calculates the ik for a two bone limb.
@@ -112,7 +112,7 @@ namespace LMSolve {
 		MQuaternion r3 = n1.rotateTo(n2);
 		
 		// Rotation cross vectors and twist
-		MQuaternion quatTwist(twist, vecAT);
+		MQuaternion quatTwist(twist.asRadians(), vecAT);
 
 		quatA *= r0 * r2 * r3 * quatTwist;
 

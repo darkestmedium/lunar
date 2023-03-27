@@ -74,7 +74,8 @@ public:
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPoleVector;
-	double twist, softness, fkIk;
+	MAngle twist;
+	double softness, fkIk;
 	bool bIsPvConnected;
 
 	MDagPath pathFkStartParent;
