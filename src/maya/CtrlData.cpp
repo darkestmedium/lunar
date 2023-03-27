@@ -952,6 +952,23 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 		fLineList.append(MPoint(listPointsLine[0][0], listPointsLine[0][1], listPointsLine[0][2]) * matrix);
 		fLineList.append(MPoint(listPointsLine[1][0], listPointsLine[1][1], listPointsLine[1][2]) * matrix);
 	}
+	// }	else if (shapeIndex == 8) {  	// Joint Line
+	// 	MFnDagNode fnShape = pathObj;
+	// 	MFnTransform fnChild;
+	// 	MDagPath dpChild;
+	// 	status = MDagPath::getAPathTo(fnShape.parent(0), dpChild);
+	// 	if (status == MS::kSuccess) {
+	// 		fnChild.setObject(dpChild);
+	// 	} else {
+	// 		fnChild.setObject(MObject::kNullObj);
+	// 	}
+
+	// 	MPoint posFnChild = fnChild.rotatePivot(MSpace::kWorld);
+
+	// 	listLine.append(MPoint() * matrix);
+	// 	listLine.append(MPoint() * pathObj.exclusiveMatrixInverse());
+	// 	// listLine.append(posFnChild * pathObj.exclusiveMatrixInverse());
+	// }
 
 	// Draw line for pole vectors
 	if (bDrawline) { 

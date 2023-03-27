@@ -57,20 +57,20 @@ public:
 	static const MTypeId typeId;
 
 	// Node's Input Attributes
-	static Attribute inFkStartAttr;
-	static Attribute inFkMidAttr;
-	static Attribute inFkEndAttr;
-	static Attribute inIkHandleAttr;
+	static Attribute attrInFkStart;
+	static Attribute attrInFkMid;
+	static Attribute attrInFkEnd;
+	static Attribute attrInIkHandle;
 	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
-	static Attribute inTwistAttr;
-	static MObject inSoftnessAttr;
-	static MObject inFkIkAttr;
-	static MObject AttrInTime;
+	static Attribute attrInTwist;
+	static MObject attrInSoftness;
+	static MObject attrInFkIk;
+	static MObject attrInTime;
 	// Nodes's Output Attributes
-	static Attribute AttrOutUpdateX, AttrOutUpdateY, AttrOutUpdateZ, AttrOutUpdate;
+	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
 
 	MObject objFkStart, objFkMid, objFkEnd, objIkhandle, objPoleVector;
-	MDagPathArray InOutLinks;
+	// MDagPathArray InOutLinks;
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPoleVector;
@@ -83,18 +83,12 @@ public:
 	MFnTransform FnFkStartParent, FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
 
 	// Position
-	// Fk
 	MVector PosFkStart, PosFkMid, PosFkEnd, PosFkHandle, PosFkPoleVector;
-	// Ik
 	MVector PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector;
-	// Out
 	MVector PosOutStart, PosOutMid, PosOutEnd, PosOutHandle, PosOutPoleVector;
 	// Quats
-	// Fk
 	MQuaternion QuatFkStart, QuatFkMid, QuatFkEnd, QuaFkHandle;
-	// Ik
 	MQuaternion QuatIkStart, QuatIkMid, QuatIkEnd, QuatIkHandle;
-	// Out
 	MQuaternion QuatOutStart, QuatOutMid, QuatOutEnd, QuatOutHandle;
 
 	MTime timeCurrent, timeCached;
@@ -108,7 +102,7 @@ public:
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
-		// , bIsPoleVectorConnected(false)
+		, bIsPvConnected(false)
 	{};
 	// Destructors
 	~Ik2bSolver() override {};
@@ -127,12 +121,12 @@ public:
 	void getFkTransforms();
 	void getIkTransforms();
 
-	MStatus solveLimb(MDagPathArray& InOutLinks);
+	MStatus solveLimb();
 	void solveFk();
 	void solveIk();
 	void blendFkIk();
 	void solveFkIk();
 
-	MStatus parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks);
+	MStatus parseDataBlock(MDataBlock& dataBlock);
 	MStatus updateOutput(const MPlug& plug, MDataBlock& dataBlock);
 };

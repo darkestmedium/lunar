@@ -13,6 +13,10 @@
 #include <maya/MVectorArray.h>
 #include <maya/MEulerRotation.h>
 
+// Function Sets
+#include <maya/MFnTransform.h>
+#include <maya/MFnDagNode.h>
+
 // Viewport 2.0 Includes
 #include <maya/MDrawRegistry.h>
 #include <maya/MPxDrawOverride.h>
@@ -23,8 +27,7 @@
 
 
 
-class CtrlData : public MUserData
-{
+class CtrlData : public MUserData {
 public:
 	// Public Data
 	MBoundingBox bBox;
@@ -65,6 +68,4 @@ public:
 	virtual void getBBox(const MObject& obj, const MDagPath& objPath, MMatrix matrix);
 	virtual void getShape(const MObject& obj, const MDagPath& pathObj, MMatrix matrix);
 	virtual void getText(const MObject& obj);
-
-
 };

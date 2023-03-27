@@ -70,6 +70,7 @@ MStatus Ctrl::initialize() {
 	eAttr.addField("Circle", 5);
 	eAttr.addField("Locator", 6);
 	eAttr.addField("Line", 7);
+	eAttr.addField("JointLine", 8);
 	eAttr.setKeyable(false);
 	eAttr.setStorable(true);
 	eAttr.setChannelBox(true);

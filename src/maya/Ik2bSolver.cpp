@@ -6,25 +6,25 @@ const MString Ik2bSolver::typeName = "ik2bSolver";
 const MTypeId Ik2bSolver::typeId = 0x0066674;
 
 // Node's Input Attributes
-Attribute Ik2bSolver::inFkStartAttr;
-Attribute Ik2bSolver::inFkMidAttr;
-Attribute Ik2bSolver::inFkEndAttr;
-Attribute Ik2bSolver::inIkHandleAttr;
+Attribute Ik2bSolver::attrInFkStart;
+Attribute Ik2bSolver::attrInFkMid;
+Attribute Ik2bSolver::attrInFkEnd;
+Attribute Ik2bSolver::attrInIkHandle;
 
 MObject Ik2bSolver::attrInPvX;
 MObject Ik2bSolver::attrInPvY;
 MObject Ik2bSolver::attrInPvZ;
 MObject Ik2bSolver::attrInPv;
 
-Attribute Ik2bSolver::inTwistAttr;
-MObject Ik2bSolver::inSoftnessAttr;
-MObject Ik2bSolver::inFkIkAttr;
-MObject Ik2bSolver::AttrInTime;
+Attribute Ik2bSolver::attrInTwist;
+MObject Ik2bSolver::attrInSoftness;
+MObject Ik2bSolver::attrInFkIk;
+MObject Ik2bSolver::attrInTime;
 // Nodes's Output Attributes
-Attribute Ik2bSolver::AttrOutUpdateX;
-Attribute Ik2bSolver::AttrOutUpdateY;
-Attribute Ik2bSolver::AttrOutUpdateZ;
-Attribute Ik2bSolver::AttrOutUpdate;
+Attribute Ik2bSolver::attrOutUpdateX;
+Attribute Ik2bSolver::attrOutUpdateY;
+Attribute Ik2bSolver::attrOutUpdateZ;
+Attribute Ik2bSolver::attrOutUpdate;
 
 
 MStatus Ik2bSolver::initialize() {
@@ -43,26 +43,26 @@ MStatus Ik2bSolver::initialize() {
 	MFnUnitAttribute uAttr;
 
 	// Node's Input Attributes
-	createAttribute(inFkStartAttr, "fkStart", DefaultValue<MMatrix>());
-	createAttribute(inFkMidAttr, "fkMid", DefaultValue<MMatrix>());
-	createAttribute(inFkEndAttr, "fkEnd", DefaultValue<MMatrix>());
-	createAttribute(inIkHandleAttr, "ikHandle", DefaultValue<MMatrix>());
+	createAttribute(attrInFkStart, "fkStart", DefaultValue<MMatrix>());
+	createAttribute(attrInFkMid, "fkMid", DefaultValue<MMatrix>());
+	createAttribute(attrInFkEnd, "fkEnd", DefaultValue<MMatrix>());
+	createAttribute(attrInIkHandle, "ikHandle", DefaultValue<MMatrix>());
 
 	attrInPvX = nAttr.create("poleVectorX", "pvX", MFnNumericData::kDouble, 0.0);
 	attrInPvY = nAttr.create("poleVectorY", "pvY", MFnNumericData::kDouble, 0.0);
 	attrInPvZ = nAttr.create("poleVectorZ", "pvZ", MFnNumericData::kDouble, 0.0);
 	attrInPv = nAttr.create("poleVector", "pv", attrInPvX, attrInPvY, attrInPvZ);
 
-	createAttribute(inTwistAttr, "twist", DefaultValue<double>());
+	createAttribute(attrInTwist, "twist", DefaultValue<double>());
 
-	inSoftnessAttr = nAttr.create("softness", "sfns", MFnNumericData::kDouble, 0.0);
+	attrInSoftness = nAttr.create("softness", "sfns", MFnNumericData::kDouble, 0.0);
 	nAttr.setKeyable(true);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
 	nAttr.setMin(0.0);
 	nAttr.setMax(10.0);
 
-	inFkIkAttr = nAttr.create("fkIk", "fkik", MFnNumericData::kDouble, 0.0);
+	attrInFkIk = nAttr.create("fkIk", "fkik", MFnNumericData::kDouble, 0.0);
 	nAttr.setKeyable(true);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
@@ -70,23 +70,23 @@ MStatus Ik2bSolver::initialize() {
 	nAttr.setMin(0.0);
 	nAttr.setMax(100.0);
 
-	AttrInTime = uAttr.create("inTime", "itm", MFnUnitAttribute::kTime);
+	attrInTime = uAttr.create("inTime", "itm", MFnUnitAttribute::kTime);
 	uAttr.setKeyable(true);
 	uAttr.setReadable(false);
 
 	// Output attributes
-	AttrOutUpdateX = nAttr.create("updateX", "updX", MFnNumericData::kDouble, 0.0);
-	AttrOutUpdateY = nAttr.create("updateY", "updY", MFnNumericData::kDouble, 0.0);
-	AttrOutUpdateZ = nAttr.create("updateZ", "updZ", MFnNumericData::kDouble, 0.0);
-	AttrOutUpdate = nAttr.create("update", "upd", AttrOutUpdateX, AttrOutUpdateY, AttrOutUpdateZ);
+	attrOutUpdateX = nAttr.create("updateX", "updX", MFnNumericData::kDouble, 0.0);
+	attrOutUpdateY = nAttr.create("updateY", "updY", MFnNumericData::kDouble, 0.0);
+	attrOutUpdateZ = nAttr.create("updateZ", "updZ", MFnNumericData::kDouble, 0.0);
+	attrOutUpdate = nAttr.create("update", "upd", attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ);
 
 	// Add attributes
 	addAttributes(
-		inFkStartAttr, inFkMidAttr,	inFkEndAttr,
-		inIkHandleAttr,	attrInPv,
-		inTwistAttr, inSoftnessAttr, inFkIkAttr,
-		AttrInTime,
-		AttrOutUpdate
+		attrInFkStart, attrInFkMid,	attrInFkEnd,
+		attrInIkHandle,	attrInPv,
+		attrInTwist, attrInSoftness, attrInFkIk,
+		attrInTime,
+		attrOutUpdate
 	);
 
 	return MS::kSuccess;
@@ -109,14 +109,14 @@ bool Ik2bSolver::isPassiveOutput(const MPlug& plug) const {
 		bool: Wheter or not he specified plug is passive - true indicates passive.
 
 	*/
-	if (plug == AttrOutUpdate) {
+	if (plug == attrOutUpdate) {
 		return true;
 	}
 	return MPxNode::isPassiveOutput(plug);
 }
 
 
-MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLinks) {
+MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	/* Parse the data block and get all inputs.
 	 *
 	 * We're getting the mObj from the .attribute() instead of a numeric data type like double in
@@ -127,17 +127,17 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	MStatus status;
 
 	// Ask for time value to force refresh on the node
-	timeCurrent = dataBlock.inputValue(AttrInTime, &status).asTime();
+	timeCurrent = dataBlock.inputValue(attrInTime, &status).asTime();
 	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
-	matInFkStart = dataBlock.inputValue(inFkStartAttr).asMatrix();
-	matInFkMid = dataBlock.inputValue(inFkMidAttr).asMatrix();
-	matInFkEnd = dataBlock.inputValue(inFkEndAttr).asMatrix();
-	matInIkHandle = dataBlock.inputValue(inIkHandleAttr).asMatrix();
+	matInFkStart = dataBlock.inputValue(attrInFkStart).asMatrix();
+	matInFkMid = dataBlock.inputValue(attrInFkMid).asMatrix();
+	matInFkEnd = dataBlock.inputValue(attrInFkEnd).asMatrix();
+	matInIkHandle = dataBlock.inputValue(attrInIkHandle).asMatrix();
 	posInPoleVector = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
 	// Start fk controller
 	MDagPath pathFkStart;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkStartAttr).attribute()), pathFkStart);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkStart).attribute()), pathFkStart);
 	if (status == MS::kSuccess) {
 		FnFkStart.setObject(pathFkStart);
 	} else {
@@ -145,7 +145,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Mid fk controller
 	MDagPath pathFkMid;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkMidAttr).attribute()), pathFkMid);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkMid).attribute()), pathFkMid);
 	if (status == MS::kSuccess) {
 		FnFkMid.setObject(pathFkMid);
 	} else {
@@ -153,7 +153,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// End fk controller
 	MDagPath pathFkEnd;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inFkEndAttr).attribute()), pathFkEnd);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkEnd).attribute()), pathFkEnd);
 	if (status == MS::kSuccess) {
 		FnFkEnd.setObject(pathFkEnd);
 	} else {
@@ -161,7 +161,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 	// Ik handle
 	MDagPath pathIkHandle;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(inIkHandleAttr).attribute()), pathIkHandle);
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInIkHandle).attribute()), pathIkHandle);
 	if (status == MS::kSuccess) {
 		FnIkHandle.setObject(pathIkHandle);
 	} else {
@@ -187,15 +187,9 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock, MDagPathArray& InOutLi
 	}
 
 	// Additional attributes
-	twist = MAngle(dataBlock.inputValue(inTwistAttr).asDouble(), MAngle::uiUnit());
-	softness = dataBlock.inputValue(inSoftnessAttr).asDouble();
-	fkIk = dataBlock.inputValue(inFkIkAttr).asDouble();
-
-	InOutLinks.append(pathFkStart);
-	InOutLinks.append(pathFkMid);
-	InOutLinks.append(pathFkEnd);
-	InOutLinks.append(pathIkHandle);
-	InOutLinks.append(pathPoleVector);
+	twist = MAngle(dataBlock.inputValue(attrInTwist).asDouble(), MAngle::uiUnit());
+	softness = dataBlock.inputValue(attrInSoftness).asDouble();
+	fkIk = dataBlock.inputValue(attrInFkIk).asDouble();
 
 	return MS::kSuccess;
 }
@@ -216,9 +210,7 @@ void Ik2bSolver::getFkTransforms() {
 	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
 
 	if (bIsPvConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
-	else {
-		PosFkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;
-	}
+	else {PosFkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;}
 }
 
 
@@ -239,7 +231,6 @@ void Ik2bSolver::getIkTransforms() {
 	if (bIsPvConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
 	else {
 		PosIkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;
-
 		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.x).c_str());
 		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.y).c_str());
 		// MGlobal::displayWarning(MString("vecOutY ") + std::to_string(PosIkPoleVector.z).c_str());
@@ -247,7 +238,7 @@ void Ik2bSolver::getIkTransforms() {
 }
 
 
-MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
+MStatus Ik2bSolver::solveLimb() {
 	/* Solves the limb. 
 
 	Main fk / ik routing method. 
@@ -259,9 +250,8 @@ MStatus Ik2bSolver::solveLimb(MDagPathArray& InOutLinks) {
 	// Editing
 	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
 		if (LMGLobal::currentToolIsTransformContext()) {
-			MGlobal::getActiveSelectionList(listSel);
-			// If selection has any fk ctrl, solve fk
-			if (listSel.hasItem(InOutLinks[0]) || listSel.hasItem(InOutLinks[1]) || listSel.hasItem(InOutLinks[2])) {
+			MGlobal::getActiveSelectionList(listSel);  // If selection has any fk ctrl, solve fk
+			if (listSel.hasItem(FnFkStart.dagPath()) || listSel.hasItem(FnFkMid.dagPath()) || listSel.hasItem(FnFkEnd.dagPath())) {
 				solveFk();
 			} else {
 				solveIk();
@@ -362,7 +352,7 @@ MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	MDataHandle dhOutUpdate = dataBlock.outputValue(AttrOutUpdate, &status);
+	MDataHandle dhOutUpdate = dataBlock.outputValue(attrOutUpdate, &status);
 	dhOutUpdate.set3Double(0.0, 0.0, 0.0);
 	dhOutUpdate.setClean();
 
@@ -403,11 +393,10 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	// MDagPathArray InOutLinks;
-	status = parseDataBlock(dataBlock, InOutLinks);
+	status = parseDataBlock(dataBlock);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	status = solveLimb(InOutLinks);
+	status = solveLimb();
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = updateOutput(plug, dataBlock);
@@ -429,17 +418,17 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 			to this list.
 
 	*/
-	if ( plugBeingDirtied == inFkEndAttr
-		|| plugBeingDirtied == inFkMidAttr
-		|| plugBeingDirtied == inFkStartAttr
-		|| plugBeingDirtied == inIkHandleAttr
+	if ( plugBeingDirtied == attrInFkMid
+		|| plugBeingDirtied == attrInFkMid
+		|| plugBeingDirtied == attrInFkEnd
+		|| plugBeingDirtied == attrInIkHandle
 		|| plugBeingDirtied == attrInPv
-		|| plugBeingDirtied == inTwistAttr
-		|| plugBeingDirtied == inSoftnessAttr
-		|| plugBeingDirtied == inFkIkAttr
-		|| plugBeingDirtied == AttrInTime
+		|| plugBeingDirtied == attrInTwist
+		|| plugBeingDirtied == attrInSoftness
+		|| plugBeingDirtied == attrInFkIk
+		|| plugBeingDirtied == attrInTime
 	)	{
-		affectedPlugs.append(MPlug(objSelf, AttrOutUpdate));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
 	}
 
 	return MS::kSuccess;
