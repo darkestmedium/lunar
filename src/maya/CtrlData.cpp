@@ -987,5 +987,5 @@ void CtrlData::getText(const MObject &obj) {
 		MPlug(obj, Ctrl::attrInTextPositionZ).asDouble()
 	);
 	MString strFkIk = LMText::doublePrecision(MPlug(obj, Ctrl::attrInFkIk).asDouble(), 0).c_str();
-	strDrawText = MString("ik  " + strFkIk);
+	strDrawText = MString("ik " + strFkIk);
 }

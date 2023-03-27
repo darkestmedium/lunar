@@ -69,27 +69,24 @@ public:
 	// Nodes's Output Attributes
 	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
 
-	MObject objFkStart, objFkMid, objFkEnd, objIkhandle, objPoleVector;
-	// MDagPathArray InOutLinks;
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
-	MVector posInPoleVector;
+	MVector posInPv;
 	MAngle twist;
 	double softness, fkIk;
 	bool bIsPvConnected;
 
-	MDagPath pathFkStartParent;
 	// Function sets
-	MFnTransform FnFkStartParent, FnFkStart, FnFkMid, FnFkEnd, FnIkHandle, FnPoleVector;
+	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
 
 	// Position
-	MVector PosFkStart, PosFkMid, PosFkEnd, PosFkHandle, PosFkPoleVector;
-	MVector PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector;
-	MVector PosOutStart, PosOutMid, PosOutEnd, PosOutHandle, PosOutPoleVector;
+	MVector posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
+	MVector posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
+	MVector posOutStart, posOutMid, posOutEnd, posOutHandle, posOutPv;
 	// Quats
-	MQuaternion QuatFkStart, QuatFkMid, QuatFkEnd, QuaFkHandle;
-	MQuaternion QuatIkStart, QuatIkMid, QuatIkEnd, QuatIkHandle;
-	MQuaternion QuatOutStart, QuatOutMid, QuatOutEnd, QuatOutHandle;
+	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;
+	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
+	MQuaternion quatOutStart, quatOutMid, quatOutEnd, quatOutHandle;
 
 	MTime timeCurrent, timeCached;
 

@@ -133,13 +133,13 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	matInFkMid = dataBlock.inputValue(attrInFkMid).asMatrix();
 	matInFkEnd = dataBlock.inputValue(attrInFkEnd).asMatrix();
 	matInIkHandle = dataBlock.inputValue(attrInIkHandle).asMatrix();
-	posInPoleVector = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
+	posInPv = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
 	// Start fk controller
 	MDagPath pathFkStart;
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkStart).attribute()), pathFkStart);
 	if (status == MS::kSuccess) {
-		FnFkStart.setObject(pathFkStart);
+		fnFkStart.setObject(pathFkStart);
 	} else {
 		return MS::kFailure;
 	}
@@ -147,7 +147,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	MDagPath pathFkMid;
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkMid).attribute()), pathFkMid);
 	if (status == MS::kSuccess) {
-		FnFkMid.setObject(pathFkMid);
+		fnFkMid.setObject(pathFkMid);
 	} else {
 		return MS::kFailure;
 	}
@@ -155,7 +155,7 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	MDagPath pathFkEnd;
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkEnd).attribute()), pathFkEnd);
 	if (status == MS::kSuccess) {
-		FnFkEnd.setObject(pathFkEnd);
+		fnFkEnd.setObject(pathFkEnd);
 	} else {
 		return MS::kFailure;
 	}
@@ -163,26 +163,26 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	MDagPath pathIkHandle;
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInIkHandle).attribute()), pathIkHandle);
 	if (status == MS::kSuccess) {
-		FnIkHandle.setObject(pathIkHandle);
+		fnIkHandle.setObject(pathIkHandle);
 	} else {
 		return MS::kFailure;
 	}
 	// Pole vector
-	MDagPath pathPoleVector;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInPv).attribute()), pathPoleVector);
+	MDagPath pathPv;
+	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInPv).attribute()), pathPv);
 	if (status == MS::kSuccess) {
-		FnPoleVector.setObject(pathPoleVector);
+		fnPv.setObject(pathPv);
 		bIsPvConnected = true;
 	} else {
-		FnPoleVector.setObject(MObject::kNullObj);
+		fnPv.setObject(MObject::kNullObj);
 		bIsPvConnected = false;
 		// Get fk start parent
-		// MDagPath pathParent;
-		status = MDagPath::getAPathTo(FnFkStart.parent(0), pathFkStartParent);
+		MDagPath pathRoot;
+		status = MDagPath::getAPathTo(fnFkStart.parent(0), pathRoot);
 		if (status == MS::kSuccess) {
-			FnFkStartParent.setObject(pathFkStartParent);
+			fnRoot.setObject(pathRoot);
 		} else {
-			FnFkStartParent.setObject(MObject::kNullObj);
+			fnRoot.setObject(MObject::kNullObj);
 		}
 	}
 
@@ -197,43 +197,43 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 
 void Ik2bSolver::getFkTransforms() {
 	// Position
-	PosFkStart = FnFkStart.rotatePivot(MSpace::kWorld);
-	FnFkStart.getRotation(QuatFkStart, MSpace::kWorld);
+	posFkStart = fnFkStart.rotatePivot(MSpace::kWorld);
+	fnFkStart.getRotation(quatFkStart, MSpace::kWorld);
 
-	PosFkMid = FnFkMid.rotatePivot(MSpace::kWorld);
-	FnFkMid.getRotation(QuatFkMid, MSpace::kWorld);
+	posFkMid = fnFkMid.rotatePivot(MSpace::kWorld);
+	fnFkMid.getRotation(quatFkMid, MSpace::kWorld);
 
-	PosFkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
-	FnFkEnd.getRotation(QuatFkEnd, MSpace::kWorld);
+	posFkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
+	fnFkEnd.getRotation(quatFkEnd, MSpace::kWorld);
 
-	PosFkHandle = PosFkEnd;
-	FnIkHandle.getRotation(QuaFkHandle, MSpace::kWorld);
+	posFkHandle = posFkEnd;
+	fnIkHandle.getRotation(quatFkHandle, MSpace::kWorld);
 
-	if (bIsPvConnected) {PosFkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
-	else {PosFkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;}
+	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
+	else {posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkStart;}
 }
 
 
 void Ik2bSolver::getIkTransforms() {
 	// Position
-	PosIkStart = FnFkStart.rotatePivot(MSpace::kWorld);
-	FnFkStart.getRotation(QuatIkStart, MSpace::kWorld);
+	posIkStart = fnFkStart.rotatePivot(MSpace::kWorld);
+	fnFkStart.getRotation(quatIkStart, MSpace::kWorld);
 
-	PosIkMid = FnFkMid.rotatePivot(MSpace::kWorld);
-	FnFkMid.getRotation(QuatIkMid, MSpace::kWorld);
+	posIkMid = fnFkMid.rotatePivot(MSpace::kWorld);
+	fnFkMid.getRotation(quatIkMid, MSpace::kWorld);
 
-	PosIkEnd = FnFkEnd.rotatePivot(MSpace::kWorld);
-	FnFkEnd.getRotation(QuatIkEnd, MSpace::kWorld);
+	posIkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
+	fnFkEnd.getRotation(quatIkEnd, MSpace::kWorld);
 
-	PosIkHandle = FnIkHandle.rotatePivot(MSpace::kWorld);
-	FnIkHandle.getRotation(QuatIkHandle, MSpace::kWorld);
+	posIkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
+	fnIkHandle.getRotation(quatIkHandle, MSpace::kWorld);
 
-	if (bIsPvConnected) {PosIkPoleVector = FnPoleVector.rotatePivot(MSpace::kWorld);}
+	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
-		PosIkPoleVector = posInPoleVector * pathFkStartParent.inclusiveMatrix() + PosFkStart;
-		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.x).c_str());
-		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(PosIkPoleVector.y).c_str());
-		// MGlobal::displayWarning(MString("vecOutY ") + std::to_string(PosIkPoleVector.z).c_str());
+		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkStart;
+		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(posIkPv.x).c_str());
+		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(posIkPv.y).c_str());
+		// MGlobal::displayWarning(MString("vecOutY ") + std::to_string(posIkPv.z).c_str());
 	}
 }
 
@@ -251,7 +251,7 @@ MStatus Ik2bSolver::solveLimb() {
 	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
 		if (LMGLobal::currentToolIsTransformContext()) {
 			MGlobal::getActiveSelectionList(listSel);  // If selection has any fk ctrl, solve fk
-			if (listSel.hasItem(FnFkStart.dagPath()) || listSel.hasItem(FnFkMid.dagPath()) || listSel.hasItem(FnFkEnd.dagPath())) {
+			if (listSel.hasItem(fnFkStart.dagPath()) || listSel.hasItem(fnFkMid.dagPath()) || listSel.hasItem(fnFkEnd.dagPath())) {
 				solveFk();
 			} else {
 				solveIk();
@@ -281,10 +281,10 @@ void Ik2bSolver::solveFk() {
 	*/
 	getFkTransforms();
 
-	FnIkHandle.setTranslation(PosFkHandle, MSpace::kWorld);
-	FnIkHandle.setRotation(QuatFkEnd, MSpace::kWorld);
+	fnIkHandle.setTranslation(posFkHandle, MSpace::kWorld);
+	fnIkHandle.setRotation(quatFkEnd, MSpace::kWorld);
 
-	if (bIsPvConnected) {FnPoleVector.setTranslation(LMRigUtils::getPvPosition(PosFkStart, PosFkMid, PosFkEnd), MSpace::kWorld);}
+	if (bIsPvConnected) {fnPv.setTranslation(LMRigUtils::getPvPosition(posFkStart, posFkMid, posFkEnd), MSpace::kWorld);}
 }
 
 
@@ -293,12 +293,12 @@ void Ik2bSolver::solveIk() {
 	*/
 	getIkTransforms();
 
-	LMSolve::twoBoneIk(PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, quatIkStart, quatIkMid);
 
 	// Set fk rotations
-	FnFkStart.setRotation(QuatIkStart, MSpace::kWorld);
-	FnFkMid.setRotation(QuatIkMid, MSpace::kWorld);
-	FnFkEnd.setRotation(QuatIkHandle, MSpace::kWorld);
+	fnFkStart.setRotation(quatIkStart, MSpace::kWorld);
+	fnFkMid.setRotation(quatIkMid, MSpace::kWorld);
+	fnFkEnd.setRotation(quatIkHandle, MSpace::kWorld);
 }
 
 
@@ -306,13 +306,13 @@ void Ik2bSolver::blendFkIk() {
 	// because we want to use 0 - 100 in the channel box, yeah i know :|
 	double ScaledWeight = fkIk * 0.01;
 
-	QuatOutStart = slerp(QuatFkStart, QuatIkStart, ScaledWeight);
-	QuatOutMid = slerp(QuatFkMid, QuatIkMid, ScaledWeight);
-	QuatOutEnd = slerp(QuatFkEnd, QuatIkEnd, ScaledWeight);
-	QuatOutHandle = slerp(QuatFkEnd, QuatIkHandle, ScaledWeight);
+	quatOutStart = slerp(quatFkStart, quatIkStart, ScaledWeight);
+	quatOutMid = slerp(quatFkMid, quatIkMid, ScaledWeight);
+	quatOutEnd = slerp(quatFkEnd, quatIkEnd, ScaledWeight);
+	quatOutHandle = slerp(quatFkEnd, quatIkHandle, ScaledWeight);
 	// so this still is an issue since it's a bit off from the fk end ctrl pos, maybe we just snap to it
-	PosOutHandle = Lerp(PosFkHandle, PosIkHandle, ScaledWeight);
-	PosOutPoleVector = Lerp(PosFkPoleVector, PosIkPoleVector, ScaledWeight);
+	posOutHandle = Lerp(posFkHandle, posIkHandle, ScaledWeight);
+	posOutPv = Lerp(posFkPv, posIkPv, ScaledWeight);
 }
 
 
@@ -322,19 +322,19 @@ void Ik2bSolver::solveFkIk() {
 	getFkTransforms();
 	getIkTransforms();
 
-	LMSolve::twoBoneIk(PosIkStart, PosIkMid, PosIkEnd, PosIkHandle, PosIkPoleVector, twist, softness, QuatIkStart, QuatIkMid);
+	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, quatIkStart, quatIkMid);
 
 	blendFkIk();
 
 	// Set rotations
-	FnFkStart.setRotation(QuatOutStart, MSpace::kWorld);
-	FnFkMid.setRotation(QuatOutMid, MSpace::kWorld);
-	FnFkEnd.setRotation(QuatOutEnd, MSpace::kWorld);
-	FnIkHandle.setRotation(QuatOutHandle, MSpace::kWorld);
+	fnFkStart.setRotation(quatOutStart, MSpace::kWorld);
+	fnFkMid.setRotation(quatOutMid, MSpace::kWorld);
+	fnFkEnd.setRotation(quatOutEnd, MSpace::kWorld);
+	fnIkHandle.setRotation(quatOutHandle, MSpace::kWorld);
 
 	// Sync the ik ctrl to the fk end bone due to differences in fk / ik blending
-	FnIkHandle.setTranslation(PosOutHandle, MSpace::kWorld);
-	FnPoleVector.setTranslation(PosOutPoleVector, MSpace::kWorld);
+	fnIkHandle.setTranslation(posOutHandle, MSpace::kWorld);
+	fnPv.setTranslation(posOutPv, MSpace::kWorld);
 }
 
 
@@ -430,7 +430,6 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 	)	{
 		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
 	}
-
 	return MS::kSuccess;
 }
 
@@ -456,7 +455,7 @@ void Ik2bSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisabl
 
 
 void Ik2bSolver::postConstructor() {
-	/* Post constructor.
+	/* post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and
 	the user derived object. The association between the these two objects is not made until after the
