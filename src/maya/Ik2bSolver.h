@@ -44,6 +44,7 @@
 #include "LMAnimControl.h"
 #include "LMSolve.h"
 #include "LMRigUtils.h"
+#include "LMPlugin.h"
 #include "Utils.h"
 #include "MathUtility.h"
 

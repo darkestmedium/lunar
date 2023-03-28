@@ -41,6 +41,8 @@
 #include <maya/MPxNode.h>
 
 // Custom
+#include "LMAttribute.h"
+#include "LMPlugin.h"
 #include "Utils.h"
 
 
@@ -54,32 +56,27 @@ public:
 	static const MTypeId typeId;
 
 	// Node's Input Attributes
-	static MObject attrInHeel;
+	static Attribute attrInAnkle;
 	static Attribute attrInBall;
 	static Attribute attrInToe;
-	static Attribute attrInAnkle;
-
+	static MObject attrInHeelX, attrInHeelY, attrInHeelZ, attrInHeel;
 	static Attribute attrInRoll;
 	static Attribute attrInBendLimitAngle;
 	static Attribute attrInToeLimitAngle;
-
 	static MObject attrInTime;
 	// Nodes's Output Attributes
-	static Attribute attrOutUpdateX;
-	static Attribute attrOutUpdateY;
-	static Attribute attrOutUpdateZ;
-	static Attribute attrOutUpdate;
-
+	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
+	
+	// In-data
+	MMatrix matInAnkle, matInBall, matInToe;
 	MVector posHeel;
-	double roll;
-	double bendLimitAngle;
-	double toeLimitAngle;
+	MAngle roll, bendLimitAngle, toeLimitAngle;
+	MTime timeCurrent, timeCached;
 
 	// Function sets
-	// MFnTransform fnHeel;
+	MFnTransform fnAnkle;
 	MFnTransform fnBall;
 	MFnTransform fnToe;
-	MFnTransform fnAnkle;
 
 	MObject objSelf;
 
@@ -105,8 +102,6 @@ public:
 	) const override;
 	void postConstructor() override;
 	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
-
-	MObject getSourceObjFromPlug(const MObject& object, const MObject& plug);
 
 	MStatus parseDataBlock(MDataBlock& dataBlock);
 	MStatus solve();

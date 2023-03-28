@@ -6,14 +6,18 @@ const MString FootRollNode::typeName = "footRollNode";
 const MTypeId FootRollNode::typeId = 0x0066676;
 
 // Node's Input Attributes
-MObject FootRollNode::attrInHeel;
 Attribute FootRollNode::attrInBall;
 Attribute FootRollNode::attrInToe;
 Attribute FootRollNode::attrInAnkle;
+MObject FootRollNode::attrInHeelX;
+MObject FootRollNode::attrInHeelY;
+MObject FootRollNode::attrInHeelZ;
+MObject FootRollNode::attrInHeel;
 
 Attribute FootRollNode::attrInRoll;
 Attribute FootRollNode::attrInBendLimitAngle;
 Attribute FootRollNode::attrInToeLimitAngle;
+MObject FootRollNode::attrInTime;
 
 // Nodes's Output Attributes
 Attribute FootRollNode::attrOutUpdateX;
@@ -22,8 +26,7 @@ Attribute FootRollNode::attrOutUpdateZ;
 Attribute FootRollNode::attrOutUpdate;
 
 
-MStatus FootRollNode::initialize() 
-{
+MStatus FootRollNode::initialize() {
 	/* Node Initializer.
 
 	This method initializes the node, and should be overridden in user-defined nodes.
@@ -37,21 +40,27 @@ MStatus FootRollNode::initialize()
 	MFnNumericAttribute nAttr;
 	MFnMatrixAttribute mAttr;
 	MFnUnitAttribute uAttr;
-	// MFnCompoundAttribute cAttr;
 
 	// Node's Input Attributes
-	attrInHeel = nAttr.createPoint("heel", "heel");
-	nAttr.setKeyable(true);
-	nAttr.setStorable(true);
-	nAttr.setWritable(true);
-
 	createAttribute(attrInBall, "ball", DefaultValue<MMatrix>());
 	createAttribute(attrInToe, "toe", DefaultValue<MMatrix>());
 	createAttribute(attrInAnkle, "ankle", DefaultValue<MMatrix>());
 
+	attrInHeelX = nAttr.create("heelX", "helX", MFnNumericData::kDouble, 0.0);
+	attrInHeelY = nAttr.create("heelY", "helY", MFnNumericData::kDouble, 0.0);
+	attrInHeelZ = nAttr.create("heelZ", "helZ", MFnNumericData::kDouble, 0.0);
+	attrInHeel = nAttr.create("heel", "hel", attrInHeelX, attrInHeelY, attrInHeelZ);
+	nAttr.setKeyable(true);
+	nAttr.setStorable(true);
+	nAttr.setWritable(true);
+
 	createAttribute(attrInRoll, "roll", DefaultValue<double>());
 	createAttribute(attrInBendLimitAngle, "bendLimitAngle", DefaultValue<double>());
 	createAttribute(attrInToeLimitAngle, "toeLimitAngle", DefaultValue<double>());
+
+	attrInTime = uAttr.create("inTime", "itm", MFnUnitAttribute::kTime);
+	uAttr.setKeyable(true);
+	uAttr.setReadable(false);
 
 	// Output attributes
 	attrOutUpdateX = nAttr.create("updateX", "updX", MFnNumericData::kDouble, 0.0);
@@ -61,8 +70,8 @@ MStatus FootRollNode::initialize()
 
 	// Add attributes
 	addAttributes(
-		attrInHeel, attrInBall,	attrInToe, attrInAnkle,
-		attrInRoll, attrInBendLimitAngle, attrInToeLimitAngle,
+		attrInBall,	attrInToe, attrInAnkle, attrInHeel,
+		attrInRoll, attrInBendLimitAngle, attrInToeLimitAngle, attrInTime,
 		attrOutUpdate
 	);
 
@@ -70,8 +79,7 @@ MStatus FootRollNode::initialize()
 }
 
 
-bool FootRollNode::isPassiveOutput(const MPlug& plug) const
-{
+bool FootRollNode::isPassiveOutput(const MPlug& plug) const {
 	/* Sets the specified plug as passive.
 
 	This method may be overridden by the user defined node if it wants to provide output attributes
@@ -87,79 +95,48 @@ bool FootRollNode::isPassiveOutput(const MPlug& plug) const
 		bool: Wheter or not he specified plug is passive - true indicates passive.
 
 	*/
-	if (plug == attrOutUpdate)
-	{
+	if (plug == attrOutUpdate) 	{
 		return true;
 	}
 	return MPxNode::isPassiveOutput(plug);
 }
 
 
-MObject FootRollNode::getSourceObjFromPlug(const MObject& object, const MObject& plug)
-{
-	/* Gets the object from the given plug if it is connected.
-
-	Args:
-		Plug (MObject&): Object for the given plug.
-	
-	Returns:
-		MObject: If the plug is a valid connection it will return the obj, otherwise a null object will
-			be returned instead.
-
-	*/
-	MPlug PlugDestination(object, plug);
-	if (PlugDestination.isConnected())
-	{
-		return PlugDestination.source().node();
-	}
-	return MObject::kNullObj;
-}
-
-
-MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock)
-{
+MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock) {
 	/* Parse the data block and get all inputs.	*/
 	MStatus status;
 
-	posHeel = dataBlock.inputValue(attrInHeel).asVector();
+	// Ask for time value to force refresh on the node
+	timeCurrent = dataBlock.inputValue(attrInTime, &status).asTime();
+	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
+	matInAnkle = dataBlock.inputValue(attrInAnkle).asMatrix();
+	matInBall = dataBlock.inputValue(attrInBall).asMatrix();
+	matInToe = dataBlock.inputValue(attrInToe).asMatrix();
+	posHeel = MVector(dataBlock.inputValue(attrInHeelX).asDouble(), dataBlock.inputValue(attrInHeelY).asDouble(),	dataBlock.inputValue(attrInHeelZ).asDouble());
+
+	// Ankle
+	status = LMPlugin::parseTransformInput(dataBlock, fnAnkle, objSelf, attrInAnkle);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Ball
-	MDagPath pathBall;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInBall).attribute()), pathBall);
-	if (status == MS::kSuccess) {
-		fnBall.setObject(pathBall);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnBall, objSelf, attrInBall);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	// Toe
-	MDagPath pathToe;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInToe).attribute()), pathToe);
-	if (status == MS::kSuccess) {
-		fnToe.setObject(pathToe);
-	} else {
-		return MS::kFailure;
-	}
-	// Ankle
-	MDagPath pathAnkle;
-	status = MDagPath::getAPathTo(getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInAnkle).attribute()), pathAnkle);
-	if (status == MS::kSuccess) {
-		fnAnkle.setObject(pathAnkle);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnToe, objSelf, attrInToe);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Additional attributes
-	roll = dataBlock.inputValue(attrInRoll).asDouble();
-	bendLimitAngle = dataBlock.inputValue(attrInBendLimitAngle).asDouble();
-	toeLimitAngle = dataBlock.inputValue(attrInToeLimitAngle).asDouble();
-
+	MAngle::Unit uiAngleUnit = MAngle::uiUnit();
+	roll = MAngle(dataBlock.inputValue(attrInRoll).asDouble(), uiAngleUnit);
+	bendLimitAngle = MAngle(dataBlock.inputValue(attrInBendLimitAngle).asDouble(), uiAngleUnit);
+	toeLimitAngle = MAngle(dataBlock.inputValue(attrInToeLimitAngle).asDouble(), uiAngleUnit);
 
 	return MS::kSuccess;
 }
 
 
-MStatus FootRollNode::solve()
-{
+MStatus FootRollNode::solve() {
 	/* Solves the node.
 	*/
 	MStatus status;
@@ -171,7 +148,7 @@ MStatus FootRollNode::solve()
 	// get ankle vector position
 
 	// heel - anklke pos = rotate pivot
-	MQuaternion quatRoll(roll, MVector().zAxis);
+	MQuaternion quatRoll(roll.asRadians(), MVector().zAxis);
 	MQuaternion quatAnkle;
 	fnAnkle.getRotation(quatAnkle, MSpace::kTransform);
 
@@ -187,8 +164,7 @@ MStatus FootRollNode::solve()
 }
 
 
-MStatus FootRollNode::updateOutput(const MPlug& plug, MDataBlock& dataBlock)
-{	
+MStatus FootRollNode::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {	
 	/* Sets the outputs and data block clean.
 
 	Args:
@@ -212,8 +188,7 @@ MStatus FootRollNode::updateOutput(const MPlug& plug, MDataBlock& dataBlock)
 }
 
 
-MStatus FootRollNode::compute(const MPlug& plug, MDataBlock& dataBlock)
-{
+MStatus FootRollNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	/* This method should be overridden in user defined nodes.
 
 	Recompute the given output based on the nodes inputs. The plug represents the data
@@ -260,8 +235,7 @@ MStatus FootRollNode::compute(const MPlug& plug, MDataBlock& dataBlock)
 }
 
 
-MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs)
-{
+MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) {
 	/* Sets the relation between attributes and marks the specified plugs dirty.
 
 	Args:
@@ -270,15 +244,18 @@ MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArr
 			to this list.
 
 	*/
-	if ( plugBeingDirtied == attrInHeel
-		|| plugBeingDirtied == attrInBall
+	if ( plugBeingDirtied == attrInBall
 		|| plugBeingDirtied == attrInToe
 		|| plugBeingDirtied == attrInAnkle
+		|| plugBeingDirtied == attrInHeel
+		|| plugBeingDirtied == attrInHeelX
+		|| plugBeingDirtied == attrInHeelY
+		|| plugBeingDirtied == attrInHeelZ
 		|| plugBeingDirtied == attrInRoll
 		|| plugBeingDirtied == attrInBendLimitAngle
 		|| plugBeingDirtied == attrInToeLimitAngle
-	)
-	{
+		|| plugBeingDirtied == attrInTime
+	)	{
 		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
 	}
 
@@ -286,8 +263,7 @@ MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArr
 }
 
 
-void FootRollNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const
-{
+void FootRollNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
 	/* Disables Cached Playback support by default.
 
 	Built-in locators all enable Cached Playback by default, but plug-ins have to
@@ -307,8 +283,7 @@ void FootRollNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisa
 }
 
 
-void FootRollNode::postConstructor()
-{
+void FootRollNode::postConstructor() {
 	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and

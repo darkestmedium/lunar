@@ -24,6 +24,7 @@ set(MAYA_FILES
 	LMGlobal.h
 	LMAnimControl.h
 	LMObject.h
+	LMPlugin.h
 	LMRigUtils.h
 	LMScene.h
 	LMSolve.h

@@ -136,37 +136,21 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	posInPv = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
 	// Start fk controller
-	MDagPath pathFkStart;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkStart).attribute()), pathFkStart);
-	if (status == MS::kSuccess) {
-		fnFkStart.setObject(pathFkStart);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnFkStart, objSelf, attrInFkStart);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	// Mid fk controller
-	MDagPath pathFkMid;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkMid).attribute()), pathFkMid);
-	if (status == MS::kSuccess) {
-		fnFkMid.setObject(pathFkMid);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnFkMid, objSelf, attrInFkMid);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	// End fk controller
-	MDagPath pathFkEnd;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInFkEnd).attribute()), pathFkEnd);
-	if (status == MS::kSuccess) {
-		fnFkEnd.setObject(pathFkEnd);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnFkEnd, objSelf, attrInFkEnd);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	// Ik handle
-	MDagPath pathIkHandle;
-	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInIkHandle).attribute()), pathIkHandle);
-	if (status == MS::kSuccess) {
-		fnIkHandle.setObject(pathIkHandle);
-	} else {
-		return MS::kFailure;
-	}
+	status = LMPlugin::parseTransformInput(dataBlock, fnIkHandle, objSelf, attrInIkHandle);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	// Pole vector
 	MDagPath pathPv;
 	status = MDagPath::getAPathTo(LMAttribute::getSourceObjFromPlug(objSelf, dataBlock.inputValue(attrInPv).attribute()), pathPv);
