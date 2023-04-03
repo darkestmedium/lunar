@@ -237,8 +237,6 @@ class LMHumanIk():
 		# Is always called when updating the HiK contextual UI
 		mel.eval('hikUpdateContextualUI()')
 
-		cmds.refresh()
-
 
 	def extractNameSpace(self, name) -> str:
 		"""Extracts namespaces from given name.
@@ -1740,8 +1738,7 @@ class LMLunarCtrl(LMHumanIk):
 					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
 
 				self.setSource("None")
-				
-				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
+				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
 				return True
