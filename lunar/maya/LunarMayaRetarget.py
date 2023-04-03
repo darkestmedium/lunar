@@ -237,6 +237,8 @@ class LMHumanIk():
 		# Is always called when updating the HiK contextual UI
 		mel.eval('hikUpdateContextualUI()')
 
+		cmds.refresh()
+
 
 	def extractNameSpace(self, name) -> str:
 		"""Extracts namespaces from given name.
@@ -889,7 +891,7 @@ class LMHumanIk():
 			animatableAttributes = [attr.split('.')[-1] for attr in cmds.listAnimatable(pTransform)]
 			pairBlend = cmds.pairBlend(node=pTransform, attribute=animatableAttributes)
 			if pSrcT != "":	cmds.connectAttr(pSrcT, f"{pairBlend}.inTranslate2")
-			if pSrcR != "":cmds.connectAttr(pSrcR, f"{pairBlend}.inRotate2")
+			if pSrcR != "": cmds.connectAttr(pSrcR, f"{pairBlend}.inRotate2")
 			cmds.setAttr(f"{pairBlend}.weight", True)
 			cmds.setAttr(f"{pairBlend}.currentDriver", True)
 
@@ -1621,6 +1623,7 @@ class LMLunarCtrl(LMHumanIk):
 							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
 						self._updateUI(updateSource=True)
+
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
 						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
@@ -1720,8 +1723,11 @@ class LMLunarCtrl(LMHumanIk):
 				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
 				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
-				# Needs one cpu cycle after import to properly move ik solvers
-				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
+				# Ok so we need to update two frames to get the polevector work from the sovler since their (like a pre-roll)
+				# are connected to fore limb translation which in case of fk is 0 0 0 and the solver calculates
+				# it in real time, other was the animations 1 or 2 frame will not be baked properly on those frames
+				oma.MAnimControl.setCurrentTime(om.MTime(startFrame-2, om.MTime.uiUnit()))
+				oma.MAnimControl.setCurrentTime(om.MTime(startFrame-1, om.MTime.uiUnit()))
 
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), True)
 				self.filterRotations(nodes)
