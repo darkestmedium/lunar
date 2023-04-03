@@ -50,7 +50,7 @@ namespace LMPlugin {
 	 */
 
 
-	inline MStatus parseTransformInput(MDataBlock& dataBlock, MFnTransform& fnObj, MObject& obj, MObject& objAttribute) {
+	inline MStatus parseTransformInput(MDataBlock& dataBlock, MFnTransform& fnObj, const MObject& obj, const MObject& objAttribute) {
 		/* Gets the dag path from the given input and attaches to a function set.
 		*/
 		MStatus status;
@@ -67,7 +67,7 @@ namespace LMPlugin {
 		return MS::kSuccess;
 	}
 
-	inline MStatus parseTransformInput(MDataBlock& dataBlock, MFnTransform& fnObj, MObject& obj, Attribute& objAttribute) {
+	inline MStatus parseTransformInput(MDataBlock& dataBlock, MFnTransform& fnObj, const MObject& obj, Attribute& objAttribute) {
 		/* Gets the dag path from the given input and attaches to a function set.
 		*/
 		MStatus status;

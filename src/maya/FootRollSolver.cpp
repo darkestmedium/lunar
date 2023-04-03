@@ -1,32 +1,35 @@
-#include "FootRollNode.h"
+#include "FootRollSolver.h"
 
 
 // Public Data
-const MString FootRollNode::typeName = "footRollNode";
-const MTypeId FootRollNode::typeId = 0x0066676;
+const MString FootRollSolver::typeName = "footRollSolver";
+const MTypeId FootRollSolver::typeId = 0x0066676;
 
 // Node's Input Attributes
-Attribute FootRollNode::attrInBall;
-Attribute FootRollNode::attrInToe;
-Attribute FootRollNode::attrInAnkle;
-MObject FootRollNode::attrInHeelX;
-MObject FootRollNode::attrInHeelY;
-MObject FootRollNode::attrInHeelZ;
-MObject FootRollNode::attrInHeel;
+Attribute FootRollSolver::attrInBall;
+Attribute FootRollSolver::attrInAnkle;
+MObject FootRollSolver::attrInHeelX;
+MObject FootRollSolver::attrInHeelY;
+MObject FootRollSolver::attrInHeelZ;
+MObject FootRollSolver::attrInHeel;
+MObject FootRollSolver::attrInToeX;
+MObject FootRollSolver::attrInToeY;
+MObject FootRollSolver::attrInToeZ;
+MObject FootRollSolver::attrInToe;
 
-Attribute FootRollNode::attrInRoll;
-Attribute FootRollNode::attrInBendLimitAngle;
-Attribute FootRollNode::attrInToeLimitAngle;
-MObject FootRollNode::attrInTime;
+Attribute FootRollSolver::attrInRoll;
+Attribute FootRollSolver::attrInBendLimitAngle;
+Attribute FootRollSolver::attrInToeLimitAngle;
+MObject FootRollSolver::attrInTime;
 
 // Nodes's Output Attributes
-Attribute FootRollNode::attrOutUpdateX;
-Attribute FootRollNode::attrOutUpdateY;
-Attribute FootRollNode::attrOutUpdateZ;
-Attribute FootRollNode::attrOutUpdate;
+Attribute FootRollSolver::attrOutUpdateX;
+Attribute FootRollSolver::attrOutUpdateY;
+Attribute FootRollSolver::attrOutUpdateZ;
+Attribute FootRollSolver::attrOutUpdate;
 
 
-MStatus FootRollNode::initialize() {
+MStatus FootRollSolver::initialize() {
 	/* Node Initializer.
 
 	This method initializes the node, and should be overridden in user-defined nodes.
@@ -43,7 +46,6 @@ MStatus FootRollNode::initialize() {
 
 	// Node's Input Attributes
 	createAttribute(attrInBall, "ball", DefaultValue<MMatrix>());
-	createAttribute(attrInToe, "toe", DefaultValue<MMatrix>());
 	createAttribute(attrInAnkle, "ankle", DefaultValue<MMatrix>());
 
 	attrInHeelX = nAttr.create("heelX", "helX", MFnNumericData::kDouble, 0.0);
@@ -53,6 +55,15 @@ MStatus FootRollNode::initialize() {
 	nAttr.setKeyable(true);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
+
+	attrInToeX = nAttr.create("toeX", "toeX", MFnNumericData::kDouble, 0.0);
+	attrInToeY = nAttr.create("toeY", "toeY", MFnNumericData::kDouble, 0.0);
+	attrInToeZ = nAttr.create("toeZ", "toeZ", MFnNumericData::kDouble, 0.0);
+	attrInToe = nAttr.create("toe", "toe", attrInToeX, attrInToeY, attrInToeZ);
+	nAttr.setKeyable(true);
+	nAttr.setStorable(true);
+	nAttr.setWritable(true);
+
 
 	createAttribute(attrInRoll, "roll", DefaultValue<double>());
 	createAttribute(attrInBendLimitAngle, "bendLimitAngle", DefaultValue<double>());
@@ -70,7 +81,7 @@ MStatus FootRollNode::initialize() {
 
 	// Add attributes
 	addAttributes(
-		attrInBall,	attrInToe, attrInAnkle, attrInHeel,
+		attrInBall, attrInAnkle, attrInHeel, attrInToe,
 		attrInRoll, attrInBendLimitAngle, attrInToeLimitAngle, attrInTime,
 		attrOutUpdate
 	);
@@ -79,7 +90,7 @@ MStatus FootRollNode::initialize() {
 }
 
 
-bool FootRollNode::isPassiveOutput(const MPlug& plug) const {
+bool FootRollSolver::isPassiveOutput(const MPlug& plug) const {
 	/* Sets the specified plug as passive.
 
 	This method may be overridden by the user defined node if it wants to provide output attributes
@@ -102,7 +113,7 @@ bool FootRollNode::isPassiveOutput(const MPlug& plug) const {
 }
 
 
-MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock) {
+MStatus FootRollSolver::parseDataBlock(MDataBlock& dataBlock) {
 	/* Parse the data block and get all inputs.	*/
 	MStatus status;
 
@@ -111,8 +122,8 @@ MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock) {
 	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
 	matInAnkle = dataBlock.inputValue(attrInAnkle).asMatrix();
 	matInBall = dataBlock.inputValue(attrInBall).asMatrix();
-	matInToe = dataBlock.inputValue(attrInToe).asMatrix();
 	posHeel = MVector(dataBlock.inputValue(attrInHeelX).asDouble(), dataBlock.inputValue(attrInHeelY).asDouble(),	dataBlock.inputValue(attrInHeelZ).asDouble());
+	posToe = MVector(dataBlock.inputValue(attrInToeX).asDouble(), dataBlock.inputValue(attrInToeY).asDouble(),	dataBlock.inputValue(attrInToeZ).asDouble());
 
 	// Ankle
 	status = LMPlugin::parseTransformInput(dataBlock, fnAnkle, objSelf, attrInAnkle);
@@ -120,10 +131,6 @@ MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock) {
 
 	// Ball
 	status = LMPlugin::parseTransformInput(dataBlock, fnBall, objSelf, attrInBall);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	// Toe
-	status = LMPlugin::parseTransformInput(dataBlock, fnToe, objSelf, attrInToe);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Additional attributes
@@ -136,7 +143,7 @@ MStatus FootRollNode::parseDataBlock(MDataBlock& dataBlock) {
 }
 
 
-MStatus FootRollNode::solve() {
+MStatus FootRollSolver::solve() {
 	/* Solves the node.
 	*/
 	MStatus status;
@@ -164,7 +171,7 @@ MStatus FootRollNode::solve() {
 }
 
 
-MStatus FootRollNode::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {	
+MStatus FootRollSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {	
 	/* Sets the outputs and data block clean.
 
 	Args:
@@ -188,7 +195,7 @@ MStatus FootRollNode::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {
 }
 
 
-MStatus FootRollNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
+MStatus FootRollSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	/* This method should be overridden in user defined nodes.
 
 	Recompute the given output based on the nodes inputs. The plug represents the data
@@ -231,11 +238,14 @@ MStatus FootRollNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	status = updateOutput(plug, dataBlock);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	// Cache time change
+	timeCached = timeCurrent;
+
 	return MS::kSuccess;
 }
 
 
-MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) {
+MStatus FootRollSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) {
 	/* Sets the relation between attributes and marks the specified plugs dirty.
 
 	Args:
@@ -263,7 +273,7 @@ MStatus FootRollNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArr
 }
 
 
-void FootRollNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
+void FootRollSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
 	/* Disables Cached Playback support by default.
 
 	Built-in locators all enable Cached Playback by default, but plug-ins have to
@@ -283,7 +293,7 @@ void FootRollNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisa
 }
 
 
-void FootRollNode::postConstructor() {
+void FootRollSolver::postConstructor() {
 	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and

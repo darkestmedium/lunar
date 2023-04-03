@@ -81,8 +81,8 @@ public:
 	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
 
 	// Position
-	MVector posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
-	MVector posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
+	MVector posFkRoot, posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
+	MVector posIkRoot, posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
 	MVector posOutStart, posOutMid, posOutEnd, posOutHandle, posOutPv;
 	// Quats
 	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;

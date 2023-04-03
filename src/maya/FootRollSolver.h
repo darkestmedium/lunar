@@ -48,8 +48,7 @@
 
 
 
-class FootRollNode : public MPxNode
-{
+class FootRollSolver : public MPxNode {
 public:
 	// Node Data
 	static const MString typeName;
@@ -58,18 +57,20 @@ public:
 	// Node's Input Attributes
 	static Attribute attrInAnkle;
 	static Attribute attrInBall;
-	static Attribute attrInToe;
 	static MObject attrInHeelX, attrInHeelY, attrInHeelZ, attrInHeel;
+	static MObject attrInToeX, attrInToeY, attrInToeZ, attrInToe;
+	
 	static Attribute attrInRoll;
 	static Attribute attrInBendLimitAngle;
 	static Attribute attrInToeLimitAngle;
 	static MObject attrInTime;
+	
 	// Nodes's Output Attributes
 	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
 	
 	// In-data
 	MMatrix matInAnkle, matInBall, matInToe;
-	MVector posHeel;
+	MVector posHeel, posToe;
 	MAngle roll, bendLimitAngle, toeLimitAngle;
 	MTime timeCurrent, timeCached;
 
@@ -81,15 +82,15 @@ public:
 	MObject objSelf;
 
 	// Constructors
-	FootRollNode()
+	FootRollSolver()
 		: MPxNode()
 		, posHeel(MVector::one)
 	{};
 	// Destructors
-	~FootRollNode() override {};
+	~FootRollSolver() override {};
 
 	// Public methods - overrides
-	static void* creator() {return new FootRollNode();}
+	static void* creator() {return new FootRollSolver();}
 	static MStatus initialize();
 	bool isPassiveOutput(const MPlug& plug)	const override;
 	virtual MStatus compute(const MPlug& plug, MDataBlock& dataBlock) override;

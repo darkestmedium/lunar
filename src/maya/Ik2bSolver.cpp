@@ -194,7 +194,9 @@ void Ik2bSolver::getFkTransforms() {
 	fnIkHandle.getRotation(quatFkHandle, MSpace::kWorld);
 
 	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
-	else {posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkStart;}
+	else {
+		// posFkRoot = fnRoot.rotatePivot(MSpace::kWorld);
+		posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
 }
 
 
@@ -214,11 +216,8 @@ void Ik2bSolver::getIkTransforms() {
 
 	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
-		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkStart;
-		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(posIkPv.x).c_str());
-		// MGlobal::displayWarning(MString("vecOutX ") + std::to_string(posIkPv.y).c_str());
-		// MGlobal::displayWarning(MString("vecOutY ") + std::to_string(posIkPv.z).c_str());
-	}
+		// posIkRoot = fnRoot.rotatePivot(MSpace::kWorld);
+		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
 }
 
 
@@ -277,7 +276,7 @@ void Ik2bSolver::solveIk() {
 	*/
 	getIkTransforms();
 
-	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, quatIkStart, quatIkMid);
+	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
 
 	// Set fk rotations
 	fnFkStart.setRotation(quatIkStart, MSpace::kWorld);
@@ -306,7 +305,7 @@ void Ik2bSolver::solveFkIk() {
 	getFkTransforms();
 	getIkTransforms();
 
-	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, quatIkStart, quatIkMid);
+	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
 
 	blendFkIk();
 

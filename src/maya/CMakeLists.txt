@@ -8,8 +8,8 @@ set(MAYA_FILES
 	CtrlData.cpp
 	CtrlDrawOverride.h
 	CtrlDrawOverride.cpp
-	FootRollNode.h
-	FootRollNode.cpp
+	FootRollSolver.h
+	FootRollSolver.cpp
 	Ik2bSolver.h
 	Ik2bSolver.cpp
 	IkCommand.h

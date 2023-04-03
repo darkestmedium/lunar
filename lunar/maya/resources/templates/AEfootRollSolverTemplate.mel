@@ -1,0 +1,40 @@
+/*  AEfootRollSolverTemplate.mel
+	The Attribute Editor template for the mlunar plugin.
+
+	source "AEfootRollSolverTemplate.mel";
+	refreshEditorTemplates;
+*/
+
+global proc AEfootRollSolverTemplate(string $nodeName) {
+	// Main layout
+	editorTemplate -beginScrollLayout;
+		
+		editorTemplate -beginLayout "Solver Inputs" -collapse false;
+			editorTemplate -addControl "ankle";
+			editorTemplate -addControl "ball";
+			editorTemplate -addControl "heel";
+			editorTemplate -addControl "toe";
+			editorTemplate -addControl "roll";
+			editorTemplate -addControl "bendLimitAngle";
+			editorTemplate -addControl "toeLimitAngle";
+			editorTemplate -endLayout;
+
+    editorTemplate -beginLayout "Time Attributes" -collapse true;
+			editorTemplate -addControl "inTime";
+			editorTemplate -endLayout;
+    
+    // Include/call base class/node attributes
+    AEdependNodeTemplate $nodeName;
+		
+		// hide attributes attributes
+		editorTemplate -beginNoOptimize;
+
+		editorTemplate -suppress "update";
+
+		editorTemplate -endNoOptimize;
+	
+		editorTemplate -addExtraControls;
+
+	// End Main Layout
+	editorTemplate -endScrollLayout;
+};

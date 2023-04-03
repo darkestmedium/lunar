@@ -3,7 +3,7 @@
 #include "CtrlCommand.h"
 #include "Ik2bSolver.h"
 #include "IkCommand.h"
-#include "FootRollNode.h"
+#include "FootRollSolver.h"
 #include "MetaDataNode.h"
 #include "MetaDataCmd.h"
 
@@ -109,10 +109,10 @@ MStatus initializePlugin(MObject obj)
 
 	// Register FootRoll node
 	status = pluginFn.registerNode(
-		FootRollNode::typeName,
-		FootRollNode::typeId,
-		FootRollNode::creator,
-		FootRollNode::initialize,
+		FootRollSolver::typeName,
+		FootRollSolver::typeId,
+		FootRollSolver::creator,
+		FootRollSolver::initialize,
 		MPxNode::kDependNode
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
@@ -148,7 +148,7 @@ MStatus uninitializePlugin(MObject obj)
 	MMessage::removeCallbacks(callbackIds);
 
 	// Deregister Footroll Node
-	status = pluginFn.deregisterNode(FootRollNode::typeId);
+	status = pluginFn.deregisterNode(FootRollSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister MetaData command

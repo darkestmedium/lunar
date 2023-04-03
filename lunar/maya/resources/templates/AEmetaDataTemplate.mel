@@ -5,8 +5,7 @@
 	refreshEditorTemplates;
 */
 
-global proc AEmetaDataTemplate(string $nodeName)
-{
+global proc AEmetaDataTemplate(string $nodeName) {
 	// Main layout
 	editorTemplate -beginScrollLayout;
 		
