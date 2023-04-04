@@ -195,8 +195,8 @@ void Ik2bSolver::getFkTransforms() {
 
 	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
-		// posFkRoot = fnRoot.rotatePivot(MSpace::kWorld);
-		posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
+		posFkRoot = fnRoot.rotatePivot(MSpace::kWorld);
+		posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkRoot;}
 }
 
 
@@ -216,7 +216,7 @@ void Ik2bSolver::getIkTransforms() {
 
 	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
-		// posIkRoot = fnRoot.rotatePivot(MSpace::kWorld);
+		posIkRoot = fnRoot.rotatePivot(MSpace::kWorld);
 		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
 }
 

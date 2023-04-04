@@ -1303,7 +1303,7 @@ class Ik2bLimbComponent():
 			parent=parent,
 			translateTo=fkEnd,
 			rotateTo=fkEnd,
-			lineWidth=3,
+			lineWidth=2.0,
 			textPosition=textPosition,
 			color=color,
 		)

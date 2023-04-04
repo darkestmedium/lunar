@@ -19,7 +19,7 @@ from PySide2 import QtCore as qtc
 class LMViewport():
 	"""Class wrapper for the 3d viewport.
 	"""
-	log = logging.getLogger("MViewport")
+	log = logging.getLogger("LMViewport")
 
 
 	@classmethod
