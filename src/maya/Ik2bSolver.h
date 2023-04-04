@@ -38,15 +38,15 @@
 // Proxies
 #include <maya/MPxNode.h>
 
-// Custom
-#include "LMAttribute.h"
-#include "LMGlobal.h"
-#include "LMAnimControl.h"
-#include "LMSolve.h"
-#include "LMRigUtils.h"
-#include "LMPlugin.h"
-#include "Utils.h"
-#include "MathUtility.h"
+// Lunar
+#include "../maya/api/LMAttribute.h"
+#include "../maya/api/LMGlobal.h"
+#include "../maya/api/LMAnimControl.h"
+#include "../maya/api/LMSolve.h"
+#include "../maya/api/LMRigUtils.h"
+#include "../maya/api/LMPlugin.h"
+#include "../maya/api/Utils.h"
+#include "../maya/api/MathUtility.h"
 
 
 

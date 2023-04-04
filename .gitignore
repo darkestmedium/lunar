@@ -1,8 +1,8 @@
 # .vscode
 *.DS_Store
-desktop.ini
+*desktop.ini
 *Icon?
-*_MACOS
+*__MACOSX
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

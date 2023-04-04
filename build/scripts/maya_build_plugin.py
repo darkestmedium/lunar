@@ -16,12 +16,12 @@ class LMBuildPlugin():
 	"""Class for automating the development of a maya plugin.
 	"""
 	def __init__(self,
-		projectName="mlunar",
-		mayaVersion=2023,
-		buildType="Release",
-		buildTarget="all",
-		clean=True,
-		) -> None:
+		projectName:str="mlunar",
+		mayaVersion:int=2023,
+		buildType:str="Release",
+		buildTarget:str="all",
+		clean:bool=True,
+	) -> None:
 		self.getPlatformData()
 
 		self.projectName=projectName

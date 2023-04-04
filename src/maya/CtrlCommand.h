@@ -27,11 +27,11 @@
 // Proxies
 #include <maya/MPxCommand.h>
 
-// Custom
+// Lunar
 #include "Ctrl.h"
-#include "Utils.h"
-#include "LMAttribute.h"
-#include "LMObject.h"
+#include "../maya/api/Utils.h"
+#include "../maya/api/LMAttribute.h"
+#include "../maya/api/LMObject.h"
 
 
 

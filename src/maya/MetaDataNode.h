@@ -38,8 +38,8 @@
 #include <maya/MPxDrawOverride.h>
 
 // Custom
-#include "Utils.h"
-#include "LMAttribute.h"
+#include "api/Utils.h"
+#include "api/LMAttribute.h"
 
 
 

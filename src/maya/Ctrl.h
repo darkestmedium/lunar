@@ -32,13 +32,12 @@
 // Proxies
 #include <maya/MPxLocatorNode.h>
 
-// Custom
-#include "Utils.h"
+// Lunar
+#include "../maya/api/Utils.h"
 
 
 
-class Ctrl : public MPxLocatorNode
-{
+class Ctrl : public MPxLocatorNode {
 public:
 	// Public Data
 	static const MString typeName;

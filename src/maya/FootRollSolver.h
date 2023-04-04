@@ -40,10 +40,10 @@
 // Proxies
 #include <maya/MPxNode.h>
 
-// Custom
-#include "LMAttribute.h"
-#include "LMPlugin.h"
-#include "Utils.h"
+// Lunar
+#include "../maya/api/LMAttribute.h"
+#include "../maya/api/LMPlugin.h"
+#include "../maya/api/Utils.h"
 
 
 

@@ -19,18 +19,18 @@ set(MAYA_FILES
 	MetaDataNode.h
 	MetaDataNode.cpp
 	ShapesDefinition.h
-# Api
-	LMAttribute.h
-	LMGlobal.h
-	LMAnimControl.h
-	LMObject.h
-	LMPlugin.h
-	LMRigUtils.h
-	LMScene.h
-	LMSolve.h
-	LMText.h
-	MathUtility.h
-	Utils.h
+# # Api
+# 	LMAttribute.h
+# 	LMGlobal.h
+# 	LMAnimControl.h
+# 	LMObject.h
+# 	LMPlugin.h
+# 	LMRigUtils.h
+# 	LMScene.h
+# 	LMSolve.h
+# 	LMText.h
+# 	MathUtility.h
+# 	Utils.h
 # Main
 	MainPlugin.cpp
 )
@@ -48,6 +48,7 @@ target_include_directories(mlunar
 MAYA_PLUGIN(mlunar)
 
 # # Add the subdirectory for the nested project
+add_subdirectory(api)
 # add_subdirectory(ctrl)
 # add_subdirectory(solver)
 # add_subdirectory(misc)

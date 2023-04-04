@@ -23,7 +23,7 @@
 #include <maya/MUserData.h>
 
 // Custom	
-#include <LMText.h>
+#include <api/LMText.h>
 
 
 
