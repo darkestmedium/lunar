@@ -49,7 +49,6 @@ public:
 	static MObject localRotateX;
 	static MObject localRotateY;
 	static MObject localRotateZ;
-	static MObject localRotate;
 
 	static MObject shapeAttr;
 	static MObject fillShapeAttr;
@@ -63,7 +62,6 @@ public:
 	static MObject attrInTextPositionX;
 	static MObject attrInTextPositionY;
 	static MObject attrInTextPositionZ;
-	static MObject attrInTextPosition;
 	static MObject attrInText;
 
 	static MObject attrInFkIk;

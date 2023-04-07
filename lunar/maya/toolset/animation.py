@@ -209,7 +209,7 @@ def createTimeEditorClip():
 	if not fiAnimFbx:	clipName = "animation"
 	else:	clipName = fiAnimFbx.fileName()
 
-	lma.MTimeEditor.createClip(clipName)
+	lma.LMTimeEditor.createClip(clipName)
 	cmds.TimeEditorWindow()
 	return True
 

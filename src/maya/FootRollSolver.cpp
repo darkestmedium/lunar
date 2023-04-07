@@ -153,6 +153,7 @@ MStatus FootRollSolver::solve() {
 	MVector vecAnkleHeel = posAnkle - posHeel;
 
 	// get ankle vector position
+	// MGlobal::displayWarning(MString("roll: ") + std::to_string(roll.asRadians()).c_str());
 
 	// heel - anklke pos = rotate pivot
 	MQuaternion quatRoll(roll.asRadians(), MVector().zAxis);
@@ -162,7 +163,6 @@ MStatus FootRollSolver::solve() {
 	quatAnkle *= quatRoll;
 
 	// set rotate pivot
-	fnAnkle.setRotatePivot(vecAnkleHeel, MSpace::kWorld, false);
 	fnAnkle.setRotation(quatAnkle, MSpace::kTransform);
 
 	// rotate by vector
@@ -267,6 +267,9 @@ MStatus FootRollSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugA
 		|| plugBeingDirtied == attrInTime
 	)	{
 		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateX));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateY));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateZ));
 	}
 
 	return MS::kSuccess;

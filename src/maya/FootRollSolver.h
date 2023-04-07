@@ -77,7 +77,7 @@ public:
 	// Function sets
 	MFnTransform fnAnkle;
 	MFnTransform fnBall;
-	MFnTransform fnToe;
+	// MFnTransform fnToe;
 
 	MObject objSelf;
 

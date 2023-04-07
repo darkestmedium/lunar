@@ -70,6 +70,10 @@ public:
 	// Nodes's Output Attributes
 	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
 
+	static MObject attrInDirty;
+	static MObject attrOutDirty;
+	double isDirty;
+
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPv;

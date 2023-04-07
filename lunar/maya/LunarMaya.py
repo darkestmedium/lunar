@@ -896,8 +896,8 @@ class LMTransformUtils():
 				if ctrl == "pelvis_rot_ctrl": continue
 				# LMAttribute.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
 
-				if "twist" not in jnt:
-					distance = cls.getDistanceBetween(jnt)
-					if distance:
-						LMAttribute.editLocked(f"{ctrl}Shape.localScaleX", distance*0.7)
-						LMAttribute.editLocked(f"{ctrl}Shape.localPositionX", distance*0.5)
+				# if "twist" not in jnt:
+				# 	distance = cls.getDistanceBetween(jnt)
+				# 	if distance:
+				# 		LMAttribute.editLocked(f"{ctrl}Shape.localScaleX", distance*0.7)
+				# 		LMAttribute.editLocked(f"{ctrl}Shape.localPositionX", distance*0.5)

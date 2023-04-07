@@ -107,7 +107,6 @@ namespace LMSolve {
 		MQuaternion r1(ba_bc_1 - ba_bc_0, axis0);
 		MQuaternion r2(ac_at_0, axis1);
 
-		
 		// Pole vector rotation
 		// MQuaternion r3;
 		// if (bIsPvConnected) {
@@ -123,7 +122,6 @@ namespace LMSolve {
 		// 	r3 = vecAPv.rotateTo(n2);
 		// }
 
-		
 		// Rotation cross vectors and twist
 		MQuaternion quatTwist(twist.asRadians(), vecAT);
 

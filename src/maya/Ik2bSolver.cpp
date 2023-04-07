@@ -26,6 +26,9 @@ Attribute Ik2bSolver::attrOutUpdateY;
 Attribute Ik2bSolver::attrOutUpdateZ;
 Attribute Ik2bSolver::attrOutUpdate;
 
+MObject Ik2bSolver::attrInDirty;
+MObject Ik2bSolver::attrOutDirty;
+
 
 MStatus Ik2bSolver::initialize() {
 	/* Node Initializer.
@@ -80,13 +83,19 @@ MStatus Ik2bSolver::initialize() {
 	attrOutUpdateZ = nAttr.create("updateZ", "updZ", MFnNumericData::kDouble, 0.0);
 	attrOutUpdate = nAttr.create("update", "upd", attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ);
 
+
+	attrInDirty = nAttr.create("inDirty", "idirt", MFnNumericData::kDouble, 1.0);
+	attrOutDirty = nAttr.create("dirty", "dirt", MFnNumericData::kDouble, 0.0);
+
 	// Add attributes
 	addAttributes(
 		attrInFkStart, attrInFkMid,	attrInFkEnd,
 		attrInIkHandle,	attrInPv,
 		attrInTwist, attrInSoftness, attrInFkIk,
 		attrInTime,
-		attrOutUpdate
+		attrOutUpdate,
+		attrInDirty,
+		attrOutDirty
 	);
 
 	return MS::kSuccess;
@@ -125,6 +134,8 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	 * 
 	 */
 	MStatus status;
+
+	isDirty = dataBlock.inputValue(attrInDirty).asDouble(),
 
 	// Ask for time value to force refresh on the node
 	timeCurrent = dataBlock.inputValue(attrInTime, &status).asTime();
@@ -216,6 +227,7 @@ void Ik2bSolver::getIkTransforms() {
 
 	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
+		// we need a getPvRootPosition that will calculate the pv and multiply by the root
 		posIkRoot = fnRoot.rotatePivot(MSpace::kWorld);
 		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
 }
@@ -339,6 +351,10 @@ MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {
 	dhOutUpdate.set3Double(0.0, 0.0, 0.0);
 	dhOutUpdate.setClean();
 
+	MDataHandle dhOutDirty = dataBlock.outputValue(attrOutDirty, &status);
+	dhOutDirty.setDouble(1.0);
+	dhOutDirty.setClean();
+
 	dataBlock.setClean(plug);
 
 	return MS::kSuccess;
@@ -412,6 +428,10 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		|| plugBeingDirtied == attrInTime
 	)	{
 		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateX));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateY));
+		affectedPlugs.append(MPlug(objSelf, attrOutUpdateZ));
+		affectedPlugs.append(MPlug(objSelf, attrOutDirty));
 	}
 	return MS::kSuccess;
 }

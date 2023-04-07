@@ -73,7 +73,7 @@ class LMTimeEditor():
 class LMAnimBake():
 	"""Wrappper class for custom baking."""
 
-	log = logging.getLogger("MAnimBake")
+	log = logging.getLogger("LMAnimBake")
 
 
 	@classmethod

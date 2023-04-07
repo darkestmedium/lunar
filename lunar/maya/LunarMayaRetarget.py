@@ -26,15 +26,15 @@ import lunar.maya.resources.retarget.unreal as lmrrue
 
 
 
-def __loadDependencies():
+def loadDependencies():
 	"""Loads all dependencies (hik plugins and mel sources).
 	"""
 	# [cmds.loadPlugin(plugin) for plugin in ["mayaHIK", "mayaCharacterization", "retargeterNodes"] if cmds.pluginInfo(plugin, query=True, loaded=False)]
-	# if cmds.pluginInfo("mayaHIK", query=True, loaded=False): 
+	# # if cmds.pluginInfo("mayaHIK", query=True, loaded=False): 
 	cmds.loadPlugin("mayaHIK")
-	# if cmds.pluginInfo("mayaCharacterization", query=True, loaded=False): 
+	# # if cmds.pluginInfo("mayaCharacterization", query=True, loaded=False): 
 	cmds.loadPlugin("mayaCharacterization")
-	# if cmds.pluginInfo("retargeterNodes", query=True, loaded=False): 
+	# # if cmds.pluginInfo("retargeterNodes", query=True, loaded=False): 
 	cmds.loadPlugin("retargeterNodes")
 	
 	
@@ -52,7 +52,7 @@ def __loadDependencies():
 	log.info("Successfully loaded all dependencies.")
 
 
-if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): __loadDependencies()
+if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): loadDependencies()
 
 
 
@@ -1056,7 +1056,7 @@ class LMMetaHuman(LMHumanIk):
 	aPose = lmrrue.templateMH["aPose"]
 
 
-	def accessoryJoints(self, value=False):
+	def accessoryJoints(self, value:bool=False):
 		"""Hides additional joints on the metahuman rig."""
 
 		referenceNode = self.returnNodeWithNameSpace(self.definition['Reference']['node'])
@@ -1976,6 +1976,8 @@ class LMSinnersDev1(LMHumanIk):
 	tPose = lmrrsd.templateSD1["tPose"]
 	aPose = lmrrsd.templateSD1["aPose"]
 
+	rootMotion = "NUXRoot"
+
 
 	def accessoryJoints(self, value=False):
 		"""Hides additional joints on the metahuman rig."""
@@ -2130,6 +2132,8 @@ class LMRetargeter():
 
 		if type(entry) == list:
 			entries = entry
+
+		entries.sort()
 
 		filePathList = []
 		for entry in entries:
@@ -2371,29 +2375,32 @@ if __name__ == "__main__":
 	# from lunar.maya.retarget import unreal
 	# [importlib.reload(module) for module in [retargeter, lunar]]
 
-	# finder = Finder()
-	# # Source list
-	# sourceList = finder.getFilesInDirectory("C:/Users/lukyb/Desktop/Animations/Mocap/Anton/input/traversal")
-	# # print(sourceList)
-	# alredyRetargetedList = finder.getFilesInDirectory("C:/Users/lukyb/Desktop/npc/Manny")
-	# alredyRetargetedFileNameList = [retargeted.fileName() for retargeted in alredyRetargetedList]
-	# missingRetargetList = []
-	# for anim in sourceList:
-	# 	if anim.fileName() not in alredyRetargetedFileNameList:
-	# 		missingRetargetList.append(anim.filePath())
-
 	cmds.file(new=True, force=True)
 
+	# Source list
+	sourceList = lm.LMFinder.getFilesInDirectory("/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal")
+	# print(sourceList)
+	alredyRetargetedList = lm.LMFinder.getFilesInDirectory("/Users/luky/Desktop/thug")
+	alredyRetargetedFileNameList = [retargeted.fileName() for retargeted in alredyRetargetedList]
+	missingRetargetList = []
+	for anim in sourceList:
+		if anim.fileName() not in alredyRetargetedFileNameList:
+			missingRetargetList.append(anim.filePath())
+
+	
+
 	retargeter = LMRetargeter(
+		# sources=missingRetargetList,
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
-			"/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/anim-player-movement-push-pull",
+			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal",
+			"/Users/luky/Desktop/thug_fucked",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/push_pull",
+		outputDirectory="/Users/luky/Desktop/thug",
 		# sourceNameSpace="Anton",
-		sourceTemplate="SinnersDev2",
+		sourceTemplate="SinnersDev1",
 		# sourceTemplate="MannequinUe5",
 		targetNameSpace="Player",
 		targetTemplate="LunarExport",
@@ -2401,7 +2408,7 @@ if __name__ == "__main__":
 
 	retargeter.retarget(
 		preserveFolderHierarchy=False,
-		trimStart=1,  # if baking from sinnersDev set
+		# trimStart=1,  # if baking from sinnersDev set
 		matchSource=True,
 		# reachActorChest=1.0,
 		oversamplingRate=1,

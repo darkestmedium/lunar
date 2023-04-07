@@ -28,8 +28,8 @@ class Ctrl():
 	"""
 	defaultTransparency = 0.15
 	defaultLineWidth = 2.0
-	defaultFingerLineWidth = 5.0
-	defaultLockShapeAttributes = True
+	defaultFingerLineWidth = 2.0
+	defaultLockShapeAttributes = False
 
 	def __init__(self,
 		name="new_ctrl",
@@ -37,10 +37,10 @@ class Ctrl():
 		translateTo="",
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
-		localRotate=(0.0, 0.0, 0.0),
+		localRotate=(0.0, 0.0, 90.0),
 		localScale=(2.0, 2.0, 2.0),
-		shape="cube",
-		fillShape=True,
+		shape="circle",
+		fillShape=False,
 		drawText=False,
 		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=defaultTransparency,
@@ -191,7 +191,7 @@ class PelvisCtrl(Ctrl):
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
 		localRotate=(0.0, 0.0, 0.0),
-		localScale=(30.0, 30.0, 30.0),
+		localScale=(40.0, 40.0, 40.0),
 		shape="square",
 		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
@@ -268,10 +268,10 @@ class FingerCtrl():
 		translateTo="",
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
-		localRotate=(0.0, 0.0, 0.0),
-		localScale=(0.75, 0.75, 0.75),
-		shape="line",
-		fillShape=True,
+		localRotate=(0.0, 0.0, 90.0),
+		localScale=(3.0, 3.0, 3.0),
+		shape="circle",
+		fillShape=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultFingerLineWidth,
 		color="yellow",
@@ -585,6 +585,7 @@ class PelvisComponent():
 
 
 
+
 class FkSpineComponent():
 	"""Class for building the fk spine component."""
 
@@ -642,6 +643,7 @@ class FkSpineComponent():
 
 	def getCtrls(self):
 		return (self.CtrlSpine1, self.CtrlSpine2, self.CtrlSpine3, self.CtrlSpine4, self.CtrlSpine5)
+
 
 
 

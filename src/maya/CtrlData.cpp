@@ -904,7 +904,7 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 			fTriangleList.append(fTransformedList[4]);
 		}
 
-	} else if (shapeIndex == 4) {  	// Square
+	} else if (shapeIndex == 4) {  // Square
 		for (int i=0; i<squareCount; i++) {
 			fTransformedList.append(
 				MPoint(listPointsSquare[i][0], listPointsSquare[i][1], listPointsSquare[i][2]) * matrix

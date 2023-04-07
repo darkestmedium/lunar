@@ -13,7 +13,6 @@ const MString Ctrl::drawRegistrationId("ctrlNode");
 MObject Ctrl::localRotateX;
 MObject Ctrl::localRotateY;
 MObject Ctrl::localRotateZ;
-MObject Ctrl::localRotate;
 
 MObject Ctrl::shapeAttr;
 MObject Ctrl::fillShapeAttr;
@@ -27,7 +26,6 @@ MObject Ctrl::attrInDrawText;
 MObject Ctrl::attrInTextPositionX;
 MObject Ctrl::attrInTextPositionY;
 MObject Ctrl::attrInTextPositionZ;
-MObject Ctrl::attrInTextPosition;
 
 MObject Ctrl::attrInFkIk;
 
@@ -52,14 +50,21 @@ MStatus Ctrl::initialize() {
 	MFnTypedAttribute tAttr;
 	MFnEnumAttribute eAttr;
 
-	localRotateX = uAttr.create("localRotateX", "lrx", MFnUnitAttribute::kAngle, 0.0);
-	localRotateY = uAttr.create("localRotateY", "lry", MFnUnitAttribute::kAngle, 0.0);
-	localRotateZ = uAttr.create("localRotateZ", "lrz", MFnUnitAttribute::kAngle, 0.0);
-	localRotate = nAttr.create("localRotate", "lr", localRotateX, localRotateY, localRotateZ);
+	localRotateX = uAttr.create("localRotateX", "lrX", MFnUnitAttribute::kAngle, 0.0);
 	uAttr.setStorable(true);
-	nAttr.setStorable(true);
-	nAttr.setKeyable(false);
-	nAttr.setChannelBox(true);
+	uAttr.setStorable(true);
+	uAttr.setKeyable(false);
+	uAttr.setChannelBox(true);
+	localRotateY = uAttr.create("localRotateY", "lrY", MFnUnitAttribute::kAngle, 0.0);
+	uAttr.setStorable(true);
+	uAttr.setStorable(true);
+	uAttr.setKeyable(false);
+	uAttr.setChannelBox(true);
+	localRotateZ = uAttr.create("localRotateZ", "lrZ", MFnUnitAttribute::kAngle, 0.0);
+	uAttr.setStorable(true);
+	uAttr.setStorable(true);
+	uAttr.setKeyable(false);
+	uAttr.setChannelBox(true);
 
 	shapeAttr = eAttr.create("shape", "shp");
 	eAttr.addField("Cube", 0);
@@ -110,9 +115,16 @@ MStatus Ctrl::initialize() {
 	nAttr.setChannelBox(true);
 
 	attrInTextPositionX = nAttr.create("textPositionX", "tpx", MFnNumericData::kDouble, 0.0);
+	nAttr.setStorable(true);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
 	attrInTextPositionY = nAttr.create("textPositionY", "tpy", MFnNumericData::kDouble, 0.0);
+	nAttr.setStorable(true);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
 	attrInTextPositionZ = nAttr.create("textPositionZ", "tpz", MFnNumericData::kDouble, 0.0);
-	attrInTextPosition = nAttr.create("textPosition", "tp", attrInTextPositionX, attrInTextPositionY, attrInTextPositionZ);
 	nAttr.setStorable(true);
 	nAttr.setStorable(true);
 	nAttr.setKeyable(false);
@@ -127,9 +139,10 @@ MStatus Ctrl::initialize() {
 
 	// Add attributes
 	addAttributes(
-		localRotate, shapeAttr,	fillShapeAttr, fillTransparencyAttr, lineWidthAttr,
-		attrInDrawLine, attrInDrawLineTo,
-		attrInDrawText, attrInTextPosition,
+		localRotateX, localRotateY, localRotateZ,
+		shapeAttr, fillShapeAttr, fillTransparencyAttr, lineWidthAttr,
+		attrInDrawLine, attrInDrawLineTo,	attrInDrawText,
+		attrInTextPositionX, attrInTextPositionY, attrInTextPositionZ,
 		attrInFkIk
 	);
 
@@ -191,7 +204,8 @@ void Ctrl::postConstructor() {
 	member function can be called from the MPxNode constructor. The postConstructor will
 	get called immediately after the constructor when it is safe to call any MPxNode
 	member function.
-*/
+
+	*/
 	objSelf = thisMObject();
 	MDagPath::getAPathTo(objSelf, pathSelf);
 	MFnDependencyNode thisFn(objSelf);
