@@ -207,7 +207,8 @@ void Ik2bSolver::getFkTransforms() {
 	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
 		posFkRoot = fnRoot.rotatePivot(MSpace::kWorld);
-		posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkRoot;}
+		posFkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posFkRoot;
+	}
 }
 
 
@@ -229,7 +230,8 @@ void Ik2bSolver::getIkTransforms() {
 	else {
 		// we need a getPvRootPosition that will calculate the pv and multiply by the root
 		posIkRoot = fnRoot.rotatePivot(MSpace::kWorld);
-		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;}
+		posIkPv = posInPv * fnRoot.dagPath().exclusiveMatrix() + posIkRoot;
+	}
 }
 
 
@@ -458,7 +460,7 @@ void Ik2bSolver::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisabl
 
 
 void Ik2bSolver::postConstructor() {
-	/* post constructor.
+	/* Post constructor.
 
 	Internally maya creates two objects when a user defined node is created, the internal MObject and
 	the user derived object. The association between the these two objects is not made until after the

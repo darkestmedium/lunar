@@ -817,7 +817,16 @@ class FkLegComponent():
 			)
 			self.CtrlCorrective.append(CtrlCorrective)
 		# Leg
-		for joint in listJoints["Leg"]["LegRoll1"]["Corrective"]:
+		# for joint in listJoints["Leg"]["LegRoll1"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlLegRoll1.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		for joint in listJoints["Leg"]["LegRoll2"]["Corrective"]:
 			CtrlCorrective = CorrectiveCtrl(
 				name=f"{joint}{sideSuffix}_ctrl",
 				parent=self.CtrlLegRoll1.transform,
@@ -1316,7 +1325,6 @@ class Ik2bLimbComponent():
 				parent=parent,
 				translateTo=poleVector,
 				rotateTo=rotateTo,
-				# localScale=(4.0, 4.0, 4.0),
 				lineWidth=2.0,
 				color=color,
 			)

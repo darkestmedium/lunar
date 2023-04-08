@@ -23,7 +23,7 @@ class LMTimeEditor():
 	"""
 	defaultComposition = "Composition1"
 
-	log = logging.getLogger("MTimeEditor")
+	log = logging.getLogger("LMTimeEditor")
 
 
 	@classmethod

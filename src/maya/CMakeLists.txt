@@ -19,6 +19,8 @@ set(MAYA_FILES
 	MetaDataNode.h
 	MetaDataNode.cpp
 	ShapesDefinition.h
+	TwistSolver.cpp
+	TwistSolver.h
 # # Api
 # 	LMAttribute.h
 # 	LMGlobal.h

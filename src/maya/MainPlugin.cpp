@@ -6,6 +6,7 @@
 #include "FootRollSolver.h"
 #include "MetaDataNode.h"
 #include "MetaDataCmd.h"
+#include "TwistSolver.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -20,8 +21,7 @@ static MCallbackIdArray callbackIds;
 
 
 
-void setMelConfig(void*)
-{
+void setMelConfig(void*) {
 	/* Sets the selection priority for locators to 999. */
 	MGlobal::executeCommandOnIdle("cycleCheck -e 0");
 	MGlobal::executeCommandOnIdle("selectPriority -locator 999");
@@ -29,8 +29,7 @@ void setMelConfig(void*)
 
 
 
-MStatus initializePlugin(MObject obj)
-{
+MStatus initializePlugin(MObject obj) {
 	// Plugin variables
 	const char* author = "Lunatics";
 	const char* version = "0.3.1";
@@ -117,8 +116,17 @@ MStatus initializePlugin(MObject obj)
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	if (MGlobal::mayaState() == MGlobal::kInteractive)
-	{
+	// Register TwistSolver node
+	status = pluginFn.registerNode(
+		TwistSolver::typeName,
+		TwistSolver::typeId,
+		TwistSolver::creator,
+		TwistSolver::initialize,
+		MPxNode::kDependNode
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	if (MGlobal::mayaState() == MGlobal::kInteractive) {
 		// Register callback to set selection priority on locators to 999
 		setMelConfig(NULL);
 
@@ -140,12 +148,15 @@ MStatus initializePlugin(MObject obj)
 
 
 
-MStatus uninitializePlugin(MObject obj)
-{
+MStatus uninitializePlugin(MObject obj){
 	MStatus status;
 	MFnPlugin pluginFn(obj);
 
 	MMessage::removeCallbacks(callbackIds);
+
+	// Deregister TwistSolver Node
+	status = pluginFn.deregisterNode(TwistSolver::typeId);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister Footroll Node
 	status = pluginFn.deregisterNode(FootRollSolver::typeId);
@@ -174,7 +185,6 @@ MStatus uninitializePlugin(MObject obj)
 	// Deregister Controller command
 	status = pluginFn.deregisterCommand(CtrlCommand::commandName);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-
 	// Deregister Controller draw override
 	status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
 		Ctrl::drawRegistrationId,
