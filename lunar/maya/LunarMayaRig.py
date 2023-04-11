@@ -311,13 +311,56 @@ class IkCtrl():
 		localScale=(6.0, 6.0, 6.0),
 		shape="cube",
 		fillShape=False,
-		drawText=True,
+		drawText=False,
 		textPosition=(0.0, 0.0, 0.0),
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
 		lockChannels=["scale", "visibility"]
+	):
+		self.transform, self.shape = cmds.ctrl(
+			name=name,
+			parent=parent,
+			translateTo=translateTo,
+			rotateTo=rotateTo,
+			localPosition=localPosition,
+			localRotate=localRotate,
+			localScale=localScale,
+			shape=shape,
+			fillShape=fillShape,
+			drawText=drawText,
+			textPosition=textPosition,
+			fillTransparency=fillTransparency,
+			lineWidth=lineWidth,
+			color=color,
+			lockShapeAttributes=lockShapeAttributes,
+		)
+		lm.LMAttribute.lockControlChannels(self.transform, lockChannels)
+
+
+
+
+class FkIkSwitchCtrl():
+	"""Class for building the rig controller.
+	"""
+	def __init__(self,
+		name="new_ctrl",
+		parent="",
+		translateTo="",
+		rotateTo="",
+		localPosition=(0.0,	0.0, 0.0),
+		localRotate=(0.0, 0.0, 0.0),
+		localScale=(2.0, 2.0, 2.0),
+		shape="diamond",
+		fillShape=False,
+		drawText=False,
+		textPosition=(0.0, 0.0, 0.0),
+		fillTransparency=Ctrl.defaultTransparency,
+		lineWidth=Ctrl.defaultLineWidth,
+		color="yellow",
+		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
+		lockChannels=["translate", "rotate", "scale", "visibility"]
 	):
 		self.transform, self.shape = cmds.ctrl(
 			name=name,
@@ -477,45 +520,10 @@ class Base():
 
 	def _setupVisibilityAttributesAndConnections(self):
 		"""Creates visibility and display type attributes on the main cotroller and connects them.
-		
+
 		"""
 
 		lm.LMAttribute.addSeparator(self.ctrlMain.transform)
-
-		# Left Arm
-		self.AttrLeftArmFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftArmFkIk")
-		self.AttrLeftArmSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftArmSoftness", 0, 10)
-		self.AttrLeftArmTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "leftArmTwist")
-
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
-
-		# Right Arm
-		self.AttrRightArmFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightArmFkIk")
-		self.AttrRightArmSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightArmSoftness", 0, 10)
-		self.AttrRightArmTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "rightArmTwist")
-
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "___")
-
-		# Left Leg
-		self.AttrLeftLegFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftLegFkIk")
-		self.AttrLeftLegSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "leftLegSoftness", 0, 10)
-		self.AttrLeftLegTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "leftLegTwist")
-
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "____")
-
-		# Right Leg
-		self.AttrRightLegFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightLegFkIk")
-		self.AttrRightLegSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "rightLegSoftness", 0, 10)
-		self.AttrRightLegTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "rightLegTwist")
-
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "_____")
-
-		# Head
-		self.AttrHeadFkIk = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "headFkIk")
-		self.AttrHeadSoftness = lm.LMAttribute.addFloatFkIk(self.ctrlMain.transform, "headSoftness", 0, 10)
-		self.AttrHeadTwist = lm.LMAttribute.addFloat(self.ctrlMain.transform, "headTwist")
-
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "______")
 
 		# Visibility
 		# Main Ctrls
@@ -534,7 +542,7 @@ class Base():
 		self.AttrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
 		cmds.connectAttr(self.AttrHideCtrlsOnPlayback, f"{self.ctrlMain.shape}.hideOnPlayback")
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "_______")
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
 
 		# Diplay Type Overrides
 		# Main Ctrls 
@@ -1078,6 +1086,7 @@ class FkHandComponent():
 		if side == "right":
 			sideSuffix = "_r"
 			color = "lightblue"
+
 		# Thumb
 		self.CtrlThumb1 = FingerCtrl(
 			name="{}{}_ctrl".format(listJoints["Hand"]["Thumb1"], sideSuffix),

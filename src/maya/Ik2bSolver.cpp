@@ -32,14 +32,14 @@ MObject Ik2bSolver::attrOutDirty;
 
 MStatus Ik2bSolver::initialize() {
 	/* Node Initializer.
-	 *
-	 * This method initializes the node, and should be overridden in user-defined nodes.
-	 * 
-	 * Returns:
-	 *	status code (MStatus): kSuccess if the operation was successful, kFailure if an	error occured
-	 *		during the operation
-	 *
-	 */
+	
+	This method initializes the node, and should be overridden in user-defined nodes.
+	
+	Returns:
+		status code (MStatus): kSuccess if the operation was successful, kFailure if an	error occured
+			during the operation.
+
+	*/
 	MStatus status;
 	MFnNumericAttribute nAttr;
 	MFnMatrixAttribute mAttr;
@@ -83,19 +83,15 @@ MStatus Ik2bSolver::initialize() {
 	attrOutUpdateZ = nAttr.create("updateZ", "updZ", MFnNumericData::kDouble, 0.0);
 	attrOutUpdate = nAttr.create("update", "upd", attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ);
 
-
 	attrInDirty = nAttr.create("inDirty", "idirt", MFnNumericData::kDouble, 1.0);
 	attrOutDirty = nAttr.create("dirty", "dirt", MFnNumericData::kDouble, 0.0);
 
 	// Add attributes
 	addAttributes(
-		attrInFkStart, attrInFkMid,	attrInFkEnd,
-		attrInIkHandle,	attrInPv,
-		attrInTwist, attrInSoftness, attrInFkIk,
-		attrInTime,
+		attrInFkStart, attrInFkMid,	attrInFkEnd, attrInIkHandle, attrInPv,
+		attrInTwist, attrInSoftness, attrInFkIk, attrInTime,
 		attrOutUpdate,
-		attrInDirty,
-		attrOutDirty
+		attrInDirty, attrOutDirty
 	);
 
 	return MS::kSuccess;
@@ -127,12 +123,12 @@ bool Ik2bSolver::isPassiveOutput(const MPlug& plug) const {
 
 MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	/* Parse the data block and get all inputs.
-	 *
-	 * We're getting the mObj from the .attribute() instead of a numeric data type like double in
-	 * order to retrieve the MFnTransform for the input controllers - this also triggers the input as
-	 * dirty. All of Maya's solvers get the world position from the .rotatePivot() method.
-	 * 
-	 */
+	
+	We're getting the mObj from the .attribute() instead of a numeric data type like double in
+	order to retrieve the MFnTransform for the input controllers - this also triggers the input as
+	dirty. All of Maya's solvers get the world position from the .rotatePivot() method.
+
+	*/
 	MStatus status;
 
 	isDirty = dataBlock.inputValue(attrInDirty).asDouble(),
@@ -147,20 +143,16 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	posInPv = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
 	// Start fk controller
-	status = LMPlugin::parseTransformInput(dataBlock, fnFkStart, objSelf, attrInFkStart);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, fnFkStart, objSelf, attrInFkStart));
 
 	// Mid fk controller
-	status = LMPlugin::parseTransformInput(dataBlock, fnFkMid, objSelf, attrInFkMid);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, fnFkMid, objSelf, attrInFkMid));
 
 	// End fk controller
-	status = LMPlugin::parseTransformInput(dataBlock, fnFkEnd, objSelf, attrInFkEnd);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, fnFkEnd, objSelf, attrInFkEnd));
 
 	// Ik handle
-	status = LMPlugin::parseTransformInput(dataBlock, fnIkHandle, objSelf, attrInIkHandle);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, fnIkHandle, objSelf, attrInIkHandle));
 
 	// Pole vector
 	MDagPath pathPv;
@@ -255,16 +247,18 @@ MStatus Ik2bSolver::solveLimb() {
 			}
 			return MS::kSuccess;
 		}
+	} else { // if we don't enclose it in an else then autokey always gets triggered
+		// Solve for playback and all other possible cases - just solve something
+		if (fkIk == 0.0) {
+			solveFk();
+		}	else if (fkIk > 0.0 && fkIk < 100.0) {
+			solveFkIk();
+		} else if (fkIk == 100.0) {
+			solveIk();
+		}
+		return MS::kSuccess;
 	}
-	// Solve for playback and all other possible cases - just solve something
-	if (fkIk == 0.0) {
-		solveFk();
-	}	else if (fkIk > 0.0 && fkIk < 100.0) {
-		solveFkIk();
-	} else if (fkIk == 100.0) {
-		solveIk();
-	}
-	return MS::kSuccess;
+
 }
 
 
@@ -394,14 +388,11 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	status = parseDataBlock(dataBlock);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(parseDataBlock(dataBlock));
 
-	status = solveLimb();
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(solveLimb());
 
-	status = updateOutput(plug, dataBlock);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	CHECK_MSTATUS_AND_RETURN_IT(updateOutput(plug, dataBlock));
 
 	// Cache time change
 	timeCached = timeCurrent;

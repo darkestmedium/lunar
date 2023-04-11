@@ -9,7 +9,9 @@ global proc AEctrlTemplate(string $nodeName)
 
 		editorTemplate -beginLayout "Local Transform Attributes" -collapse false;
 			editorTemplate -addControl "localPosition";
-			editorTemplate -addControl "localRotate";
+			editorTemplate -addControl "localRotateX";
+			editorTemplate -addControl "localRotateY";
+			editorTemplate -addControl "localRotateZ";
 			editorTemplate -addControl "localScale";
 			editorTemplate -endLayout;
 
@@ -20,7 +22,9 @@ global proc AEctrlTemplate(string $nodeName)
 			editorTemplate -addControl "drawText";
 			editorTemplate -addControl "fillTransparency";
 			editorTemplate -addControl "lineWidth";
-			editorTemplate -addControl "textPosition";
+			editorTemplate -addControl "textPositionX";
+			editorTemplate -addControl "textPositionY";
+			editorTemplate -addControl "textPositionZ";
 			editorTemplate -addControl "drawLineTo";
 			editorTemplate -endLayout;
 

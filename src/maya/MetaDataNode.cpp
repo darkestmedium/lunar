@@ -31,13 +31,13 @@ MStatus MetaDataNode::initialize() {
 	AttrNum.setKeyable(false);
 	AttrNum.setReadable(false);
 
-	AttrTextPositionX = AttrNum.create("textPositionX", "tpX", MFnNumericData::kInt, 100);
+	AttrTextPositionX = AttrNum.create("textPositionX", "tpX", MFnNumericData::kInt, 50);
 	AttrNum.setKeyable(false);
 	AttrNum.setChannelBox(true);
 	AttrNum.setStorable(true);
 	AttrNum.setWritable(true);
 	AttrNum.setMin(0);
-	AttrTextPositionY = AttrNum.create("textPositionY", "tpY", MFnNumericData::kInt, 100);
+	AttrTextPositionY = AttrNum.create("textPositionY", "tpY", MFnNumericData::kInt, 50);
 	AttrNum.setKeyable(false);
 	AttrNum.setChannelBox(true);
 	AttrNum.setStorable(true);

@@ -155,12 +155,12 @@ def loadMocap() -> bool:
 	
 		# the export skeleton 
 		if not namespaceMocap:
-			ctrlRig.setSourceAndBake(exportSkeleton)
+			ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
 			if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 			return True
 
 		mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
-		ctrlRig.setSourceAndBake(mocapSkeleton)
+		ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
 
 		# Clean up namespaces
 		om.MNamespace.removeNamespace(namespaceMocap[0], True)
@@ -184,7 +184,7 @@ def exportAnimation(exportAs=False):
 		if strFilePath != None:
 			FiAnimFbx = qtc.QFileInfo(strFilePath[0])
 			# Source and bake to export skeleton
-			exportSkeleton.setSourceAndBake(ctrlRig)
+			exportSkeleton.setSourceAndBake(ctrlRig, rootMotion=True)
 			exportSkeleton.exportAnimation(FiAnimFbx.filePath())
 			return True
 

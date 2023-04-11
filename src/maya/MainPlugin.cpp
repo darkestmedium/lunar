@@ -154,7 +154,7 @@ MStatus uninitializePlugin(MObject obj){
 
 	MMessage::removeCallbacks(callbackIds);
 
-	// Deregister TwistSolver Node
+	// Deregister TwistSolver
 	status = pluginFn.deregisterNode(TwistSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
@@ -171,14 +171,14 @@ MStatus uninitializePlugin(MObject obj){
 		MetaDataNode::drawRegistrationId
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// Deregister MetaData node
+	// Deregister MetaDataNode
 	status = pluginFn.deregisterNode(MetaDataNode::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	// Deregister ik command
+	// Deregister IkCommand
 	status = pluginFn.deregisterCommand(IkCommand::commandName);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// Deregister ik2Solver node
+	// Deregister Ik2Solver
 	status = pluginFn.deregisterNode(Ik2bSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 

@@ -1,30 +1,6 @@
 #include "TwistSolver.h"
 
 
-// #include <maya/MAngle.h>
-// #include <maya/MAnimControl.h>
-// #include <maya/MArrayDataBuilder.h>
-// #include <maya/MDagPath.h>
-// #include <maya/MDataBlock.h>
-// #include <maya/MDataHandle.h>
-// #include <maya/MFnAnimCurve.h>
-// #include <maya/MFnCompoundAttribute.h>
-// #include <maya/MFnEnumAttribute.h>
-// #include <maya/MFnMatrixAttribute.h>
-// #include <maya/MFnNumericAttribute.h>
-// #include <maya/MFnPlugin.h>
-// #include <maya/MFnUnitAttribute.h>
-// #include <maya/MGlobal.h>
-// #include <maya/MMatrix.h>
-// #include <maya/MPlug.h>
-// #include <maya/MPlugArray.h>
-// #include <maya/MPxNode.h>
-// #include <maya/MQuaternion.h>
-// #include <maya/MRampAttribute.h>
-// #include <maya/MTransformationMatrix.h>
-// #include <maya/MVector.h>
-// #include <maya/MTypeId.h>
-
 
 
 // ---------------------------------------------------------------------
@@ -223,12 +199,13 @@ MStatus TwistSolver::initialize() {
 }
 
 
-MStatus TwistSolver::affectsOutput(MObject &attr) {
+MStatus TwistSolver::affectsOutput(MObject& attr) {
 	CHECK_MSTATUS_AND_RETURN_IT(attributeAffects(attr, TwistSolver::twist));
 	CHECK_MSTATUS_AND_RETURN_IT(attributeAffects(attr, TwistSolver::twistSegmentOut));
 
 	return MStatus::kSuccess;
 }
+
 
 MStatus TwistSolver::postConstructor_init_curveRamp(MObject &nodeObj,	MObject &rampObj, int index, float position, float value,	int interpolation) {
 	MStatus status;
@@ -256,8 +233,6 @@ MStatus TwistSolver::postConstructor_init_curveRamp(MObject &nodeObj,	MObject &r
 
 MStatus TwistSolver::compute(const MPlug &plug, MDataBlock& dataBlock) {
 	MStatus status = MS::kSuccess;
-
-	MObject objSelf = this->thisMObject();
 
 	// -----------------------------------------------------------------
 	// attributes
@@ -357,22 +332,18 @@ MStatus TwistSolver::compute(const MPlug &plug, MDataBlock& dataBlock) {
 	MPlug animPlug;
 	bool isConnected = false;
 
-	if (inputCount > 0)
-	{
+	if (inputCount > 0)	{
 		// Check if the current transform index matches one of the
 		// existing attribute ids.
 		bool exists = false;
-		for (unsigned int i = 0; i < inputCount; i ++)
-		{
-			if (twistInputIds[i] == transformIndexVal)
-			{
+		for (unsigned int i = 0; i < inputCount; i ++) {
+			if (twistInputIds[i] == transformIndexVal) {
 				exists = true;
 				break;
 			}
 		}
 
-		if (exists)
-		{
+		if (exists) {
 			MPlug inPlug = twistInputPlug.connectionByPhysicalIndex((unsigned)transformIndexVal);
 
 			// If the input is animated replace the internal twist
@@ -382,8 +353,7 @@ MStatus TwistSolver::compute(const MPlug &plug, MDataBlock& dataBlock) {
 			// This is important for setting the twist value on the
 			// transform node.
 			bool animated = isAnimated(inPlug, animPlug, isConnected);
-			if (animated)
-			{
+			if (animated)	{
 				status = twistInputHandle.jumpToArrayElement((unsigned)transformIndexVal);
 				CHECK_MSTATUS_AND_RETURN_IT(status);
 				twistRefVal = twistInputHandle.inputValue().asAngle().asDegrees();
@@ -436,8 +406,7 @@ MStatus TwistSolver::compute(const MPlug &plug, MDataBlock& dataBlock) {
 
 	double twistVal = 0.0;
 
-	if (activeVal)
-	{
+	if (activeVal) {
 		// Build the relative quaternion.
 		quat = quatInput * quatRest.conjugate();
 
@@ -454,8 +423,7 @@ MStatus TwistSolver::compute(const MPlug &plug, MDataBlock& dataBlock) {
 		// If the given angle (default 45 degrees) is exceeded the
 		// reference value gets modified/reduced to a remainder of 180,
 		// which should be sufficient in most cases.
-		if (extendVal && regulateVal)
-		{
+		if (extendVal && regulateVal)	{
 			// Define the reference vector base.
 			if (axisVal == 1)
 				pose = MVector(0.0, 1.0, 0.0);
@@ -575,6 +543,7 @@ double TwistSolver::trackRotation(double twistValue, double reference) {
 	Args:
 		twistValue (double): The current twist value.
 		reference (double): The reference angle.
+
 	Returns:
 		double: The expanded twist angle.
 
@@ -679,7 +648,7 @@ void TwistSolver::postConstructor() {
 	Reimplemented in MPxTransform, and MPxPolyTrg.
 
 	*/
-	MObject objSelf = thisMObject();
+	objSelf = thisMObject();
 
 	// One entry is the least needed or the attribute editor will
 	// produce an error.

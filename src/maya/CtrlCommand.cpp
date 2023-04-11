@@ -441,6 +441,9 @@ MStatus CtrlCommand::redoIt() {
 			MPlug plugTextPositionZ = shapeFn.findPlug("textPositionZ", false);
 			plugTextPositionZ.setValue(textPosition.z);
 
+			MPlug plugInFkIk = shapeFn.findPlug("inFkIk", false);
+			// plugTextPositionZ.setValue(textPosition.z);
+
 			MPlug plugFillTransparency = shapeFn.findPlug("fillTransparency", false);
 			plugFillTransparency.setValue(fillTransparency);
 
@@ -482,6 +485,8 @@ MStatus CtrlCommand::redoIt() {
 
 				LMAttribute::lockAndHideAttr(plugFillTransparency);
 				LMAttribute::lockAndHideAttr(plugLineWidth);
+
+				LMAttribute::lockAndHideAttr(plugInFkIk);
 			}
 		}
 		// Set hide on playback

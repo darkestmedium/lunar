@@ -905,9 +905,9 @@ class LMHumanIk():
 				if cmds.getAttr(f"{pTransform}.translateZ", lock=True) == 0: cmds.connectAttr(f"{pSrcR}z", f"{pTransform}.rotateZ")
 
 
-	def setSourceAndBake(self, source, startFrame=None, endFrame=None,  oversamplingRate=1):
+	def setSourceAndBake(self, source, startFrame=None, endFrame=None, rootMotion=True, rootRotationOffset=0, oversamplingRate=1):
 		"""Wrapper method for setting the source and baking in one go."""
-		self.setSource(source)
+		self.setSource(source, rootMotion, rootRotationOffset)
 		self.bakeAnimation(startFrame, endFrame)
 
 
@@ -1470,7 +1470,8 @@ class LMLunarCtrl(LMHumanIk):
 		"HeadHandle": 			"head_ik_ctrl",
 	}
 	CtrlIkHandles = ["arm_ik_l_ctrl", "arm_ik_r_ctrl", "leg_ik_l_ctrl", "leg_ik_r_ctrl"]
-	CtrlFkHands = ["hand_l_ctrl", "hand_r_ctrl"]
+	CtrlSwitches = ["head_switch_ctrl", "arm_switch_l_ctrl", "arm_switch_r_ctrl", "leg_switch_l_ctrl", "leg_switch_r_ctrl"]
+	CtrlHandSwitches = ["arm_switch_l_ctrl", "arm_switch_r_ctrl"]
 
 	AttrIk = ["headFkIk", "leftArmFkIk", "rightArmFkIk", "leftLegFkIk", "rightLegFkIk"]
 
@@ -1671,22 +1672,35 @@ class LMLunarCtrl(LMHumanIk):
 	# 	return ListCtrlsNamespace
 
 
-	def getCtrlFkHand(self):
+	def getCtrlSwitches(self):
 
 		ListCtrlsNamespace = []
 		if self.isValid():
-			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlFkHands]
+			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlSwitches]
+
+		return ListCtrlsNamespace
+
+	def getCtrlHandSwitches(self):
+
+		ListCtrlsNamespace = []
+		if self.isValid():
+			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlHandSwitches]
 
 		return ListCtrlsNamespace
 	
 
 	def setCtrlsIkToFk(self):
 
-		ListFkHand = self.getCtrlFkHand()
-		[cmds.setAttr(f"{self.CtrlMain}.{attr}", 0) for attr in self.AttrIk]
+		listSwitches = self.getCtrlSwitches()
+		listHandSwitches = self.getCtrlHandSwitches()
+		# [cmds.setAttr(f"{self.CtrlMain}.{attr}", 0) for attr in self.AttrIk]
 
-		[cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in ListFkHand]
-		[cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in ListFkHand]
+		[cmds.setAttr(f"{ctrl}.fkIk", 0) for ctrl in listSwitches]
+		[cmds.setAttr(f"{ctrl}.softness", 0) for ctrl in listSwitches]
+		# [cmds.setAttr(f"{ctrl}.twist", 0) for ctrl in listSwitches]
+
+		[cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in listHandSwitches]
+		[cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in listHandSwitches]
 
 
 	def __validateIkCtrlsBeforeBaking(self, ikCtrls):
