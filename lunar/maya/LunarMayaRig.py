@@ -441,7 +441,8 @@ class CorrectiveCtrl():
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
-		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
+		lockShapeAttributes=True,
+		# lockChannels=["scale", "visibility"]
 		lockChannels=[]
 	):
 		self.transform, self.shape = cmds.ctrl(

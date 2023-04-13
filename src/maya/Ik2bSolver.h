@@ -88,6 +88,9 @@ public:
 	MVector posFkRoot, posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
 	MVector posIkRoot, posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
 	MVector posOutStart, posOutMid, posOutEnd, posOutHandle, posOutPv;
+
+	MVector posHandleCached, posPvCached;
+
 	// Quats
 	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;
 	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
@@ -105,6 +108,8 @@ public:
 	Ik2bSolver()
 		: MPxNode()
 		, bIsPvConnected(false)
+		, posHandleCached(MVector::zero)
+		, posPvCached(MVector::zero)
 	{};
 	// Destructors
 	~Ik2bSolver() override {};
@@ -124,8 +129,8 @@ public:
 	void getIkTransforms();
 
 	MStatus solveLimb();
-	void solveFk();
-	void solveIk();
+	bool solveFk();
+	bool solveIk();
 	void blendFkIk();
 	void solveFkIk();
 

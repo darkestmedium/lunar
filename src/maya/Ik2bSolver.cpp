@@ -32,7 +32,7 @@ MObject Ik2bSolver::attrOutDirty;
 
 MStatus Ik2bSolver::initialize() {
 	/* Node Initializer.
-	
+
 	This method initializes the node, and should be overridden in user-defined nodes.
 	
 	Returns:
@@ -84,7 +84,7 @@ MStatus Ik2bSolver::initialize() {
 	attrOutUpdate = nAttr.create("update", "upd", attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ);
 
 	attrInDirty = nAttr.create("inDirty", "idirt", MFnNumericData::kDouble, 1.0);
-	attrOutDirty = nAttr.create("dirty", "dirt", MFnNumericData::kDouble, 0.0);
+	attrOutDirty = nAttr.create("outDirty", "odirt", MFnNumericData::kDouble, 0.0);
 
 	// Add attributes
 	addAttributes(
@@ -193,7 +193,7 @@ void Ik2bSolver::getFkTransforms() {
 	posFkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
 	fnFkEnd.getRotation(quatFkEnd, MSpace::kWorld);
 
-	posFkHandle = posFkEnd;
+	posFkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
 	fnIkHandle.getRotation(quatFkHandle, MSpace::kWorld);
 
 	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
@@ -232,12 +232,10 @@ MStatus Ik2bSolver::solveLimb() {
 
 	Main fk / ik routing method. 
 
-	Args:
-		InOutLinks (MDagPathArray&): Array with path to the input transforms.
-
 	*/
 	// Editing
 	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
+		// we probably need to check / cache the angles if they changed and we need to re calculate them
 		if (LMGLobal::currentToolIsTransformContext()) {
 			MGlobal::getActiveSelectionList(listSel);  // If selection has any fk ctrl, solve fk
 			if (listSel.hasItem(fnFkStart.dagPath()) || listSel.hasItem(fnFkMid.dagPath()) || listSel.hasItem(fnFkEnd.dagPath())) {
@@ -247,22 +245,21 @@ MStatus Ik2bSolver::solveLimb() {
 			}
 			return MS::kSuccess;
 		}
-	} else { // if we don't enclose it in an else then autokey always gets triggered
-		// Solve for playback and all other possible cases - just solve something
-		if (fkIk == 0.0) {
-			solveFk();
-		}	else if (fkIk > 0.0 && fkIk < 100.0) {
-			solveFkIk();
-		} else if (fkIk == 100.0) {
-			solveIk();
-		}
-		return MS::kSuccess;
 	}
-
+	// } else { // if we don't enclose it in an else then autokey always gets triggered
+		// Solve for playback and all other possible cases - just solve something
+	if (fkIk == 0.0) {
+		solveFk();
+	}	else if (fkIk > 0.0 && fkIk < 100.0) {
+		solveFkIk();
+	} else if (fkIk == 100.0) {
+		solveIk();
+	}
+	return MS::kSuccess;
 }
 
 
-void Ik2bSolver::solveFk() {
+bool Ik2bSolver::solveFk() {
 	/* Set the fk transforms.
 
 	We don't actually solve fk - it's called like this just for consistency and readability.
@@ -272,17 +269,22 @@ void Ik2bSolver::solveFk() {
 	*/
 	getFkTransforms();
 
-	fnIkHandle.setTranslation(posFkHandle, MSpace::kWorld);
+	fnIkHandle.setTranslation(posFkEnd, MSpace::kWorld);
 	fnIkHandle.setRotation(quatFkEnd, MSpace::kWorld);
 
 	if (bIsPvConnected) {fnPv.setTranslation(LMRigUtils::getPvPosition(posFkStart, posFkMid, posFkEnd), MSpace::kWorld);}
 }
 
 
-void Ik2bSolver::solveIk() {
+bool Ik2bSolver::solveIk() {
 	/* Calculates the ik solution for a two bone limb.
 	*/
 	getIkTransforms();
+
+	// if (posIkHandle == posHandleCached && posIkPv == posPvCached)	{
+	// 	MGlobal::displayWarning("Ik handle and pv did not change - do not solve ik");
+	// 	return true;
+	// }
 
 	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
 
@@ -290,6 +292,9 @@ void Ik2bSolver::solveIk() {
 	fnFkStart.setRotation(quatIkStart, MSpace::kWorld);
 	fnFkMid.setRotation(quatIkMid, MSpace::kWorld);
 	fnFkEnd.setRotation(quatIkHandle, MSpace::kWorld);
+
+	posHandleCached = posIkHandle;
+	posPvCached = posPvCached;
 }
 
 
@@ -387,6 +392,8 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 
 	*/
 	MStatus status;
+
+	if (plug != attrOutUpdate) {return MS::kUnknownParameter;}
 
 	CHECK_MSTATUS_AND_RETURN_IT(parseDataBlock(dataBlock));
 
