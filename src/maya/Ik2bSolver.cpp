@@ -6,28 +6,27 @@ const MString Ik2bSolver::typeName = "ik2bSolver";
 const MTypeId Ik2bSolver::typeId = 0x0066674;
 
 // Node's Input Attributes
+MObject Ik2bSolver::attrInFkIk;
+
 Attribute Ik2bSolver::attrInFkStart;
 Attribute Ik2bSolver::attrInFkMid;
 Attribute Ik2bSolver::attrInFkEnd;
 Attribute Ik2bSolver::attrInIkHandle;
 
-MObject Ik2bSolver::attrInPvX;
-MObject Ik2bSolver::attrInPvY;
-MObject Ik2bSolver::attrInPvZ;
-MObject Ik2bSolver::attrInPv;
+MObject Ik2bSolver::attrInPvX, Ik2bSolver::attrInPvY, Ik2bSolver::attrInPvZ, Ik2bSolver::attrInPv;
 
 Attribute Ik2bSolver::attrInTwist;
 MObject Ik2bSolver::attrInSoftness;
-MObject Ik2bSolver::attrInFkIk;
-MObject Ik2bSolver::attrInTime;
-// Nodes's Output Attributes
-Attribute Ik2bSolver::attrOutUpdateX;
-Attribute Ik2bSolver::attrOutUpdateY;
-Attribute Ik2bSolver::attrOutUpdateZ;
-Attribute Ik2bSolver::attrOutUpdate;
 
-MObject Ik2bSolver::attrInDirty;
-MObject Ik2bSolver::attrOutDirty;
+// Nodes's Output Attributes
+MObject Ik2bSolver::attrOutStartX, Ik2bSolver::attrOutStartY, Ik2bSolver::attrOutStartZ, Ik2bSolver::attrOutStart;
+MObject Ik2bSolver::attrOutMidX, Ik2bSolver::attrOutMidY, Ik2bSolver::attrOutMidZ, Ik2bSolver::attrOutMid;
+MObject Ik2bSolver::attrOutEndX, Ik2bSolver::attrOutEndY, Ik2bSolver::attrOutEndZ, Ik2bSolver::attrOutEnd;
+
+MObject Ik2bSolver::attrOutFkVisibility;
+MObject Ik2bSolver::attrOutIkVisibility;
+
+
 
 
 MStatus Ik2bSolver::initialize() {
@@ -44,8 +43,16 @@ MStatus Ik2bSolver::initialize() {
 	MFnNumericAttribute nAttr;
 	MFnMatrixAttribute mAttr;
 	MFnUnitAttribute uAttr;
+	MFnEnumAttribute eAttr;
 
 	// Node's Input Attributes
+	attrInFkIk = eAttr.create("fkIk", "fi");
+	eAttr.addField("Fk", 0);
+	eAttr.addField("Ik", 1);
+	eAttr.setKeyable(true);
+	eAttr.setReadable(false);
+	eAttr.setStorable(true);
+
 	createAttribute(attrInFkStart, "fkStart", DefaultValue<MMatrix>());
 	createAttribute(attrInFkMid, "fkMid", DefaultValue<MMatrix>());
 	createAttribute(attrInFkEnd, "fkEnd", DefaultValue<MMatrix>());
@@ -55,69 +62,60 @@ MStatus Ik2bSolver::initialize() {
 	attrInPvY = nAttr.create("poleVectorY", "pvY", MFnNumericData::kDouble, 0.0);
 	attrInPvZ = nAttr.create("poleVectorZ", "pvZ", MFnNumericData::kDouble, 0.0);
 	attrInPv = nAttr.create("poleVector", "pv", attrInPvX, attrInPvY, attrInPvZ);
+	nAttr.setReadable(false);
 
 	createAttribute(attrInTwist, "twist", DefaultValue<double>());
 
 	attrInSoftness = nAttr.create("softness", "sfns", MFnNumericData::kDouble, 0.0);
 	nAttr.setKeyable(true);
+	nAttr.setReadable(false);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
 	nAttr.setMin(0.0);
 	nAttr.setMax(10.0);
 
-	attrInFkIk = nAttr.create("fkIk", "fkik", MFnNumericData::kDouble, 0.0);
-	nAttr.setKeyable(true);
-	nAttr.setStorable(true);
-	nAttr.setWritable(true);
-	uAttr.setReadable(true);
-	nAttr.setMin(0.0);
-	nAttr.setMax(100.0);
-
-	attrInTime = uAttr.create("inTime", "itm", MFnUnitAttribute::kTime);
-	uAttr.setKeyable(true);
-	uAttr.setReadable(false);
+	// attrInFkIk = eAttr.create("fkIk", "fkik", MFnNumericData::kDouble, 0.0);
+	// nAttr.setKeyable(true);
+	// nAttr.setStorable(true);
+	// nAttr.setWritable(true);
+	// uAttr.setReadable(true);
+	// nAttr.setMin(0.0);
+	// nAttr.setMax(100.0);
 
 	// Output attributes
-	attrOutUpdateX = nAttr.create("updateX", "updX", MFnNumericData::kDouble, 0.0);
-	attrOutUpdateY = nAttr.create("updateY", "updY", MFnNumericData::kDouble, 0.0);
-	attrOutUpdateZ = nAttr.create("updateZ", "updZ", MFnNumericData::kDouble, 0.0);
-	attrOutUpdate = nAttr.create("update", "upd", attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ);
+	attrOutStartX = uAttr.create("outputStartX", "osX", MFnUnitAttribute::kAngle, 0.0);
+	attrOutStartY = uAttr.create("outputStartY", "osY", MFnUnitAttribute::kAngle, 0.0);
+	attrOutStartZ = uAttr.create("outputStartZ", "osZ", MFnUnitAttribute::kAngle, 0.0);
+	attrOutStart = nAttr.create("outputStart", "os", attrOutStartX, attrOutStartY, attrOutStartZ);
+	nAttr.setWritable(false);
 
-	attrInDirty = nAttr.create("inDirty", "idirt", MFnNumericData::kDouble, 1.0);
-	attrOutDirty = nAttr.create("outDirty", "odirt", MFnNumericData::kDouble, 0.0);
+	attrOutMidX = uAttr.create("outputMidX", "omX", MFnUnitAttribute::kAngle, 0.0);
+	attrOutMidY = uAttr.create("outputMidY", "omY", MFnUnitAttribute::kAngle, 0.0);
+	attrOutMidZ = uAttr.create("outputMidZ", "omZ", MFnUnitAttribute::kAngle, 0.0);
+	attrOutMid = nAttr.create("outputMid", "om", attrOutMidX, attrOutMidY, attrOutMidZ);
+	nAttr.setWritable(false);
+
+	attrOutEndX = uAttr.create("outputEndX", "oeX", MFnUnitAttribute::kAngle, 0.0);
+	attrOutEndY = uAttr.create("outputEndY", "oeY", MFnUnitAttribute::kAngle, 0.0);
+	attrOutEndZ = uAttr.create("outputEndZ", "oeZ", MFnUnitAttribute::kAngle, 0.0);
+	attrOutEnd = nAttr.create("outputEnd", "oe", attrOutEndX, attrOutEndY, attrOutEndZ);
+	nAttr.setWritable(false);
+
+	attrOutFkVisibility = nAttr.create("fkVisibility", "fkVis", MFnNumericData::kBoolean, true);
+	nAttr.setWritable(false);
+
+	attrOutIkVisibility = nAttr.create("ikVisibility", "ikVis", MFnNumericData::kBoolean, false);
+	nAttr.setWritable(false);
 
 	// Add attributes
 	addAttributes(
 		attrInFkStart, attrInFkMid,	attrInFkEnd, attrInIkHandle, attrInPv,
-		attrInTwist, attrInSoftness, attrInFkIk, attrInTime,
-		attrOutUpdate,
-		attrInDirty, attrOutDirty
+		attrInTwist, attrInSoftness, attrInFkIk,
+		attrOutStart, attrOutMid, attrOutEnd,
+		attrOutFkVisibility, attrOutIkVisibility
 	);
 
 	return MS::kSuccess;
-}
-
-
-bool Ik2bSolver::isPassiveOutput(const MPlug& plug) const {
-	/* Sets the specified plug as passive.
-
-	This method may be overridden by the user defined node if it wants to provide output attributes
-	which do not prevent value modifications to the destination attribute.
-
-	For example, output plugs on animation curve nodes are passive. This allows the attributes
-	driven by the animation curves to be set to new values by the user.
-	
-	Args:
-		plug (MPlug&): Plug representing output in question.
-
-	Returns:
-		bool: Wheter or not he specified plug is passive - true indicates passive.
-
-	*/
-	if (plug == attrOutUpdate) {
-		return true;
-	}
-	return MPxNode::isPassiveOutput(plug);
 }
 
 
@@ -131,10 +129,15 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	isDirty = dataBlock.inputValue(attrInDirty).asDouble(),
+	fkIk = dataBlock.inputValue(attrInFkIk).asShort();
+	if (fkIk == 0) {
+		bFkVisibility = true;
+		bIkVisibility = false;
+	} else if (fkIk == 1) {
+		bFkVisibility = false;
+		bIkVisibility = true;
+	}
 
-	// Ask for time value to force refresh on the node
-	timeCurrent = dataBlock.inputValue(attrInTime, &status).asTime();
 	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
 	matInFkStart = dataBlock.inputValue(attrInFkStart).asMatrix();
 	matInFkMid = dataBlock.inputValue(attrInFkMid).asMatrix();
@@ -174,9 +177,9 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 	}
 
 	// Additional attributes
-	twist = MAngle(dataBlock.inputValue(attrInTwist).asDouble(), MAngle::uiUnit());
+	uiUnitAngle = MAngle::uiUnit();
+	twist = MAngle(dataBlock.inputValue(attrInTwist).asDouble(), uiUnitAngle);
 	softness = dataBlock.inputValue(attrInSoftness).asDouble();
-	fkIk = dataBlock.inputValue(attrInFkIk).asDouble();
 
 	return MS::kSuccess;
 }
@@ -184,17 +187,17 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 
 void Ik2bSolver::getFkTransforms() {
 	// Position
-	posFkStart = fnFkStart.rotatePivot(MSpace::kWorld);
-	fnFkStart.getRotation(quatFkStart, MSpace::kWorld);
+	// posFkStart = fnFkStart.rotatePivot(MSpace::kWorld);
+	fnFkStart.getRotation(quatFkStart, MSpace::kTransform);
 
-	posFkMid = fnFkMid.rotatePivot(MSpace::kWorld);
-	fnFkMid.getRotation(quatFkMid, MSpace::kWorld);
+	// posFkMid = fnFkMid.rotatePivot(MSpace::kWorld);
+	fnFkMid.getRotation(quatFkMid, MSpace::kTransform);
 
-	posFkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
-	fnFkEnd.getRotation(quatFkEnd, MSpace::kWorld);
+	// posFkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
+	fnFkEnd.getRotation(quatFkEnd, MSpace::kTransform);
 
-	posFkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
-	fnIkHandle.getRotation(quatFkHandle, MSpace::kWorld);
+	// posFkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
+	fnIkHandle.getRotation(quatFkHandle, MSpace::kTransform);
 
 	if (bIsPvConnected) {posFkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
@@ -206,17 +209,17 @@ void Ik2bSolver::getFkTransforms() {
 
 void Ik2bSolver::getIkTransforms() {
 	// Position
-	posIkStart = fnFkStart.rotatePivot(MSpace::kWorld);
-	fnFkStart.getRotation(quatIkStart, MSpace::kWorld);
+	// posIkStart = fnFkStart.rotatePivot(MSpace::kWorld);
+	fnFkStart.getRotation(quatIkStart, MSpace::kTransform);
 
-	posIkMid = fnFkMid.rotatePivot(MSpace::kWorld);
-	fnFkMid.getRotation(quatIkMid, MSpace::kWorld);
+	// posIkMid = fnFkMid.rotatePivot(MSpace::kWorld);
+	fnFkMid.getRotation(quatIkMid, MSpace::kTransform);
 
-	posIkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
-	fnFkEnd.getRotation(quatIkEnd, MSpace::kWorld);
+	// posIkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
+	fnFkEnd.getRotation(quatIkEnd, MSpace::kTransform);
 
-	posIkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
-	fnIkHandle.getRotation(quatIkHandle, MSpace::kWorld);
+	// posIkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
+	fnIkHandle.getRotation(quatIkHandle, MSpace::kTransform);
 
 	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
@@ -233,28 +236,10 @@ MStatus Ik2bSolver::solveLimb() {
 	Main fk / ik routing method. 
 
 	*/
-	// Editing
-	if (!LMAnimControl::timeChanged(ctrlAnim, timeCached, timeCurrent)) {
-		// we probably need to check / cache the angles if they changed and we need to re calculate them
-		if (LMGLobal::currentToolIsTransformContext()) {
-			MGlobal::getActiveSelectionList(listSel);  // If selection has any fk ctrl, solve fk
-			if (listSel.hasItem(fnFkStart.dagPath()) || listSel.hasItem(fnFkMid.dagPath()) || listSel.hasItem(fnFkEnd.dagPath())) {
-				solveFk();
-			} else {
-				solveIk();
-			}
-			return MS::kSuccess;
-		}
-	}
-	// } else { // if we don't enclose it in an else then autokey always gets triggered
-		// Solve for playback and all other possible cases - just solve something
-	if (fkIk == 0.0) {
-		solveFk();
-	}	else if (fkIk > 0.0 && fkIk < 100.0) {
-		solveFkIk();
-	} else if (fkIk == 100.0) {
-		solveIk();
-	}
+	if (fkIk == 0) {solveFk();}
+
+	if (fkIk == 1) {solveIk();}
+
 	return MS::kSuccess;
 }
 
@@ -269,10 +254,9 @@ bool Ik2bSolver::solveFk() {
 	*/
 	getFkTransforms();
 
-	fnIkHandle.setTranslation(posFkEnd, MSpace::kWorld);
-	fnIkHandle.setRotation(quatFkEnd, MSpace::kWorld);
-
-	if (bIsPvConnected) {fnPv.setTranslation(LMRigUtils::getPvPosition(posFkStart, posFkMid, posFkEnd), MSpace::kWorld);}
+	quatOutStart = quatFkStart;
+	quatOutMid = quatFkMid;
+	quatOutEnd = quatFkEnd;
 }
 
 
@@ -281,20 +265,12 @@ bool Ik2bSolver::solveIk() {
 	*/
 	getIkTransforms();
 
-	// if (posIkHandle == posHandleCached && posIkPv == posPvCached)	{
-	// 	MGlobal::displayWarning("Ik handle and pv did not change - do not solve ik");
-	// 	return true;
-	// }
-
 	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
 
-	// Set fk rotations
-	fnFkStart.setRotation(quatIkStart, MSpace::kWorld);
-	fnFkMid.setRotation(quatIkMid, MSpace::kWorld);
-	fnFkEnd.setRotation(quatIkHandle, MSpace::kWorld);
+	quatOutStart = quatIkStart;
+	quatOutMid = quatIkMid;
+	quatOutEnd = quatIkHandle;
 
-	posHandleCached = posIkHandle;
-	posPvCached = posPvCached;
 }
 
 
@@ -307,8 +283,8 @@ void Ik2bSolver::blendFkIk() {
 	quatOutEnd = slerp(quatFkEnd, quatIkEnd, ScaledWeight);
 	quatOutHandle = slerp(quatFkEnd, quatIkHandle, ScaledWeight);
 	// so this still is an issue since it's a bit off from the fk end ctrl pos, maybe we just snap to it
-	posOutHandle = Lerp(posFkHandle, posIkHandle, ScaledWeight);
-	posOutPv = Lerp(posFkPv, posIkPv, ScaledWeight);
+	// posOutHandle = Lerp(posFkHandle, posIkHandle, ScaledWeight);
+	// posOutPv = Lerp(posFkPv, posIkPv, ScaledWeight);
 }
 
 
@@ -322,15 +298,15 @@ void Ik2bSolver::solveFkIk() {
 
 	blendFkIk();
 
-	// Set rotations
-	fnFkStart.setRotation(quatOutStart, MSpace::kWorld);
-	fnFkMid.setRotation(quatOutMid, MSpace::kWorld);
-	fnFkEnd.setRotation(quatOutEnd, MSpace::kWorld);
-	fnIkHandle.setRotation(quatOutHandle, MSpace::kWorld);
+	// // Set rotations
+	// fnFkStart.setRotation(quatOutStart, MSpace::kWorld);
+	// fnFkMid.setRotation(quatOutMid, MSpace::kWorld);
+	// fnFkEnd.setRotation(quatOutEnd, MSpace::kWorld);
+	// fnIkHandle.setRotation(quatOutHandle, MSpace::kWorld);
 
 	// Sync the ik ctrl to the fk end bone due to differences in fk / ik blending
-	fnIkHandle.setTranslation(posOutHandle, MSpace::kWorld);
-	fnPv.setTranslation(posOutPv, MSpace::kWorld);
+	// fnIkHandle.setTranslation(posOutHandle, MSpace::kWorld);
+	// fnPv.setTranslation(posOutPv, MSpace::kWorld);
 }
 
 
@@ -348,13 +324,31 @@ MStatus Ik2bSolver::updateOutput(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	MDataHandle dhOutUpdate = dataBlock.outputValue(attrOutUpdate, &status);
-	dhOutUpdate.set3Double(0.0, 0.0, 0.0);
-	dhOutUpdate.setClean();
+	MEulerRotation eulrStart = quatOutStart.asEulerRotation();
+	MEulerRotation eulrMid = quatOutMid.asEulerRotation();
+	MEulerRotation eulrEnd = quatOutEnd.asEulerRotation();
 
-	MDataHandle dhOutDirty = dataBlock.outputValue(attrOutDirty, &status);
-	dhOutDirty.setDouble(1.0);
-	dhOutDirty.setClean();
+	// Rotation outputs
+	MDataHandle dhOutStart = dataBlock.outputValue(attrOutStart, &status);
+	dhOutStart.set3Double(eulrStart.x, eulrStart.y, eulrStart.z);
+	dhOutStart.setClean();
+
+	MDataHandle dhOutMid = dataBlock.outputValue(attrOutMid, &status);
+	dhOutMid.set3Double(eulrMid.x, eulrMid.y, eulrMid.z);
+	dhOutMid.setClean();
+
+	MDataHandle dhOutEnd = dataBlock.outputValue(attrOutEnd, &status);
+	dhOutEnd.set3Double(eulrEnd.x, eulrEnd.y, eulrEnd.z);
+	dhOutEnd.setClean();
+
+	// Visibility outputs
+	MDataHandle dhOutFkVisibility = dataBlock.outputValue(attrOutFkVisibility, &status);
+	dhOutFkVisibility.setBool(bFkVisibility);
+	dhOutFkVisibility.setClean();
+
+	MDataHandle dhOutIkVisibility = dataBlock.outputValue(attrOutIkVisibility, &status);
+	dhOutIkVisibility.setBool(bIkVisibility);
+	dhOutIkVisibility.setClean();
 
 	dataBlock.setClean(plug);
 
@@ -393,16 +387,13 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	if (plug != attrOutUpdate) {return MS::kUnknownParameter;}
+	// if (plug != attrOutStart || plug != attrOutMid || plug != attrOutEnd) {return MS::kUnknownParameter;}
 
 	CHECK_MSTATUS_AND_RETURN_IT(parseDataBlock(dataBlock));
 
 	CHECK_MSTATUS_AND_RETURN_IT(solveLimb());
 
 	CHECK_MSTATUS_AND_RETURN_IT(updateOutput(plug, dataBlock));
-
-	// Cache time change
-	timeCached = timeCurrent;
 
 	return MS::kSuccess;
 }
@@ -417,21 +408,24 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 			to this list.
 
 	*/
-	if ( plugBeingDirtied == attrInFkStart
+	// Rotation output
+	if ( plugBeingDirtied == attrInFkIk
+		|| plugBeingDirtied == attrInFkStart
 		|| plugBeingDirtied == attrInFkMid
 		|| plugBeingDirtied == attrInFkEnd
 		|| plugBeingDirtied == attrInIkHandle
 		|| plugBeingDirtied == attrInPv
 		|| plugBeingDirtied == attrInTwist
 		|| plugBeingDirtied == attrInSoftness
-		|| plugBeingDirtied == attrInFkIk
-		|| plugBeingDirtied == attrInTime
 	)	{
-		affectedPlugs.append(MPlug(objSelf, attrOutUpdate));
-		affectedPlugs.append(MPlug(objSelf, attrOutUpdateX));
-		affectedPlugs.append(MPlug(objSelf, attrOutUpdateY));
-		affectedPlugs.append(MPlug(objSelf, attrOutUpdateZ));
-		affectedPlugs.append(MPlug(objSelf, attrOutDirty));
+		affectedPlugs.append(MPlug(objSelf, attrOutStart));
+		affectedPlugs.append(MPlug(objSelf, attrOutMid));
+		affectedPlugs.append(MPlug(objSelf, attrOutEnd));
+	}
+	// Visibility output
+	if (plugBeingDirtied == attrInFkIk)	{
+		affectedPlugs.append(MPlug(objSelf, attrOutFkVisibility));
+		affectedPlugs.append(MPlug(objSelf, attrOutIkVisibility));
 	}
 	return MS::kSuccess;
 }

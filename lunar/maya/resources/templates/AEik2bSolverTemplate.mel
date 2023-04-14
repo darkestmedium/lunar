@@ -20,9 +20,9 @@ global proc AEik2bSolverTemplate(string $nodeName) {
 			editorTemplate -addControl "fkIk";
 			editorTemplate -endLayout;
 
-    editorTemplate -beginLayout "Time Attributes" -collapse true;
-			editorTemplate -addControl "inTime";
-			editorTemplate -endLayout;
+    // editorTemplate -beginLayout "Time Attributes" -collapse true;
+		// 	editorTemplate -addControl "inTime";
+		// 	editorTemplate -endLayout;
     
     // Include/call base class/node attributes
     AEdependNodeTemplate $nodeName;

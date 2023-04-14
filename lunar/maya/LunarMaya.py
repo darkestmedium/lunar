@@ -892,7 +892,7 @@ class LMTransformUtils():
 		for ctrl, jnt in zip(ListControllers, ListUnpackedJoints):
 			if cmds.objExists(ctrl):
 				LMAttribute.copyTransformsToOPM(ctrl)
-				cls.reconnectSkin(jnt, ctrl)
+				# cls.reconnectSkin(jnt, ctrl)
 				if ctrl == "pelvis_rot_ctrl": continue
 				# LMAttribute.lockControlChannels(ctrl, lockChannels=["offsetParentMatrix"])
 

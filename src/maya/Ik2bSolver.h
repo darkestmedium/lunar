@@ -58,6 +58,7 @@ public:
 	static const MTypeId typeId;
 
 	// Node's Input Attributes
+	static MObject attrInFkIk;
 	static Attribute attrInFkStart;
 	static Attribute attrInFkMid;
 	static Attribute attrInFkEnd;
@@ -65,21 +66,23 @@ public:
 	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
 	static Attribute attrInTwist;
 	static MObject attrInSoftness;
-	static MObject attrInFkIk;
-	static MObject attrInTime;
-	// Nodes's Output Attributes
-	static Attribute attrOutUpdateX, attrOutUpdateY, attrOutUpdateZ, attrOutUpdate;
+	// static MObject attrInTime;
 
-	static MObject attrInDirty;
-	static MObject attrOutDirty;
-	double isDirty;
+	// Nodes's Output Attributes
+	static MObject attrOutStartX, attrOutStartY, attrOutStartZ, attrOutStart;
+	static MObject attrOutMidX, attrOutMidY, attrOutMidZ, attrOutMid;
+	static MObject attrOutEndX, attrOutEndY, attrOutEndZ, attrOutEnd;
+	static MObject attrOutFkVisibility, attrOutIkVisibility;
 
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPv;
 	MAngle twist;
-	double softness, fkIk;
-	bool bIsPvConnected;
+	double softness;
+	short fkIk;
+	bool bIsPvConnected, bFkVisibility, bIkVisibility;
+	MAngle::Unit uiUnitAngle;
+
 
 	// Function sets
 	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
@@ -89,14 +92,10 @@ public:
 	MVector posIkRoot, posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
 	MVector posOutStart, posOutMid, posOutEnd, posOutHandle, posOutPv;
 
-	MVector posHandleCached, posPvCached;
-
 	// Quats
 	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;
 	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
 	MQuaternion quatOutStart, quatOutMid, quatOutEnd, quatOutHandle;
-
-	MTime timeCurrent, timeCached;
 
 	MObject objSelf;
 
@@ -107,9 +106,11 @@ public:
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
+		, fkIk(0)
+		, bFkVisibility(true)
+		, bIkVisibility(false)
 		, bIsPvConnected(false)
-		, posHandleCached(MVector::zero)
-		, posPvCached(MVector::zero)
+		, uiUnitAngle(MAngle::uiUnit())
 	{};
 	// Destructors
 	~Ik2bSolver() override {};
@@ -117,7 +118,6 @@ public:
 	// Public methods - overrides
 	static void* creator() {return new Ik2bSolver();}
 	static MStatus initialize();
-	bool isPassiveOutput(const MPlug& plug)	const override;
 	virtual MStatus compute(const MPlug& plug, MDataBlock& dataBlock) override;
 	MStatus setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
 	void getCacheSetup(const MEvaluationNode& evalNode,	MNodeCacheDisablingInfo& disablingInfo,	MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;

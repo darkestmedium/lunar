@@ -209,19 +209,12 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		MPlug plugInIkHandle = fnIk2bSolver.findPlug("ikHandle", false);
 		MPlug plugInPoleVector = fnIk2bSolver.findPlug("poleVector", false);
 
-		MPlug plugOutUpdate = fnIk2bSolver.findPlug("update", false);
-
 		// Connect matrix plugs
 		modDg.connect(plugOutFkStartWorldMatrix0, plugInFkStart);
 		modDg.connect(plugOutFkMidWorldMatrix0, plugInFkMid);
 		modDg.connect(plugOutFkEndWorldMatrix0, plugInFkEnd);
 		modDg.connect(plugOutIkHandleWorldMatrix0, plugInIkHandle);
 	
-		// Connect update plugs
-		modDg.connect(plugOutUpdate, plugInFkStartRotPivot);
-		modDg.connect(plugOutUpdate, plugInFkMidRotPivot);
-		modDg.connect(plugOutUpdate, plugInFkEndRotPivot);
-		modDg.connect(plugOutUpdate, plugInIkHandleRotPivot);
 
 		// Pole vector plugs
 		if (bIsPoleVectorSet) {
@@ -234,12 +227,12 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 			MPlug plugPoleVectorDrawLineTo = fnPoleVectorShape.findPlug("drawLineTo", false);
 			
 			modDg.connect(plugPoleVectorTranslate, plugInPoleVector);
-			modDg.connect(plugOutUpdate, plugPoleVectorRotPivot);
-			modDg.connect(plugOutFkMidWorldMatrix0, plugPoleVectorDrawLineTo);
+			// modDg.connect(plugOutUpdate, plugPoleVectorRotPivot);
+			// modDg.connect(plugOutFkMidWorldMatrix0, plugPoleVectorDrawLineTo);
 		}
 
-		// Connect time node
-		LMScene::connectSceneTime(objIk2bSolver, "inTime", modDg);
+		// // Connect time node
+		// LMScene::connectSceneTime(objIk2bSolver, "inTime", modDg);
 	}
 
 	return redoIt();
