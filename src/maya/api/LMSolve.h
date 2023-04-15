@@ -120,9 +120,9 @@ namespace LMSolve {
 		quatA *= r0 * r2 * r3 * rT;
 
 		// local rotation because we output to the skeleton
-		quatB *= r1;
 		// Since we are calculating in world space, apply the start rotations to the mid
-		// quatB *= r0 * r2 * r3 * rT;
+		quatB *= r1;
+		quatB *= r0 * r2 * r3 * rT;
 
 		return MS::kSuccess;
 	}

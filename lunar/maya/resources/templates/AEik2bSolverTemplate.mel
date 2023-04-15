@@ -9,20 +9,28 @@ global proc AEik2bSolverTemplate(string $nodeName) {
 	// Main layout
 	editorTemplate -beginScrollLayout;
 		
-		editorTemplate -beginLayout "Solver Inputs" -collapse false;
-			editorTemplate -addControl "fkStart";
-			editorTemplate -addControl "fkMid";
-			editorTemplate -addControl "fkEnd";
-			editorTemplate -addControl "ikHandle";
-			editorTemplate -addControl "poleVector";
+		editorTemplate -beginLayout "Solver Attributes" -collapse false;
+			editorTemplate -addControl "mode";
 			editorTemplate -addControl "twist";
 			editorTemplate -addControl "softness";
-			editorTemplate -addControl "fkIk";
+		editorTemplate -endLayout;
+
+		editorTemplate -beginLayout "Solver Inputs" -collapse true;
+			editorTemplate -beginLayout "Controllers" -collapse true;
+				editorTemplate -addControl "fkStart";
+				editorTemplate -addControl "fkMid";
+				editorTemplate -addControl "fkEnd";
+				editorTemplate -addControl "ikHandle";
+				editorTemplate -addControl "poleVector";
 			editorTemplate -endLayout;
 
-    // editorTemplate -beginLayout "Time Attributes" -collapse true;
-		// 	editorTemplate -addControl "inTime";
-		// 	editorTemplate -endLayout;
+			editorTemplate -beginLayout "Joints" -collapse true;
+				editorTemplate -addControl "jntStart";
+				editorTemplate -addControl "jntMid";
+				editorTemplate -addControl "jntEnd";
+			editorTemplate -endLayout;
+
+		editorTemplate -endLayout;
     
     // Include/call base class/node attributes
     AEdependNodeTemplate $nodeName;

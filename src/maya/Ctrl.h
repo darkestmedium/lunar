@@ -64,7 +64,7 @@ public:
 	static MObject attrInTextPositionZ;
 	static MObject attrInText;
 
-	static MObject attrInFkIk;
+	static MObject attrInMode;
 
 	MObject objSelf;
 	MDagPath pathSelf;

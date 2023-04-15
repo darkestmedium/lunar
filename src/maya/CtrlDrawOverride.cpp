@@ -2,8 +2,7 @@
 
 
 
-MBoundingBox CtrlDrawOverride::boundingBox(const MDagPath& objPath, const MDagPath& cameraPath) const
-{
+MBoundingBox CtrlDrawOverride::boundingBox(const MDagPath& objPath, const MDagPath& cameraPath) const {
 	/* Called by Maya whenever the bounding box of the drawable object is needed.
 
 	This method should return the object space bounding box for the object to be drawn.
@@ -29,8 +28,7 @@ MBoundingBox CtrlDrawOverride::boundingBox(const MDagPath& objPath, const MDagPa
 }
 
 
-MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) 
-{
+MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) {
 	/* Called by Maya whenever the object is dirty and needs to update for draw.
 
 	Any data needed from the Maya dependency graph must be retrieved and cached in this
@@ -100,8 +98,7 @@ MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagP
 }
 
 
-void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data)
-{
+void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data) {
 	/* Provides access to the MUIDrawManager, which can be used to queue up operations
 	to draw simple UI shapes like lines, circles, text, etc.
 

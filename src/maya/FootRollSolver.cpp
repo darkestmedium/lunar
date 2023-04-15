@@ -126,11 +126,11 @@ MStatus FootRollSolver::parseDataBlock(MDataBlock& dataBlock) {
 	posToe = MVector(dataBlock.inputValue(attrInToeX).asDouble(), dataBlock.inputValue(attrInToeY).asDouble(),	dataBlock.inputValue(attrInToeZ).asDouble());
 
 	// Ankle
-	status = LMPlugin::parseTransformInput(dataBlock, fnAnkle, objSelf, attrInAnkle);
+	status = LMPlugin::parseTransformInput(dataBlock, objSelf, fnAnkle, attrInAnkle);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Ball
-	status = LMPlugin::parseTransformInput(dataBlock, fnBall, objSelf, attrInBall);
+	status = LMPlugin::parseTransformInput(dataBlock, objSelf, fnBall, attrInBall);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Additional attributes

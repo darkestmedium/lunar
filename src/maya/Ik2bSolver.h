@@ -58,15 +58,13 @@ public:
 	static const MTypeId typeId;
 
 	// Node's Input Attributes
-	static MObject attrInFkIk;
-	static Attribute attrInFkStart;
-	static Attribute attrInFkMid;
-	static Attribute attrInFkEnd;
+	static MObject attrInMode;
+	static Attribute attrInFkStart, attrInFkMid, attrInFkEnd;
 	static Attribute attrInIkHandle;
 	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
 	static Attribute attrInTwist;
 	static MObject attrInSoftness;
-	// static MObject attrInTime;
+	static Attribute attrInJntStart, attrInJntMid, attrInJntEnd;
 
 	// Nodes's Output Attributes
 	static MObject attrOutStartX, attrOutStartY, attrOutStartZ, attrOutStart;
@@ -79,13 +77,14 @@ public:
 	MVector posInPv;
 	MAngle twist;
 	double softness;
-	short fkIk;
+	short mode;
 	bool bIsPvConnected, bFkVisibility, bIkVisibility;
 	MAngle::Unit uiUnitAngle;
 
 
 	// Function sets
 	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
+	MFnTransform fnOutStart, fnOutMid, fnOutEnd;
 
 	// Position
 	MVector posFkRoot, posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
@@ -106,7 +105,7 @@ public:
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
-		, fkIk(0)
+		, mode(0)
 		, bFkVisibility(true)
 		, bIkVisibility(false)
 		, bIsPvConnected(false)

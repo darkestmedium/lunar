@@ -27,7 +27,7 @@ MObject Ctrl::attrInTextPositionX;
 MObject Ctrl::attrInTextPositionY;
 MObject Ctrl::attrInTextPositionZ;
 
-MObject Ctrl::attrInFkIk;
+MObject Ctrl::attrInMode;
 
 
 // Nodes's Output Attributes
@@ -130,7 +130,7 @@ MStatus Ctrl::initialize() {
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
-	attrInFkIk = nAttr.create("inFkIk", "ifi", MFnNumericData::kDouble);
+	attrInMode = nAttr.create("inMode", "imod", MFnNumericData::kShort);
 	nAttr.setStorable(true);
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
@@ -143,7 +143,7 @@ MStatus Ctrl::initialize() {
 		shapeAttr, fillShapeAttr, fillTransparencyAttr, lineWidthAttr,
 		attrInDrawLine, attrInDrawLineTo,	attrInDrawText,
 		attrInTextPositionX, attrInTextPositionY, attrInTextPositionZ,
-		attrInFkIk
+		attrInMode
 	);
 
 	return MS::kSuccess;

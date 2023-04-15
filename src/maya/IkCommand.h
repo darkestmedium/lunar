@@ -57,11 +57,22 @@ public:
 	static const char* ikHandleFlagLong;
 	static const char* poleVectorFlagShort;
 	static const char* poleVectorFlagLong;
+	// Joint Flags
+	static const char* jntStartFlagShort;
+	static const char* jntStartFlagLong;
+	static const char* jntMidFlagShort;
+	static const char* jntMidFlagLong;
+	static const char* jntEndFlagShort;
+	static const char* jntEndFlagLong;
+
+	static const char* modeFlagShort;
+	static const char* modeFlagLong;
 
 	static const char* helpFlagShort;
 	static const char* helpFlagLong;
 
 	MString name;
+	short mode;
 	bool bIsPoleVectorSet;
 
 	MObject objIk2bSolver;
@@ -72,6 +83,9 @@ public:
 	MFnTransform fnFkEnd;
 	MFnTransform fnIkHandle;
 	MFnTransform fnPoleVector;
+	MFnTransform fnJntStart;
+	MFnTransform fnJntMid;
+	MFnTransform fnJntEnd;
 	MFnDependencyNode fnIk2bSolver;
 
 	MDGModifier modDg;
@@ -81,6 +95,7 @@ public:
  	: MPxCommand()
  	, command(kCommandCreate)
 	, name(Ctrl::typeName)
+	, mode(0)
 	, bIsPoleVectorSet(false)
 	{}
 
@@ -92,10 +107,4 @@ public:
 	virtual MStatus doIt(const MArgList& argList) override;
 	virtual MStatus redoIt() override;
 	virtual MStatus undoIt() override;
-
-
-private:
-	// Private Data
-	MSelectionList __selList;
-	MDagPath __dp;
 };

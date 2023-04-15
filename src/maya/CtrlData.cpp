@@ -979,13 +979,19 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 }
 
 
-void CtrlData::getText(const MObject &obj) {
+void CtrlData::getText(const MObject& obj) {
 	bDrawText = MPlug(obj, Ctrl::attrInDrawText).asBool();
 	posText = MPoint(
 		MPlug(obj, Ctrl::attrInTextPositionX).asDouble(),
 		MPlug(obj, Ctrl::attrInTextPositionY).asDouble(),
 		MPlug(obj, Ctrl::attrInTextPositionZ).asDouble()
 	);
-	MString strFkIk = LMText::doublePrecision(MPlug(obj, Ctrl::attrInFkIk).asDouble(), 0).c_str();
-	strDrawText = MString("ik " + strFkIk);
+	short mode = MPlug(obj, Ctrl::attrInMode).asShort();
+	if (mode == 0) {
+		strDrawText = MString("fk");
+	}
+	if (mode == 1) {
+		strDrawText = MString("ik");
+	}
 }
+ 
