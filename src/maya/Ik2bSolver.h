@@ -71,6 +71,9 @@ public:
 	static MObject attrOutMidX, attrOutMidY, attrOutMidZ, attrOutMid;
 	static MObject attrOutEndX, attrOutEndY, attrOutEndZ, attrOutEnd;
 	static MObject attrOutFkVisibility, attrOutIkVisibility;
+	static MObject attrOutUpdate;
+
+	// static MObject attrInTime;
 
 	// In data
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
@@ -81,6 +84,10 @@ public:
 	bool bIsPvConnected, bFkVisibility, bIkVisibility;
 	MAngle::Unit uiUnitAngle;
 
+	// MTime timeCurrent, timeCached;
+
+	MTransformationMatrix mtrnInStart, mtrnInMid, mtrnInEnd;
+	MEulerRotation eulFkStart, eulFkMid, eulFkEnd;
 
 	// Function sets
 	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
@@ -95,6 +102,7 @@ public:
 	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;
 	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
 	MQuaternion quatOutStart, quatOutMid, quatOutEnd, quatOutHandle;
+	
 
 	MObject objSelf;
 

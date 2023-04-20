@@ -16,6 +16,7 @@ from PySide2 import QtCore as qtc
 # Custom imports
 import lunar.maya.LunarMaya as lm
 import lunar.maya.LunarMayaAnim as lma
+import lunar.maya.LunarMayaRig as lmr
 
 # HumanIk templates
 import lunar.maya.resources.retarget.humanik as lmrrhi
@@ -1539,6 +1540,16 @@ class LMLunarCtrl(LMHumanIk):
 		if state2kSKNode: cmds.rename(state2kSKNode, f'{self.character}State2SK')
 
 		return True
+	
+
+	# def connectIK(self, start:str, mid:str, end:str, ikHande:str, pv:str):
+	# 	cmds.parentConstraint(end, ikHande)
+	# 	posArmPvL = lmr.LMRigUtils.getPoleVectorPosition(start, mid, end)
+	# 	# posArmPvL = lmr.LMRigUtils.getPoleVectorPosition("upperarm_l", "lowerarm_l", "hand_l")
+	# 	locArmPvL = cmds.spaceLocator(name="locLeftArm")[0]
+	# 	cmds.xform(locArmPvL, translation=(posArmPvL.x, posArmPvL.y, posArmPvL.z), ws=True)
+	# 	cmds.parentConstraint(mid, locArmPvL, maintainOffset=True)
+	# 	cmds.parentConstraint(locArmPvL, pv, maintainOffset=False, skipRotate=["x", "y", "z"])
 
 
 	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
@@ -1561,60 +1572,99 @@ class LMLunarCtrl(LMHumanIk):
 						self.setCtrlsIkToFk()
 
 						# Start override of hik setSource method
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace("pelvis_rot_ctrl"),
-							f"{self.nodeState2Sk}.HipsR",
-							# f"{self.nodeState2Sk}.LeftHandR",
-						)
-		
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmHandle"]),
-							f"{self.nodeState2Sk}.LeftHandT",
-							f"{self.nodeState2Sk}.LeftHandR",
-						)
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmPv"]),
-							f"{self.nodeState2Sk}.LeftForeArmT",
-							# f"{self.nodeState2Sk}.LeftForeArmR",
-						)
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("pelvis_rot_ctrl"), f"{self.nodeState2Sk}.HipsR")
 
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmHandle"]),
-							f"{self.nodeState2Sk}.RightHandT",
-							f"{self.nodeState2Sk}.RightHandR",
+						# Head
+						self.cnstHeadIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("head_ctrl"), self.returnNodeWithNameSpace("head_ik_ctrl"))
+
+						# Left Arm
+						self.cnstLeftArmIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("hand_l_ctrl"), self.returnNodeWithNameSpace("arm_ik_l_ctrl"))
+						posLeftArmPv = lmr.LMRigUtils.getPoleVectorPosition(
+							self.returnNodeWithNameSpace("upperarm_l_ctrl"), self.returnNodeWithNameSpace("lowerarm_l_ctrl"), self.returnNodeWithNameSpace("hand_l_ctrl")
 						)
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmPv"]),
-							f"{self.nodeState2Sk}.RightForeArmT",
-							# f"{self.nodeState2Sk}.RightForeArmR",
+						self.locLeftArmPv = cmds.spaceLocator(name="tmpLeftArmLoc")[0]
+						cmds.xform(self.locLeftArmPv, translation=(posLeftArmPv.x, posLeftArmPv.y, posLeftArmPv.z), ws=True)
+						cmds.parentConstraint(self.returnNodeWithNameSpace("lowerarm_l_ctrl"), self.locLeftArmPv, maintainOffset=True)
+						cmds.parentConstraint(self.locLeftArmPv, self.returnNodeWithNameSpace("arm_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+
+						# Right Arm
+						self.cnstRightArmIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("hand_r_ctrl"), self.returnNodeWithNameSpace("arm_ik_r_ctrl"))
+						posRightArmPv = lmr.LMRigUtils.getPoleVectorPosition(
+							self.returnNodeWithNameSpace("upperarm_r_ctrl"), self.returnNodeWithNameSpace("lowerarm_r_ctrl"), self.returnNodeWithNameSpace("hand_r_ctrl")
 						)
+						self.locRightArmPv = cmds.spaceLocator(name="tmpRightArmLoc")[0]
+						cmds.xform(self.locRightArmPv, translation=(posRightArmPv.x, posRightArmPv.y, posRightArmPv.z), ws=True)
+						cmds.parentConstraint(self.returnNodeWithNameSpace("lowerarm_r_ctrl"), self.locRightArmPv, maintainOffset=True)
+						cmds.parentConstraint(self.locRightArmPv, self.returnNodeWithNameSpace("arm_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+
+						# Left Leg
+						self.cnstLeftLegIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("foot_l_ctrl"), self.returnNodeWithNameSpace("leg_ik_l_ctrl"))
+						posLeftLegPv = lmr.LMRigUtils.getPoleVectorPosition(
+							self.returnNodeWithNameSpace("thigh_l_ctrl"), self.returnNodeWithNameSpace("calf_l_ctrl"), self.returnNodeWithNameSpace("foot_l_ctrl")
+						)
+						self.locLeftLegPv = cmds.spaceLocator(name="tmpLeftLegLoc")[0]
+						cmds.xform(self.locLeftLegPv, translation=(posLeftLegPv.x, posLeftLegPv.y, posLeftLegPv.z), ws=True)
+						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_l_ctrl"), self.locLeftLegPv, maintainOffset=True)
+						cmds.parentConstraint(self.locLeftLegPv, self.returnNodeWithNameSpace("leg_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+
+						# Right Leg
+						self.cnstRightLegIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("foot_r_ctrl"), self.returnNodeWithNameSpace("leg_ik_r_ctrl"))
+						posRightLegPv = lmr.LMRigUtils.getPoleVectorPosition(
+							self.returnNodeWithNameSpace("thigh_r_ctrl"), self.returnNodeWithNameSpace("calf_r_ctrl"), self.returnNodeWithNameSpace("foot_r_ctrl")
+						)
+						self.locRightLegPv = cmds.spaceLocator(name="tmpRightLegLoc")[0]
+						cmds.xform(self.locRightLegPv, translation=(posRightLegPv.x, posRightLegPv.y, posRightLegPv.z), ws=True)
+						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_r_ctrl"), self.locRightLegPv, maintainOffset=True)
+						cmds.parentConstraint(self.locRightLegPv, self.returnNodeWithNameSpace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+						
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmHandle"]),
+						# 	f"{self.nodeState2Sk}.LeftHandT",
+						# 	f"{self.nodeState2Sk}.LeftHandR",
+						# )
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmPv"]),
+						# 	f"{self.nodeState2Sk}.LeftForeArmT",
+						# 	# f"{self.nodeState2Sk}.LeftForeArmR",
+						# )
+
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmHandle"]),
+						# 	f"{self.nodeState2Sk}.RightHandT",
+						# 	f"{self.nodeState2Sk}.RightHandR",
+						# )
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmPv"]),
+						# 	f"{self.nodeState2Sk}.RightForeArmT",
+						# 	# f"{self.nodeState2Sk}.RightForeArmR",
+						# )
 	
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegHandle"]),
-							f"{self.nodeState2Sk}.LeftFootT",
-							f"{self.nodeState2Sk}.LeftFootR",
-						)
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegPv"]),
-							f"{self.nodeState2Sk}.LeftLegT",
-							# f"{self.nodeState2Sk}.LeftLegR",
-						)
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegHandle"]),
+						# 	f"{self.nodeState2Sk}.LeftFootT",
+						# 	f"{self.nodeState2Sk}.LeftFootR",
+						# )
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegPv"]),
+						# 	f"{self.nodeState2Sk}.LeftLegT",
+						# 	# f"{self.nodeState2Sk}.LeftLegR",
+						# )
 
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegHandle"]),
-							f"{self.nodeState2Sk}.RightFootT",
-							f"{self.nodeState2Sk}.RightFootR",
-						)
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegPv"]),
-							f"{self.nodeState2Sk}.RightLegT",
-							# f"{self.nodeState2Sk}.RightLegR",
-						)
-						self.connectSourceAndSaveAnimNew(
-							self.returnNodeWithNameSpace(self.ctrlIkEffectors["HeadHandle"]),
-							f"{self.nodeState2Sk}.HeadT",
-							f"{self.nodeState2Sk}.HeadR",
-						)
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegHandle"]),
+						# 	f"{self.nodeState2Sk}.RightFootT",
+						# 	f"{self.nodeState2Sk}.RightFootR",
+						# )
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegPv"]),
+						# 	f"{self.nodeState2Sk}.RightLegT",
+						# 	# f"{self.nodeState2Sk}.RightLegR",
+						# )
+						# self.connectSourceAndSaveAnimNew(
+						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["HeadHandle"]),
+						# 	f"{self.nodeState2Sk}.HeadT",
+						# 	f"{self.nodeState2Sk}.HeadR",
+						# )
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
@@ -1663,15 +1713,6 @@ class LMLunarCtrl(LMHumanIk):
 		return False
 
 
-	# def getCtrlIkHandles(self) -> list:
-
-	# 	ListCtrlsNamespace = []
-	# 	if self.isValid():
-	# 		[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlIkHandles]
-
-	# 	return ListCtrlsNamespace
-
-
 	def getCtrlSwitches(self):
 
 		ListCtrlsNamespace = []
@@ -1679,6 +1720,7 @@ class LMLunarCtrl(LMHumanIk):
 			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlSwitches]
 
 		return ListCtrlsNamespace
+
 
 	def getCtrlHandSwitches(self):
 
@@ -1691,16 +1733,32 @@ class LMLunarCtrl(LMHumanIk):
 
 	def setCtrlsIkToFk(self):
 
-		listSwitches = self.getCtrlSwitches()
-		listHandSwitches = self.getCtrlHandSwitches()
+		ctrlSwitch = self.returnNodeWithNameSpace("head_switch_ctrl")
+		cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
+		cmds.setAttr(f"{ctrlSwitch}.headTwist", 0)
+
+		cmds.setAttr(f"{ctrlSwitch}.leftArmSoftness", 0)
+		cmds.setAttr(f"{ctrlSwitch}.leftArmSoftness", 0)
+	
+		cmds.setAttr(f"{ctrlSwitch}.rightArmTwist", 0)
+		cmds.setAttr(f"{ctrlSwitch}.rightArmTwist", 0)
+
+		cmds.setAttr(f"{ctrlSwitch}.leftLegSoftness", 0)
+		cmds.setAttr(f"{ctrlSwitch}.leftLegSoftness", 0)
+	
+		cmds.setAttr(f"{ctrlSwitch}.rightLegTwist", 0)
+		cmds.setAttr(f"{ctrlSwitch}.rightLegTwist", 0)
+
+		# listSwitches = self.getCtrlSwitches()
+		# listHandSwitches = self.getCtrlHandSwitches()
 		# [cmds.setAttr(f"{self.CtrlMain}.{attr}", 0) for attr in self.AttrIk]
 
-		[cmds.setAttr(f"{ctrl}.fkIk", 0) for ctrl in listSwitches]
-		[cmds.setAttr(f"{ctrl}.softness", 0) for ctrl in listSwitches]
+		# [cmds.setAttr(f"{ctrl}.mode", 0) for ctrl in listSwitches]
+		# [cmds.setAttr(f"{ctrl}.softness", 0) for ctrl in listSwitches]
 		# [cmds.setAttr(f"{ctrl}.twist", 0) for ctrl in listSwitches]
 
-		[cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in listHandSwitches]
-		[cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in listHandSwitches]
+		# [cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in listHandSwitches]
+		# [cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in listHandSwitches]
 
 
 	def __validateIkCtrlsBeforeBaking(self, ikCtrls):
@@ -1738,18 +1796,52 @@ class LMLunarCtrl(LMHumanIk):
 				# Ok so we need to update two frames to get the polevector work from the sovler since their (like a pre-roll)
 				# are connected to fore limb translation which in case of fk is 0 0 0 and the solver calculates
 				# it in real time, other was the animations 1 or 2 frame will not be baked properly on those frames
-				oma.MAnimControl.setCurrentTime(om.MTime(startFrame-2, om.MTime.uiUnit()))
-				oma.MAnimControl.setCurrentTime(om.MTime(startFrame-1, om.MTime.uiUnit()))
+				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame-2, om.MTime.uiUnit()))
+				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame-1, om.MTime.uiUnit()))
 
-				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), True)
+				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), False)
 				self.filterRotations(nodes)
 
 				# Clean up
 				self.cleanUpPairBlendNodes()
 				if self.rootCnst: cmds.delete(self.rootCnst)
-
 				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
 					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
+				
+
+				if self.cnstHeadIkHandle: cmds.delete(self.cnstHeadIkHandle)
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("head_ik_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("head_ik_ctrl"), attribute="blendParent1")
+
+				if self.cnstLeftArmIkHandle: cmds.delete(self.cnstLeftArmIkHandle)
+				if cmds.objExists(self.locLeftArmPv): cmds.delete(self.locLeftArmPv)
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_l_ctrl"), attribute="blendParent1")
+
+				if self.cnstRightArmIkHandle: cmds.delete(self.cnstRightArmIkHandle)
+				if cmds.objExists(self.locRightArmPv): cmds.delete(self.locRightArmPv)
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_r_ctrl"), attribute="blendParent1")
+
+				if self.cnstLeftLegIkHandle: cmds.delete(self.cnstLeftLegIkHandle)
+				if cmds.objExists(self.locLeftLegPv): cmds.delete(self.locLeftLegPv)
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_l_ctrl"), attribute="blendParent1")
+
+				if self.cnstRightLegIkHandle: cmds.delete(self.cnstRightLegIkHandle)
+				if cmds.objExists(self.locRightLegPv): cmds.delete(self.locRightLegPv)
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_r_ctrl"), attribute="blendParent1")
+
+
 
 				self.setSource("None")
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))

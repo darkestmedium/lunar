@@ -8,6 +8,7 @@ from collections import OrderedDict
 # Third-party imports
 from maya import cmds
 import maya.OpenMaya as om
+
 from PySide2 import QtCore as qtc
 
 # Custom imports
@@ -47,7 +48,7 @@ class Ctrl():
 		lineWidth=defaultLineWidth,
 		color="lightyellow",
 		lockShapeAttributes=defaultLockShapeAttributes,
-		lockChannels=["scale", "visibility"]
+		lockChannels=["scale"]
 	):
 		"""Init method of the Controller class.
 
@@ -317,7 +318,7 @@ class IkCtrl():
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
-		lockChannels=["scale", "visibility"]
+		lockChannels=["scale"]
 	):
 		self.transform, self.shape = cmds.ctrl(
 			name=name,
@@ -402,7 +403,7 @@ class PoleVectorCtrl():
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
-		lockChannels=["scale", "visibility"]
+		lockChannels=["scale"]
 	):
 		self.transform, self.shape = cmds.ctrl(
 			name=name,
@@ -531,8 +532,8 @@ class Base():
 		self.AttrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
 		cmds.connectAttr(self.AttrCtrlsVisibility, f"{self.ctrlMain.transform}.visibility")
 		lm.LMAttribute.lockControlChannels(self.ctrlMain.transform, ["visibility"])
-		# Roll Ctrls
-		self.AttrRollCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "rollCtrlsVisibility")
+		# # Roll Ctrls
+		# self.AttrRollCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "rollCtrlsVisibility")
 		# Meshes
 		self.AttrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "meshVisibility")
 		cmds.connectAttr(self.AttrMeshVisibility, f"{self.grpMesh}.visibility")
@@ -549,8 +550,8 @@ class Base():
 		# Main Ctrls 
 		self.AttrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "ctrlsDisplayType")
 		cmds.connectAttr(self.AttrCtrlsDisplayType, f"{self.ctrlMain.transform}.overrideDisplayType")
-		# Roll Ctrls
-		self.AttrRollCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "rollCtrlsDisplayType")
+		# # Roll Ctrls
+		# self.AttrRollCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "rollCtrlsDisplayType")
 		# Meshes
 		self.AttrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "meshDisplayType", 2)
 		cmds.setAttr(f"{self.grpMesh}.overrideEnabled", True)
@@ -638,15 +639,16 @@ class FkSpineComponent():
 			rotateTo=listJoints["Spine"]["Spine5"]["Root"],
 		)
 
-		self.CtrlCorrective = []
-		for joint in listJoints["Spine"]["Spine5"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}_ctrl",
-				parent=self.CtrlSpine5.transform,
-				translateTo=joint,
-				rotateTo=joint
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
+		# self.CtrlCorrective = []
+		# for joint in listJoints["Spine"]["Spine5"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}_ctrl",
+		# 		parent=self.CtrlSpine5.transform,
+		# 		translateTo=joint,
+		# 		rotateTo=joint
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+
 		lm.LMTransformUtils.postCtrlTransform(listJoints["Spine"])
 
 
@@ -722,28 +724,28 @@ class FkLegComponent():
 			color=color,
 		)
 		# UpLeg - roll bones
-		self.CtrlUpLegRoll1 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
-			parent=self.CtrlUpLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
-			color=color,
-		)
-		self.CtrlUpLegRoll2 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
-			parent=self.CtrlUpLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlUpLegRoll1 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
+		# 	parent=self.CtrlUpLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["UpLegRoll1"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
+		# self.CtrlUpLegRoll2 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
+		# 	parent=self.CtrlUpLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["UpLegRoll2"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 		# UpLeg - corrective root
-		self.CtrlUpLegCorrectiveRoot = CorrectiveCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
-			parent=self.CtrlUpLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlUpLegCorrectiveRoot = CorrectiveCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	parent=self.CtrlUpLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["UpLegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 
 		# Leg - main bones
 		self.CtrlLeg = Ctrl(
@@ -754,28 +756,28 @@ class FkLegComponent():
 			color=color,
 		)
 		# Leg - roll bones
-		self.CtrlLegRoll1 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
-			parent=self.CtrlLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
-			color=color,
-		)
-		self.CtrlLegRoll2 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
-			parent=self.CtrlLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlLegRoll1 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
+		# 	parent=self.CtrlLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["LegRoll1"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
+		# self.CtrlLegRoll2 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
+		# 	parent=self.CtrlLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["LegRoll2"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 		# Leg - corrective root
-		self.CtrlLegCorrectiveRoot = CorrectiveCtrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
-			parent=self.CtrlLeg.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlLegCorrectiveRoot = CorrectiveCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	parent=self.CtrlLeg.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["LegCorrectiveRoot"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 
 		# Foot - main bones
 		self.CtrlFoot = Ctrl(
@@ -787,46 +789,46 @@ class FkLegComponent():
 		)
 
 		# Toe - main bones
-		self.CtrlToe = Ctrl(
-			name="{}{}_ctrl".format(listJoints["Leg"]["ToeBase"], sideSuffix),
-			parent=self.CtrlFoot.transform,
-			translateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlToe = Ctrl(
+		# 	name="{}{}_ctrl".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+		# 	parent=self.CtrlFoot.transform,
+		# 	translateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+		# 	color=color,
+		# )
 
-		# Corrective controllers
-		self.CtrlCorrective = []
-		# UpLeg
-		for joint in listJoints["Leg"]["UpLegRoll1"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlUpLegRoll1.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		for joint in listJoints["Leg"]["UpLegRoll2"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlUpLegRoll2.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		for joint in listJoints["Leg"]["UpLegCorrectiveRoot"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlUpLegCorrectiveRoot.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# Leg
-		# for joint in listJoints["Leg"]["LegRoll1"]["Corrective"]:
+		# # Corrective controllers
+		# self.CtrlCorrective = []
+		# # UpLeg
+		# for joint in listJoints["Leg"]["UpLegRoll1"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlUpLegRoll1.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# for joint in listJoints["Leg"]["UpLegRoll2"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlUpLegRoll2.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# for joint in listJoints["Leg"]["UpLegCorrectiveRoot"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlUpLegCorrectiveRoot.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # Leg
+		# for joint in listJoints["Leg"]["LegRoll2"]["Corrective"]:
 		# 	CtrlCorrective = CorrectiveCtrl(
 		# 		name=f"{joint}{sideSuffix}_ctrl",
 		# 		parent=self.CtrlLegRoll1.transform,
@@ -835,55 +837,88 @@ class FkLegComponent():
 		# 		color=color,
 		# 	)
 		# 	self.CtrlCorrective.append(CtrlCorrective)
-		for joint in listJoints["Leg"]["LegRoll2"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlLegRoll1.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		for joint in listJoints["Leg"]["LegCorrectiveRoot"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlLegCorrectiveRoot.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# Foot
-		for joint in listJoints["Leg"]["Foot"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlFoot.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		self.CtrlCorrective.append(self.CtrlUpLegCorrectiveRoot)
-		self.CtrlCorrective.append(self.CtrlLegCorrectiveRoot)
+		# for joint in listJoints["Leg"]["LegCorrectiveRoot"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlLegCorrectiveRoot.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # Foot
+		# for joint in listJoints["Leg"]["Foot"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlFoot.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# self.CtrlCorrective.append(self.CtrlUpLegCorrectiveRoot)
+		# self.CtrlCorrective.append(self.CtrlLegCorrectiveRoot)
 		lm.LMTransformUtils.postCtrlTransform(listJoints["Leg"], sideSuffix)
 
 
 	def getCtrls(self):
 		return (
 			self.CtrlUpLeg,
-			self.CtrlLeg, self.CtrlUpLegRoll1,  self.CtrlUpLegRoll2,
-			self.CtrlFoot, self.CtrlLegRoll1, self.CtrlLegRoll2,
-			self.CtrlToe
+			self.CtrlLeg, 
+			self.CtrlFoot,
+			# self.CtrlLeg, self.CtrlUpLegRoll1,  self.CtrlUpLegRoll2,
+			# self.CtrlFoot, self.CtrlLegRoll1, self.CtrlLegRoll2,
+			# self.CtrlToe
 		)
 
 
 	def getMainCtrls(self):
-		return (self.CtrlUpLeg, self.CtrlLeg,	self.CtrlFoot, self.CtrlToe)
+		return (
+			self.CtrlUpLeg, self.CtrlLeg,	self.CtrlFoot,
+			# self.CtrlToe
+		)
 
 
-	def getRollCtrls(self):
-		return (self.CtrlUpLegRoll1,  self.CtrlUpLegRoll2, self.CtrlLegRoll1, self.CtrlLegRoll2)
+	# def getRollCtrls(self):
+	# 	return (self.CtrlUpLegRoll1,  self.CtrlUpLegRoll2, self.CtrlLegRoll1, self.CtrlLegRoll2)
 
+
+
+
+class FkFootComponent():
+	"""Class for building the fk hand component.
+	"""
+
+	def __init__(self, parent:str, listJoints:dict, side:str="left") -> None:
+		"""Class constructor.
+
+		Args:
+			parent (string): Parent of the component to be parented to.
+
+		"""
+		if side == "left":
+			sideSuffix = "_l"
+			color = "lightorange"
+		if side == "right":
+			sideSuffix = "_r"
+			color = "lightblue"
+
+		# Toe - main bones
+		self.CtrlToe = Ctrl(
+			name="{}{}_ctrl".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+			parent=parent,
+			translateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+			rotateTo="{}{}".format(listJoints["Leg"]["ToeBase"], sideSuffix),
+			color=color,
+		)
+		lm.LMAttribute.copyTransformsToOPM(self.CtrlToe.transform)
+		# lm.LMTransformUtils.postCtrlTransform(listJoints["Leg"], sideSuffix)
+
+
+	def getCtrls(self):
+		return (
+			self.CtrlToe,
+		)
 
 
 
@@ -922,28 +957,28 @@ class FkArmComponent():
 			color=color,
 		)
 		# Arm - roll bones
-		self.CtrlArmRoll1 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
-			parent=self.CtrlArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
-			color=color,
-		)
-		self.CtrlArmRoll2 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
-			parent=self.CtrlArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
-			color=color,
-		)
-		# Arm - corrective root
-		self.CtrlArmCorrectiveRoot = CorrectiveCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
-			parent=self.CtrlArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlArmRoll1 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
+		# 	parent=self.CtrlArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ArmRoll1"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
+		# self.CtrlArmRoll2 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
+		# 	parent=self.CtrlArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ArmRoll2"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
+		# # Arm - corrective root
+		# self.CtrlArmCorrectiveRoot = CorrectiveCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	parent=self.CtrlArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 
 		# Forearm - main bones
 		self.CtrlForeArm = Ctrl(
@@ -954,28 +989,28 @@ class FkArmComponent():
 			color=color,
 		)
 		# Forearm - roll bones
-		self.CtrlForeArmRoll1 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
-			parent=self.CtrlForeArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
-			color=color,
-		)
-		self.CtrlForeArmRoll2 = RollCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
-			parent=self.CtrlForeArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlForeArmRoll1 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
+		# 	parent=self.CtrlForeArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll1"], sideSuffix),
+		# 	color=color,
+		# )
+		# self.CtrlForeArmRoll2 = RollCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
+		# 	parent=self.CtrlForeArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ForeArmRoll2"], sideSuffix),
+		# 	color=color,
+		# )
 		# Forearm - corrective root
-		self.CtrlForeArmCorrectiveRoot = CorrectiveCtrl(
-			name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
-			parent=self.CtrlForeArm.transform,
-			translateTo="{}{}".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
-			rotateTo="{}{}".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
-			color=color,
-		)
+		# self.CtrlForeArmCorrectiveRoot = CorrectiveCtrl(
+		# 	name="{}{}_ctrl".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	parent=self.CtrlForeArm.transform,
+		# 	translateTo="{}{}".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	rotateTo="{}{}".format(listJoints["Arm"]["ForeArmCorrectiveRoot"]["Root"], sideSuffix),
+		# 	color=color,
+		# )
 		# Hand - corrective root
 		self.CtrlHand = Ctrl(
 			name="{}{}_ctrl".format(listJoints["Arm"]["Hand"]["Root"], sideSuffix),
@@ -984,78 +1019,80 @@ class FkArmComponent():
 			rotateTo="{}{}".format(listJoints["Arm"]["Hand"]["Root"], sideSuffix),
 			color=color,
 		)
-		# Corrective controllers
-		self.CtrlCorrective = []
-		# Shoulder
-		for joint in listJoints["Arm"]["Shoulder"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlShoulder.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# Armroll1
-		for joint in listJoints["Arm"]["ArmRoll1"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlArmRoll1.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# Armroll2
-		for joint in listJoints["Arm"]["ArmRoll2"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlArmRoll2.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# ArmCorrectiveRoot
-		for joint in listJoints["Arm"]["ArmCorrectiveRoot"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlArmCorrectiveRoot.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# ForeArmCorrectiveRoot
-		for joint in listJoints["Arm"]["ForeArmCorrectiveRoot"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlForeArmCorrectiveRoot.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		# Hand
-		for joint in listJoints["Arm"]["Hand"]["Corrective"]:
-			CtrlCorrective = CorrectiveCtrl(
-				name=f"{joint}{sideSuffix}_ctrl",
-				parent=self.CtrlHand.transform,
-				translateTo=f"{joint}{sideSuffix}",
-				rotateTo=f"{joint}{sideSuffix}",
-				color=color,
-			)
-			self.CtrlCorrective.append(CtrlCorrective)
-		self.CtrlCorrective.append(self.CtrlArmCorrectiveRoot)
-		self.CtrlCorrective.append(self.CtrlForeArmCorrectiveRoot)
+		# # Corrective controllers
+		# self.CtrlCorrective = []
+		# # Shoulder
+		# for joint in listJoints["Arm"]["Shoulder"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlShoulder.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # Armroll1
+		# for joint in listJoints["Arm"]["ArmRoll1"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlArmRoll1.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # Armroll2
+		# for joint in listJoints["Arm"]["ArmRoll2"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlArmRoll2.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # ArmCorrectiveRoot
+		# for joint in listJoints["Arm"]["ArmCorrectiveRoot"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlArmCorrectiveRoot.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # ForeArmCorrectiveRoot
+		# for joint in listJoints["Arm"]["ForeArmCorrectiveRoot"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlForeArmCorrectiveRoot.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# # Hand
+		# for joint in listJoints["Arm"]["Hand"]["Corrective"]:
+		# 	CtrlCorrective = CorrectiveCtrl(
+		# 		name=f"{joint}{sideSuffix}_ctrl",
+		# 		parent=self.CtrlHand.transform,
+		# 		translateTo=f"{joint}{sideSuffix}",
+		# 		rotateTo=f"{joint}{sideSuffix}",
+		# 		color=color,
+		# 	)
+		# 	self.CtrlCorrective.append(CtrlCorrective)
+		# self.CtrlCorrective.append(self.CtrlArmCorrectiveRoot)
+		# self.CtrlCorrective.append(self.CtrlForeArmCorrectiveRoot)
 		lm.LMTransformUtils.postCtrlTransform(listJoints["Arm"], sideSuffix)
 
 
 	def getCtrls(self):
 		return (
 			self.CtrlShoulder,
-			self.CtrlArm, self.CtrlArmRoll1,  self.CtrlArmRoll2,
-			self.CtrlForeArm, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2,
+			# self.CtrlArm, self.CtrlArmRoll1,  self.CtrlArmRoll2,
+			self.CtrlArm,
+			# self.CtrlForeArm, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2,
+			self.CtrlForeArm,
 			self.CtrlHand
 		)
 
@@ -1064,8 +1101,8 @@ class FkArmComponent():
 		return (self.CtrlShoulder, self.CtrlArm,	self.CtrlForeArm, self.CtrlHand)
 	
 
-	def getRollCtrls(self):
-		return (self.CtrlArmRoll1,  self.CtrlArmRoll2, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2)
+	# def getRollCtrls(self):
+	# 	return (self.CtrlArmRoll1,  self.CtrlArmRoll2, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2)
 
 
 
@@ -1298,8 +1335,11 @@ class Ik2bLimbComponent():
 
 
 	def __init__(self,
-	  name:str, parent:str, rotateTo:str,
-		fkStart:str, fkMid:str, fkEnd:str, poleVector:str="", side:str="left",
+	  name:str, parent:str, rotateTo:str, 
+		fkStart:str, fkMid:str, fkEnd:str,
+		jntStart:str, jntMid:str, jntEnd:str,
+		poleVector:str="",
+		side:str="left", mode:str="ik",
 		textPosition:tuple=(0.0, 0.0, 0.0),
 		) -> None:
 		"""Class constructor.
@@ -1345,6 +1385,10 @@ class Ik2bLimbComponent():
 					fkEnd=fkEnd,
 					ikHandle=self.CtrlIk.transform,
 					poleVector=self.CtrlPoleVector.transform,
+					jntStart=jntStart,
+					jntMid=jntMid,
+					jntEnd=jntEnd,
+					mode=mode,
 			)[0]
 		else:
 			self.NodeIk2bSolver = cmds.ik(
@@ -1353,13 +1397,24 @@ class Ik2bLimbComponent():
 				fkMid=fkMid,
 				fkEnd=fkEnd,
 				ikHandle=self.CtrlIk.transform,
+				jntStart=jntStart,
+				jntMid=jntMid,
+				jntEnd=jntEnd,
+				mode=mode,
 			)[0]
 
 		# Post setup
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlIk.transform)
 		# lm.LMAttribute.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkStart}Shape.visibility")
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkMid}Shape.visibility")
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkEnd}Shape.visibility")
+
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.ikVisibility", f"{self.CtrlIk.shape}.visibility")
 		if poleVector:
 			lm.LMAttribute.copyTransformsToOPM(self.CtrlPoleVector.transform)
+			cmds.connectAttr(f"{self.NodeIk2bSolver}.ikVisibility", f"{self.CtrlPoleVector.shape}.visibility")
+			cmds.connectAttr(f"{jntMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 			# lm.LMAttribute.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
 
 
@@ -1411,6 +1466,21 @@ class LMRigUtils():
 
 		if space == "world": return posPv + vecB
 		return posPv
+
+
+	@classmethod
+	def createMatrixConstraint(cls, parent, child, offset, sourceNode):
+
+		arrayLocalMatrix = cmds.xform(sourceNode, query=True, matrix=True, worldSpace=False),
+		nodeMultMatrix = cmds.createNode("multMatrix", name=f"{child}_matCnst")
+	
+		cmds.setAttr(f"{nodeMultMatrix}.matrixIn[0]", arrayLocalMatrix[0], type="matrix")
+
+		cmds.connectAttr(f"{parent}.worldMatrix[0]", f"{nodeMultMatrix}.matrixIn[1]")
+		cmds.connectAttr(f"{offset}.worldInverseMatrix[0]", f"{nodeMultMatrix}.matrixIn[2]")
+
+		cmds.connectAttr(f"{nodeMultMatrix}.matrixSum", f"{child}.offsetParentMatrix")
+
 
 
 

@@ -711,8 +711,8 @@ class LMAttribute():
 	def copyTransformsToOPM(cls, object:str):
 		"""Copies the translation and rotation values to the offset parent matrix attribute.
 		"""
-		arrayLocalMatrix = cmds.xform(object, query=True, matrix=True, worldSpace=False),
-		cmds.setAttr(f"{object}.offsetParentMatrix", arrayLocalMatrix[0], type="matrix")
+		arrayLocalMatrix = cmds.xform(object, query=True, matrix=True, worldSpace=False)
+		cmds.setAttr(f"{object}.offsetParentMatrix", arrayLocalMatrix, type="matrix")
 		cmds.xform(object, translation=(0,0,0), rotation=(0,0,0))
 
 
@@ -773,6 +773,17 @@ class LMAttribute():
 		"""
 		attrName = f"{object}.{name}"
 		cmds.addAttr(object, longName=name, attributeType="float", minValue=minValue, maxValue=maxValue, keyable=True, defaultValue=defaultValue)
+		return attrName
+
+
+	@classmethod
+	def addFkIkMode(cls, object:str, name:str, defaultValue:int=0) -> str:
+		"""Adds a display type attribute on the given object.
+		"""
+		attrName = f"{object}.{name}"
+		cmds.addAttr(object, longName=name, attributeType="enum", enumName="Fk=0:Ik=1", keyable=True, defaultValue=defaultValue)
+		# cmds.setAttr(attrName, channelBox=True)
+		cmds.setAttr(f"{object}.overrideEnabled", True)
 		return attrName
 
 
@@ -866,7 +877,9 @@ class LMTransformUtils():
 		"""
 		worldMatrix0Attr = ".worldMatrix[0]"
 		skinMatrixAttr = cmds.listConnections(f"{source}{worldMatrix0Attr}", plugs=True)[0]
-		cmds.connectAttr(f"{destination}{worldMatrix0Attr}", f"{skinMatrixAttr}", force=True)
+		if skinMatrixAttr:
+			cmds.connectAttr(f"{destination}{worldMatrix0Attr}", f"{skinMatrixAttr}", force=True)
+		
 	
 
 	@classmethod

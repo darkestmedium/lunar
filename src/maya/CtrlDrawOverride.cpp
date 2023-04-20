@@ -123,6 +123,7 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 
 	// If XRay Joints Draw in XRay Mode
 	if (pCtrlData->DrawInXray) {drawManager.beginDrawInXray();}
+	
 	// Draw the fill shape
 	if (pCtrlData->fillShape)	{
 		drawManager.setColor(pCtrlData->fillColor);

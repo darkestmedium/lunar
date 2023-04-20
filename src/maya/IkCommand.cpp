@@ -289,6 +289,7 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		MPlug plugOutStart = fnIk2bSolver.findPlug("outputStart", false);
 		MPlug plugOutMid = fnIk2bSolver.findPlug("outputMid", false);
 		MPlug plugOutEnd = fnIk2bSolver.findPlug("outputEnd", false);
+
 		// Get joints rotation plugs
 		MPlug plugRotStart = fnJntStart.findPlug("rotate", false);
 		MPlug plugRotMid = fnJntMid.findPlug("rotate", false);
@@ -297,6 +298,10 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		modDg.connect(plugOutStart, plugRotStart);
 		modDg.connect(plugOutMid, plugRotMid);
 		modDg.connect(plugOutEnd, plugRotEnd);
+	
+		MPlug plugOutUpdate = fnIk2bSolver.findPlug("outputUpdate", false);
+		MPlug plugRotPivotX = fnJntStart.findPlug("rotatePivotX", false);
+		modDg.connect(plugOutUpdate, plugRotPivotX);
 
 		// Pole vector plugs
 		if (bIsPoleVectorSet) {
@@ -314,6 +319,9 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 
 		MPlug plugMode = fnIk2bSolver.findPlug("mode", false);
 		plugMode.setValue(mode);
+	
+		// // Connect time node
+		// LMScene::connectSceneTime(objIk2bSolver, "inTime", modDg);
 
 	}
 
