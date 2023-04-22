@@ -117,7 +117,12 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 	CtrlData* pCtrlData = (CtrlData*)data;
 	if (!pCtrlData) {return;}
 
-	drawManager.beginDrawable();
+	// Define selectability
+	if (pCtrlData->shapeIndex == 8) {
+		drawManager.beginDrawable(MHWRender::MUIDrawManager::kNonSelectable);
+	} else {
+		drawManager.beginDrawable();
+	}
 
 	drawManager.setDepthPriority(pCtrlData->DepthPriority);
 
@@ -136,10 +141,10 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 	if (pCtrlData->bDrawline) {
 		drawManager.mesh(MHWRender::MUIDrawManager::kLines, pCtrlData->listLine);
 	}
-
-	if (pCtrlData->bDrawText) {
+	// Fk Ik State
+	if (pCtrlData->bDrawFkIkState) {
 		drawManager.setFontSize(12);
-		drawManager.text(pCtrlData->posText, pCtrlData->strDrawText, drawManager.kCenter);
+		drawManager.text(pCtrlData->posFkIkState, pCtrlData->strFkIkState, drawManager.kCenter);
 	}
 
 	// End drawable

@@ -42,8 +42,8 @@ class Ctrl():
 		localScale=(2.0, 2.0, 2.0),
 		shape="circle",
 		fillShape=False,
-		drawText=False,
-		textPosition=(0.0, 0.0, 0.0),
+		drawFkIkState=False,
+		fkIkStatePosition=(0.0, 0.0, 0.0),
 		fillTransparency=defaultTransparency,
 		lineWidth=defaultLineWidth,
 		color="lightyellow",
@@ -75,8 +75,8 @@ class Ctrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
-			drawText=drawText,
-			textPosition=textPosition,
+			drawFkIkState=drawFkIkState,
+			fkIkStatePosition=fkIkStatePosition,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -312,8 +312,8 @@ class IkCtrl():
 		localScale=(6.0, 6.0, 6.0),
 		shape="cube",
 		fillShape=False,
-		drawText=False,
-		textPosition=(0.0, 0.0, 0.0),
+		drawFkIkState=False,
+		fkIkStatePosition=(0.0, 0.0, 0.0),
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
@@ -330,8 +330,8 @@ class IkCtrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
-			drawText=drawText,
-			textPosition=textPosition,
+			drawFkIkState=drawFkIkState,
+			fkIkStatePosition=fkIkStatePosition,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -355,8 +355,8 @@ class FkIkSwitchCtrl():
 		localScale=(2.0, 2.0, 2.0),
 		shape="diamond",
 		fillShape=False,
-		drawText=False,
-		textPosition=(0.0, 0.0, 0.0),
+		drawFkIkState=False,
+		fkIkStatePosition=(0.0, 0.0, 0.0),
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
@@ -373,8 +373,8 @@ class FkIkSwitchCtrl():
 			localScale=localScale,
 			shape=shape,
 			fillShape=fillShape,
-			drawText=drawText,
-			textPosition=textPosition,
+			drawFkIkState=drawFkIkState,
+			fkIkStatePosition=fkIkStatePosition,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
@@ -473,7 +473,7 @@ class CorrectiveCtrl():
 
 
 
-class Base():
+class BaseComponent():
 	"""Class for building the top rig structure.
 
 	Dependencies:
@@ -498,6 +498,7 @@ class Base():
 		self.grpBase = cmds.group(name="rig", empty=True)  # we're going to use a namespace anyway
 		self.ctrlMain = MainCtrl(parent=self.grpBase, localRotate=(90.0, 0.0, 0.0))
 		self.grpMesh = cmds.group(name="mesh_grp", empty=True, parent=self.grpBase)
+
 
 		self._setupRigGroups()
 
@@ -527,38 +528,53 @@ class Base():
 
 		lm.LMAttribute.addSeparator(self.ctrlMain.transform)
 
+		self.displCtrls = cmds.createNode("displayLayer", name="ctrls_displ")
+		self.displMesh = cmds.createNode("displayLayer", name="mesh_displ")
+		self.displJnts = cmds.createNode("displayLayer", name="outs_displ")
+	
 		# Visibility
 		# Main Ctrls
-		self.AttrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
-		cmds.connectAttr(self.AttrCtrlsVisibility, f"{self.ctrlMain.transform}.visibility")
-		lm.LMAttribute.lockControlChannels(self.ctrlMain.transform, ["visibility"])
-		# # Roll Ctrls
-		# self.AttrRollCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "rollCtrlsVisibility")
-		# Meshes
-		self.AttrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "meshVisibility")
-		cmds.connectAttr(self.AttrMeshVisibility, f"{self.grpMesh}.visibility")
-		# Export Skeleton
-		self.AttrExportSkeletonVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "exportSkeletonVisibility", False)
+		self.attrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "ctrlsVisibility")
+		cmds.connectAttr(self.attrCtrlsVisibility, f"{self.displCtrls}.visibility")
+		cmds.connectAttr(f"{self.displCtrls}.drawInfo", f"{self.ctrlMain.transform}.drawOverride", force=True)
 
-		# Hide Ctrls On Playback
-		self.AttrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
-		cmds.connectAttr(self.AttrHideCtrlsOnPlayback, f"{self.ctrlMain.shape}.hideOnPlayback")
+		# Meshes
+		self.attrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "meshVisibility")
+		cmds.connectAttr(self.attrMeshVisibility, f"{self.displMesh}.visibility")
+		cmds.connectAttr(f"{self.displMesh}.drawInfo", f"{self.grpMesh}.drawOverride", force=True)
+	
+		# Export Skeleton
+		self.attrExportSkeletonVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "exportSkeletonVisibility", False)
+		cmds.connectAttr(self.attrExportSkeletonVisibility, f"{self.displJnts}.visibility")
+
 
 		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "__")
 
+
 		# Diplay Type Overrides
 		# Main Ctrls 
-		self.AttrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "ctrlsDisplayType")
-		cmds.connectAttr(self.AttrCtrlsDisplayType, f"{self.ctrlMain.transform}.overrideDisplayType")
-		# # Roll Ctrls
-		# self.AttrRollCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "rollCtrlsDisplayType")
-		# Meshes
-		self.AttrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "meshDisplayType", 2)
-		cmds.setAttr(f"{self.grpMesh}.overrideEnabled", True)
-		cmds.connectAttr(self.AttrMeshDisplayType, f"{self.grpMesh}.overrideDisplayType")
-		# Export Skeleton
-		self.AttrExportSkeletonDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "exportSkeletonDisplayType", 2)
+		self.attrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "ctrlsDisplayType")
+		cmds.connectAttr(self.attrCtrlsDisplayType, f"{self.displCtrls}.displayType")
+		cmds.connectAttr(f"{self.displCtrls}.displayType", f"{self.ctrlMain.transform}.overrideDisplayType")
+		cmds.connectAttr(f"{self.displCtrls}.displayType", f"{self.ctrlMain.shape}.overrideDisplayType")
 
+		# Meshes
+		self.attrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "meshDisplayType", 2)
+		cmds.connectAttr(self.attrMeshDisplayType, f"{self.displMesh}.displayType")
+		cmds.connectAttr(f"{self.displMesh}.displayType", f"{self.grpMesh}.overrideDisplayType")
+
+		# Export Skeleton
+		self.attrExportSkeletonDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.transform, "exportSkeletonDisplayType", 2)
+		cmds.connectAttr(self.attrExportSkeletonDisplayType, f"{self.displJnts}.displayType")
+
+
+		lm.LMAttribute.addSeparator(self.ctrlMain.transform, "___")
+
+
+		# Hide Ctrls On Playback
+		self.attrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.transform, "hideCtrlsOnPlayback", False)
+		cmds.connectAttr(self.attrHideCtrlsOnPlayback, f"{self.displCtrls}.hideOnPlayback")
+		cmds.connectAttr(f"{self.displCtrls}.hideOnPlayback", f"{self.ctrlMain.shape}.hideOnPlayback")
 
 
 
@@ -1337,10 +1353,10 @@ class Ik2bLimbComponent():
 	def __init__(self,
 	  name:str, parent:str, rotateTo:str, 
 		fkStart:str, fkMid:str, fkEnd:str,
-		jntStart:str, jntMid:str, jntEnd:str,
+		outStart:str, outMid:str, outEnd:str,
 		poleVector:str="",
 		side:str="left", mode:str="ik",
-		textPosition:tuple=(0.0, 0.0, 0.0),
+		fkIkStatePosition:tuple=(0.0, 0.0, 0.0),
 		) -> None:
 		"""Class constructor.
 
@@ -1365,7 +1381,7 @@ class Ik2bLimbComponent():
 			translateTo=fkEnd,
 			rotateTo=fkEnd,
 			lineWidth=2.0,
-			textPosition=textPosition,
+			fkIkStatePosition=fkIkStatePosition,
 			color=color,
 		)
 
@@ -1385,9 +1401,9 @@ class Ik2bLimbComponent():
 					fkEnd=fkEnd,
 					ikHandle=self.CtrlIk.transform,
 					poleVector=self.CtrlPoleVector.transform,
-					jntStart=jntStart,
-					jntMid=jntMid,
-					jntEnd=jntEnd,
+					outStart=outStart,
+					outMid=outMid,
+					outEnd=outEnd,
 					mode=mode,
 			)[0]
 		else:
@@ -1397,24 +1413,31 @@ class Ik2bLimbComponent():
 				fkMid=fkMid,
 				fkEnd=fkEnd,
 				ikHandle=self.CtrlIk.transform,
-				jntStart=jntStart,
-				jntMid=jntMid,
-				jntEnd=jntEnd,
+				outStart=outStart,
+				outMid=outMid,
+				outEnd=outEnd,
 				mode=mode,
 			)[0]
 
 		# Post setup
 		lm.LMAttribute.copyTransformsToOPM(self.CtrlIk.transform)
-		# lm.LMAttribute.lockControlChannels(self.CtrlIk.transform, lockChannels=["offsetParentMatrix"])
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkStart}Shape.visibility")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkMid}Shape.visibility")
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{fkEnd}Shape.visibility")
 
-		cmds.connectAttr(f"{self.NodeIk2bSolver}.ikVisibility", f"{self.CtrlIk.shape}.visibility")
+		self.displFkCtrls = cmds.createNode("displayLayer", name=f"{name}_fk{sideSuffix}_displ")
+		self.displIkCtrls = cmds.createNode("displayLayer", name=f"{name}_ik{sideSuffix}_displ")
+
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.fkVisibility", f"{self.displFkCtrls}.visibility")
+		cmds.connectAttr(f"{self.displFkCtrls}.drawInfo", f"{fkStart}.drawOverride", force=True)
+		cmds.connectAttr(f"{self.displFkCtrls}.drawInfo", f"{fkMid}.drawOverride", force=True)
+		cmds.connectAttr(f"{self.displFkCtrls}.drawInfo", f"{fkEnd}.drawOverride", force=True)
+
+
+		cmds.connectAttr(f"{self.NodeIk2bSolver}.ikVisibility", f"{self.displIkCtrls}.visibility")
+		cmds.connectAttr(f"{self.displIkCtrls}.drawInfo", f"{self.CtrlIk.transform}.drawOverride", force=True)
 		if poleVector:
 			lm.LMAttribute.copyTransformsToOPM(self.CtrlPoleVector.transform)
-			cmds.connectAttr(f"{self.NodeIk2bSolver}.ikVisibility", f"{self.CtrlPoleVector.shape}.visibility")
-			cmds.connectAttr(f"{jntMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
+
+			cmds.connectAttr(f"{self.displIkCtrls}.drawInfo", f"{self.CtrlPoleVector.transform}.drawOverride", force=True)
+			cmds.connectAttr(f"{outMid}.worldMatrix[0]", f"{self.CtrlPoleVector.shape}.drawLineTo")
 			# lm.LMAttribute.lockControlChannels(self.CtrlPoleVector.transform, lockChannels=["offsetParentMatrix"])
 
 
@@ -1423,6 +1446,13 @@ class Ik2bLimbComponent():
 			return (self.CtrlIk, self.CtrlPoleVector)
 		else:
 			return (self.CtrlIk)
+
+
+
+
+#--------------------------------------------------------------------------------------------------
+# Limb Components
+#--------------------------------------------------------------------------------------------------
 
 
 

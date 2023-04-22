@@ -58,7 +58,7 @@ public:
 	static const MTypeId typeId;
 
 	// Node's Input Attributes
-	static MObject attrInMode;
+	static MObject attrInFkIk;
 	static Attribute attrInFkStart, attrInFkMid, attrInFkEnd;
 	static Attribute attrInIkHandle;
 	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
@@ -79,12 +79,9 @@ public:
 	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
 	MVector posInPv;
 	MAngle twist;
-	double softness;
-	short mode;
+	double fkIk, softness;
 	bool bIsPvConnected, bFkVisibility, bIkVisibility;
 	MAngle::Unit uiUnitAngle;
-
-	// MTime timeCurrent, timeCached;
 
 	MTransformationMatrix mtrnInStart, mtrnInMid, mtrnInEnd;
 	MEulerRotation eulFkStart, eulFkMid, eulFkEnd;
@@ -103,7 +100,6 @@ public:
 	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
 	MQuaternion quatOutStart, quatOutMid, quatOutEnd, quatOutHandle;
 	
-
 	MObject objSelf;
 
 	// Helpers
@@ -113,7 +109,7 @@ public:
 	// Constructors
 	Ik2bSolver()
 		: MPxNode()
-		, mode(0)
+		, fkIk(0.0)
 		, bFkVisibility(true)
 		, bIkVisibility(false)
 		, bIsPvConnected(false)

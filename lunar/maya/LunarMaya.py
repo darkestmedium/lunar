@@ -734,7 +734,7 @@ class LMAttribute():
 		attrName = f"{object}.{name}"
 		cmds.addAttr(object, longName=name, attributeType="enum", enumName="normal=0:template=1:reference=2", keyable=False, defaultValue=defaultValue)
 		cmds.setAttr(attrName, channelBox=True)
-		cmds.setAttr(f"{object}.overrideEnabled", True)
+		# cmds.setAttr(f"{object}.overrideEnabled", True)
 		return attrName
 
 

@@ -1,5 +1,8 @@
 /*  AEctrlTemplate.mel
 		The Attribute Editor template for the ctrl node.
+		
+		source "AEctrlTemplate.mel";
+		refreshEditorTemplates;
 */
 
 global proc AEctrlTemplate(string $nodeName)
@@ -9,9 +12,7 @@ global proc AEctrlTemplate(string $nodeName)
 
 		editorTemplate -beginLayout "Local Transform Attributes" -collapse false;
 			editorTemplate -addControl "localPosition";
-			editorTemplate -addControl "localRotateX";
-			editorTemplate -addControl "localRotateY";
-			editorTemplate -addControl "localRotateZ";
+			editorTemplate -addControl "localRotate";
 			editorTemplate -addControl "localScale";
 			editorTemplate -endLayout;
 
@@ -19,12 +20,10 @@ global proc AEctrlTemplate(string $nodeName)
 			editorTemplate -addControl "shape";
 			editorTemplate -addControl "fillShape";
 			editorTemplate -addControl "drawLine";
-			editorTemplate -addControl "drawText";
+			editorTemplate -addControl "drawFkIkState";
 			editorTemplate -addControl "fillTransparency";
 			editorTemplate -addControl "lineWidth";
-			editorTemplate -addControl "textPositionX";
-			editorTemplate -addControl "textPositionY";
-			editorTemplate -addControl "textPositionZ";
+			editorTemplate -addControl "fkIkStatePosition";
 			editorTemplate -addControl "drawLineTo";
 			editorTemplate -endLayout;
 

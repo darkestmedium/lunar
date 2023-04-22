@@ -1,8 +1,8 @@
 /*  AEik2bSolverTemplate.mel
-	The Attribute Editor template for the mlunar plugin.
+		The Attribute Editor template for the mlunar plugin.
 
-	source "AEik2bSolverTemplate.mel";
-	refreshEditorTemplates;
+		source "AEik2bSolverTemplate.mel";
+		refreshEditorTemplates;
 */
 
 global proc AEik2bSolverTemplate(string $nodeName) {
@@ -10,7 +10,7 @@ global proc AEik2bSolverTemplate(string $nodeName) {
 	editorTemplate -beginScrollLayout;
 		
 		editorTemplate -beginLayout "Solver Attributes" -collapse false;
-			editorTemplate -addControl "mode";
+			editorTemplate -addControl "fkIk";
 			editorTemplate -addControl "twist";
 			editorTemplate -addControl "softness";
 		editorTemplate -endLayout;
@@ -24,10 +24,10 @@ global proc AEik2bSolverTemplate(string $nodeName) {
 				editorTemplate -addControl "poleVector";
 			editorTemplate -endLayout;
 
-			editorTemplate -beginLayout "Joints" -collapse true;
-				editorTemplate -addControl "jntStart";
-				editorTemplate -addControl "jntMid";
-				editorTemplate -addControl "jntEnd";
+			editorTemplate -beginLayout "Outputs" -collapse true;
+				editorTemplate -addControl "outStart";
+				editorTemplate -addControl "outMid";
+				editorTemplate -addControl "outEnd";
 			editorTemplate -endLayout;
 
 		editorTemplate -endLayout;

@@ -62,7 +62,7 @@ void CtrlData::getBBox(const MObject& obj, const MDagPath& pathObj, MMatrix matr
 		matrix (MMatrix): Matrix used to transform the bounding box
 
 	*/
-	unsigned int shapeIndex = MPlug(obj, Ctrl::shapeAttr).asInt();
+	shapeIndex = MPlug(obj, Ctrl::shapeAttr).asShort();
 
 	// Cube
 	if (shapeIndex == 0) {
@@ -114,6 +114,10 @@ void CtrlData::getBBox(const MObject& obj, const MDagPath& pathObj, MMatrix matr
 			MPoint(lineBB[0][0], lineBB[0][1], lineBB[0][2]),
 			MPoint(lineBB[1][0], lineBB[1][1], lineBB[1][2])
 		);
+	// None
+	} else if (shapeIndex == 8) {
+		this->bBox = MBoundingBox(MPoint(0.0, 0.0, 0.0), MPoint(0.0, 0.0, 0.0)
+		);
 	}
 	this->bBox.transformUsing(matrix);
 
@@ -135,7 +139,7 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 	*/
 	MStatus status;
 
-	unsigned int shapeIndex = MPlug(obj, Ctrl::shapeAttr).asInt();
+	shapeIndex = MPlug(obj, Ctrl::shapeAttr).asShort();
 
 	this->fTransformedList.clear();
 	this->fLineList.clear();
@@ -927,7 +931,7 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 			fTriangleList.append(fTransformedList[0]);
 		}
 
-	} else if (shapeIndex == 5) {  	// Circle
+	} else if (shapeIndex == 5) {  // Circle
 		for (int i=0; i<circleCount; i++) {
 			fTransformedList.append(
 				MPoint(listPointsCircle[i][0], listPointsCircle[i][1], listPointsCircle[i][2]) * matrix
@@ -952,6 +956,10 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 		fLineList.append(MPoint(listPointsLine[0][0], listPointsLine[0][1], listPointsLine[0][2]) * matrix);
 		fLineList.append(MPoint(listPointsLine[1][0], listPointsLine[1][1], listPointsLine[1][2]) * matrix);
 	}
+	// } else if (shapeIndex == 8) {
+	// 	fLineList.append(MPoint(0.0, 0.0, 0.0) * matrix);
+	// 	fLineList.append(MPoint(1.0, 1.0, 1.0) * matrix);
+	// }
 	// }	else if (shapeIndex == 8) {  	// Joint Line
 	// 	MFnDagNode fnShape = pathObj;
 	// 	MFnTransform fnChild;
@@ -980,18 +988,20 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 
 
 void CtrlData::getText(const MObject& obj) {
-	bDrawText = MPlug(obj, Ctrl::attrInDrawText).asBool();
-	posText = MPoint(
-		MPlug(obj, Ctrl::attrInTextPositionX).asDouble(),
-		MPlug(obj, Ctrl::attrInTextPositionY).asDouble(),
-		MPlug(obj, Ctrl::attrInTextPositionZ).asDouble()
+	bDrawFkIkState = MPlug(obj, Ctrl::attrInDrawFkIkState).asBool();
+	posFkIkState = MPoint(
+		MPlug(obj, Ctrl::attrInFkIkPositionX).asDouble(),
+		MPlug(obj, Ctrl::attrInFkIkPositionY).asDouble(),
+		MPlug(obj, Ctrl::attrInFkIkPositionZ).asDouble()
 	);
-	short mode = MPlug(obj, Ctrl::attrInMode).asShort();
-	if (mode == 0) {
-		strDrawText = MString("fk");
-	}
-	if (mode == 1) {
-		strDrawText = MString("ik");
+	fkIk = MPlug(obj, Ctrl::attrInFkIk).asDouble();
+	if (fkIk == 0.0) {
+		strFkIkState = MString("fk");
+	} else if (fkIk > 0.0 && fkIk < 100.0) {
+		MString strFkIk = LMText::doublePrecision(MPlug(obj, Ctrl::attrInFkIk).asDouble(), 0).c_str();
+		strFkIkState = MString("fk | ik " + strFkIk);
+	} else if (fkIk == 100.0) {
+		strFkIkState = MString("ik");
 	}
 }
  

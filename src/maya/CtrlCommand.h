@@ -75,11 +75,11 @@ public:
 	static const char* drawLineFlagShort;
 	static const char* drawLineFlagLong;
 
-	static const char* drawTextFlagShort;
-	static const char* drawTextFlagLong;
+	static const char* drawFkIkStateFlagShort;
+	static const char* drawFkIkStateFlagLong;
 
-	static const char* textPositionFlagShort;
-	static const char* textPositionFlagLong;
+	static const char* fkIkStatePositionFlagShort;
+	static const char* fkIkStatePositionFlagLong;
 
 	static const char* fillTransparencyFlagShort;
 	static const char* fillTransparencyFlagLong;
@@ -110,7 +110,7 @@ public:
 	MVector localPosition;
 	MVector localRotate;
 	MVector localScale;
-	MVector textPosition;
+	MVector fkIkStatePosition;
 
 	MString strColor;
 	MColor colorOverride;
@@ -118,7 +118,7 @@ public:
 	short indxShape;
 	bool bFillShape;
 	bool bDrawLine;
-	bool bDrawText;
+	bool bDrawFkIkState;
 	double fillTransparency;
 	double lineWidth;
 	bool bLockShapeAttributes;
@@ -136,8 +136,8 @@ public:
  		, indxShape(0)
  		, bFillShape(true)
  		, bDrawLine(false)
- 		, bDrawText(false)
- 		, textPosition(0.0, 0.0, 0.0)
+ 		, bDrawFkIkState(false)
+ 		, fkIkStatePosition(0.0, 0.0, 0.0)
  		, fillTransparency(0.25)
  		, lineWidth(1.0)
 		, strColor("yellow")

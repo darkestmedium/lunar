@@ -58,12 +58,12 @@ public:
 	static const char* poleVectorFlagShort;
 	static const char* poleVectorFlagLong;
 	// Joint Flags
-	static const char* jntStartFlagShort;
-	static const char* jntStartFlagLong;
-	static const char* jntMidFlagShort;
-	static const char* jntMidFlagLong;
-	static const char* jntEndFlagShort;
-	static const char* jntEndFlagLong;
+	static const char* outStartFlagShort;
+	static const char* outStartFlagLong;
+	static const char* outMidFlagShort;
+	static const char* outMidFlagLong;
+	static const char* outEndFlagShort;
+	static const char* outEndFlagLong;
 
 	static const char* modeFlagShort;
 	static const char* modeFlagLong;
@@ -72,7 +72,7 @@ public:
 	static const char* helpFlagLong;
 
 	MString name;
-	short mode;
+	double mode;
 	bool bIsPoleVectorSet;
 
 	MObject objIk2bSolver;
@@ -95,7 +95,7 @@ public:
  	: MPxCommand()
  	, command(kCommandCreate)
 	, name(Ctrl::typeName)
-	, mode(0)
+	, mode(0.0)
 	, bIsPoleVectorSet(false)
 	{}
 

@@ -37,11 +37,11 @@ const char* CtrlCommand::fillShapeFlagLong = "-fillShape";
 const char* CtrlCommand::drawLineFlagShort = "-dl";
 const char* CtrlCommand::drawLineFlagLong = "-drawLine";
 
-const char* CtrlCommand::drawTextFlagShort = "-dt";
-const char* CtrlCommand::drawTextFlagLong = "-drawText";
+const char* CtrlCommand::drawFkIkStateFlagShort = "-dfi";
+const char* CtrlCommand::drawFkIkStateFlagLong = "-drawFkIkState";
 
-const char* CtrlCommand::textPositionFlagShort = "-tp";
-const char* CtrlCommand::textPositionFlagLong = "-textPosition";
+const char* CtrlCommand::fkIkStatePositionFlagShort = "-fis";
+const char* CtrlCommand::fkIkStatePositionFlagLong = "-fkIkStatePosition";
 
 const char* CtrlCommand::fillTransparencyFlagShort = "-ft";
 const char* CtrlCommand::fillTransparencyFlagLong = "-fillTransparency";
@@ -93,8 +93,8 @@ MSyntax CtrlCommand::syntaxCreator() {
 	sytnax.addFlag(lineWidthFlagShort, lineWidthFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(colorFlagShort, colorFlagLong, MSyntax::kString);
 
-	sytnax.addFlag(drawTextFlagShort, drawTextFlagLong, MSyntax::kBoolean);
-	sytnax.addFlag(textPositionFlagShort, textPositionFlagLong, MSyntax::kDouble, MSyntax::kDouble, MSyntax::kDouble);
+	sytnax.addFlag(drawFkIkStateFlagShort, drawFkIkStateFlagLong, MSyntax::kBoolean);
+	sytnax.addFlag(fkIkStatePositionFlagShort, fkIkStatePositionFlagLong, MSyntax::kDouble, MSyntax::kDouble, MSyntax::kDouble);
 
 	sytnax.addFlag(lockShapeAttributesFlagShort, lockShapeAttributesFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(hideOnPlaybackFlagShort, hideOnPlaybackFlagLong, MSyntax::kBoolean);
@@ -129,24 +129,24 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		command = kCommandHelp;
 		MString strHelp;
 		strHelp += "Flags:\n";
-		strHelp += "   -n    -name                 String     Name of the rig controller to create.\n";
-		strHelp += "   -p    -parent               String     Name of the object that will be the parent.\n";
-		strHelp += "   -tt   -translateTo	         String     Name of the object that the controller will be translated to.\n";
-		strHelp += "   -rt   -rotateTo             String     Name of the object that the controller will be rotated to.\n";
-		strHelp += "   -lp   -localPosition        Double3    Local Position of the controller.\n";
-		strHelp += "   -lr   -localRotate          Double3    Local Rotate of the controller.\n";
-		strHelp += "   -ls   -localScale           Double3    Local Scale of the controller.\n";
-		strHelp += "   -sh   -shape                String     Shape to be drawn: 'cube' 'sphere' cross' 'diamond' 'square' 'circle' 'locator'.\n";
-		strHelp += "   -fs   -fillShape            Bool       Whether or not you want to render the solid shape or just the outline.\n";
-		strHelp += "   -dl   -drawLine             Bool       Whether or not you want to display a line from the object center to a target.\n";
-		strHelp += "   -dt   -drawText             Bool       Whether or not you want to display te fk / ik switch value.\n";
-		strHelp += "   -tp   -textPosition         Double3    Local Position of the text that will be displayed.\n";
-		strHelp += "   -ft   -fillTransparency     Double     Controls the transparency of the fill shape.\n";
-		strHelp += "   -fw   -lineWidth            Double     Controls the line width of the outline.\n";
-		strHelp += "   -cl   -color                String     Viewport display color of the controller: 'lightyellow' 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
-		strHelp += "   -lsa  -lockShapeAttributes  Bool       Locks all the shpae attributes on the shape node after creation.\n";
-		strHelp += "   -hop  -hideOnPlayback       Bool       Wheter or not to hide the ctrl shapes on playback.\n";
-		strHelp += "   -h    -help                 N/A        Display this text.\n";
+		strHelp += "   -n     -name                 String     Name of the rig controller to create.\n";
+		strHelp += "   -p     -parent               String     Name of the object that will be the parent.\n";
+		strHelp += "   -tt    -translateTo	        String     Name of the object that the controller will be translated to.\n";
+		strHelp += "   -rt    -rotateTo             String     Name of the object that the controller will be rotated to.\n";
+		strHelp += "   -lp    -localPosition        Double3    Local Position of the controller.\n";
+		strHelp += "   -lr    -localRotate          Double3    Local Rotate of the controller.\n";
+		strHelp += "   -ls    -localScale           Double3    Local Scale of the controller.\n";
+		strHelp += "   -sh    -shape                String     Shape to be drawn: 'cube' 'sphere' cross' 'diamond' 'square' 'circle' 'locator' 'none'.\n";
+		strHelp += "   -fs    -fillShape            Bool       Whether or not you want to render the solid shape or just the outline.\n";
+		strHelp += "   -dl    -drawLine             Bool       Whether or not you want to display a line from the object center to a target.\n";
+		strHelp += "   -dfis  -drawFkIkState        Bool       Whether or not you want to display te fk / ik  state.\n";
+		strHelp += "   -fisp  -fkIkStatePosition    Double3    Local Position of the fk / ik state.\n";
+		strHelp += "   -ft    -fillTransparency     Double     Controls the transparency of the fill shape.\n";
+		strHelp += "   -fw    -lineWidth            Double     Controls the line width of the outline.\n";
+		strHelp += "   -cl    -color                String     Viewport display color of the controller: 'lightyellow' 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
+		strHelp += "   -lsa   -lockShapeAttributes  Bool       Locks all the shpae attributes on the shape node after creation.\n";
+		strHelp += "   -hop   -hideOnPlayback       Bool       Wheter or not to hide the ctrl shapes on playback.\n";
+		strHelp += "   -h     -help                 N/A        Display this text.\n";
 		MGlobal::displayInfo(strHelp);
 		return MS::kSuccess;
 	}
@@ -237,6 +237,8 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 			indxShape = 6;
 		} else if (strShape == "line") {
 			indxShape = 7;
+		} else if (strShape == "none") {
+			indxShape = 8;
 		}	else {
 			indxShape = 0;
 		}
@@ -247,22 +249,22 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Draw Line Flag
-	if (argData.isFlagSet(drawTextFlagShort)) {
-		bDrawText = argData.flagArgumentBool(drawTextFlagShort, 0, &status);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-	}
-	// Draw Text Flag
 	if (argData.isFlagSet(drawLineFlagShort)) {
 		bDrawLine = argData.flagArgumentBool(drawLineFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
-	// Text Position Flag
-	if (argData.isFlagSet(textPositionFlagShort)) {
-		textPosition.x = argData.flagArgumentDouble(textPositionFlagShort, 0, &status);
+	// Draw Fk Ik State Flag
+	if (argData.isFlagSet(drawFkIkStateFlagShort)) {
+		bDrawFkIkState = argData.flagArgumentBool(drawFkIkStateFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
-		textPosition.y = argData.flagArgumentDouble(textPositionFlagShort, 1, &status);
+	}
+	// Fk Ik State Position Flag
+	if (argData.isFlagSet(fkIkStatePositionFlagShort)) {
+		fkIkStatePosition.x = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
-		textPosition.z = argData.flagArgumentDouble(textPositionFlagShort, 2, &status);
+		fkIkStatePosition.y = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 1, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		fkIkStatePosition.z = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 2, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	// Fill Transparency Flag
@@ -431,18 +433,19 @@ MStatus CtrlCommand::redoIt() {
 			MPlug plugDrawLine = shapeFn.findPlug("drawLine", false);
 			plugDrawLine.setValue(bDrawLine);
 
-			// Text
-			MPlug plugDrawText = shapeFn.findPlug("drawText", false);
-			plugDrawText.setValue(bDrawText);
-			MPlug plugTextPositionX = shapeFn.findPlug("textPositionX", false);
-			plugTextPositionX.setValue(textPosition.x);
-			MPlug plugTextPositionY = shapeFn.findPlug("textPositionY", false);
-			plugTextPositionY.setValue(textPosition.y);
-			MPlug plugTextPositionZ = shapeFn.findPlug("textPositionZ", false);
-			plugTextPositionZ.setValue(textPosition.z);
+			// Fk Ik State
+			MPlug plugDrawFkIkState = shapeFn.findPlug("drawFkIkState", false);
+			plugDrawFkIkState.setValue(bDrawFkIkState);
+			MPlug plugFkIkStatePosition = shapeFn.findPlug("fkIkStatePosition", false);
 
-			MPlug plugInFkIk = shapeFn.findPlug("inFkIk", false);
-			// plugTextPositionZ.setValue(textPosition.z);
+			MPlug plugFkIkStatePositionX = shapeFn.findPlug("fkIkStatePositionX", false);
+			plugFkIkStatePositionX.setValue(fkIkStatePosition.x);
+			MPlug plugFkIkStatePositionY = shapeFn.findPlug("fkIkStatePositionY", false);
+			plugFkIkStatePositionY.setValue(fkIkStatePosition.y);
+			MPlug plugFkIkStatePositionZ = shapeFn.findPlug("fkIkStatePositionZ", false);
+			plugFkIkStatePositionZ.setValue(fkIkStatePosition.z);
+
+			MPlug plugInFkIk = shapeFn.findPlug("fkIk", false);
 
 			MPlug plugFillTransparency = shapeFn.findPlug("fillTransparency", false);
 			plugFillTransparency.setValue(fillTransparency);
@@ -478,10 +481,10 @@ MStatus CtrlCommand::redoIt() {
 				LMAttribute::lockAndHideAttr(plugFillShape);
 				LMAttribute::lockAndHideAttr(plugDrawLine);
 
-				LMAttribute::lockAndHideAttr(plugDrawText);
-				LMAttribute::lockAndHideAttr(plugTextPositionX);
-				LMAttribute::lockAndHideAttr(plugTextPositionY);
-				LMAttribute::lockAndHideAttr(plugTextPositionZ);
+				LMAttribute::lockAndHideAttr(plugDrawFkIkState);
+				LMAttribute::lockAndHideAttr(plugFkIkStatePosition);
+				// LMAttribute::lockAndHideAttr(plugFkIkStatePositionY);
+				// LMAttribute::lockAndHideAttr(plugFkIkStatePositionZ);
 
 				LMAttribute::lockAndHideAttr(plugFillTransparency);
 				LMAttribute::lockAndHideAttr(plugLineWidth);

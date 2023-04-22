@@ -10,9 +10,7 @@ const MString Ctrl::drawDbClassification("drawdb/geometry/ctrl");
 const MString Ctrl::drawRegistrationId("ctrlNode");
 
 // Nodes' Input Attributes
-MObject Ctrl::localRotateX;
-MObject Ctrl::localRotateY;
-MObject Ctrl::localRotateZ;
+MObject Ctrl::localRotateX, Ctrl::localRotateY, Ctrl::localRotateZ, Ctrl::localRotate;
 
 MObject Ctrl::shapeAttr;
 MObject Ctrl::fillShapeAttr;
@@ -22,12 +20,10 @@ MObject Ctrl::lineWidthAttr;
 MObject Ctrl::attrInDrawLine;
 Attribute Ctrl::attrInDrawLineTo;
 
-MObject Ctrl::attrInDrawText;
-MObject Ctrl::attrInTextPositionX;
-MObject Ctrl::attrInTextPositionY;
-MObject Ctrl::attrInTextPositionZ;
+MObject Ctrl::attrInDrawFkIkState;
+MObject Ctrl::attrInFkIkPositionX, Ctrl::attrInFkIkPositionY, Ctrl::attrInFkIkPositionZ, Ctrl::attrInFkIkPosition;
 
-MObject Ctrl::attrInMode;
+MObject Ctrl::attrInFkIk;
 
 
 // Nodes's Output Attributes
@@ -51,20 +47,13 @@ MStatus Ctrl::initialize() {
 	MFnEnumAttribute eAttr;
 
 	localRotateX = uAttr.create("localRotateX", "lrX", MFnUnitAttribute::kAngle, 0.0);
-	uAttr.setStorable(true);
-	uAttr.setStorable(true);
-	uAttr.setKeyable(false);
-	uAttr.setChannelBox(true);
 	localRotateY = uAttr.create("localRotateY", "lrY", MFnUnitAttribute::kAngle, 0.0);
-	uAttr.setStorable(true);
-	uAttr.setStorable(true);
-	uAttr.setKeyable(false);
-	uAttr.setChannelBox(true);
 	localRotateZ = uAttr.create("localRotateZ", "lrZ", MFnUnitAttribute::kAngle, 0.0);
-	uAttr.setStorable(true);
-	uAttr.setStorable(true);
-	uAttr.setKeyable(false);
-	uAttr.setChannelBox(true);
+	localRotate = nAttr.create("localRotate", "lr", localRotateX, localRotateY, localRotateZ);
+	nAttr.setStorable(true);
+	nAttr.setStorable(true);
+	nAttr.setKeyable(false);
+	nAttr.setChannelBox(true);
 
 	shapeAttr = eAttr.create("shape", "shp");
 	eAttr.addField("Cube", 0);
@@ -75,7 +64,7 @@ MStatus Ctrl::initialize() {
 	eAttr.addField("Circle", 5);
 	eAttr.addField("Locator", 6);
 	eAttr.addField("Line", 7);
-	eAttr.addField("JointLine", 8);
+	eAttr.addField("None", 8);
 	eAttr.setKeyable(false);
 	eAttr.setStorable(true);
 	eAttr.setChannelBox(true);
@@ -109,41 +98,35 @@ MStatus Ctrl::initialize() {
 	nAttr.setChannelBox(true);
 
 
-	attrInDrawText = nAttr.create("drawText", "dt", MFnNumericData::kBoolean, false);
+	attrInDrawFkIkState = nAttr.create("drawFkIkState", "dfis", MFnNumericData::kBoolean, false);
 	nAttr.setStorable(true);
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
-	attrInTextPositionX = nAttr.create("textPositionX", "tpx", MFnNumericData::kDouble, 0.0);
-	nAttr.setStorable(true);
-	nAttr.setStorable(true);
-	nAttr.setKeyable(false);
-	nAttr.setChannelBox(true);
-	attrInTextPositionY = nAttr.create("textPositionY", "tpy", MFnNumericData::kDouble, 0.0);
-	nAttr.setStorable(true);
-	nAttr.setStorable(true);
-	nAttr.setKeyable(false);
-	nAttr.setChannelBox(true);
-	attrInTextPositionZ = nAttr.create("textPositionZ", "tpz", MFnNumericData::kDouble, 0.0);
+	attrInFkIkPositionX = nAttr.create("fkIkStatePositionX", "fispx", MFnNumericData::kDouble, 0.0);
+	attrInFkIkPositionY = nAttr.create("fkIkStatePositionY", "fispy", MFnNumericData::kDouble, 0.0);
+	attrInFkIkPositionZ = nAttr.create("fkIkStatePositionZ", "fispz", MFnNumericData::kDouble, 0.0);
+	attrInFkIkPosition = nAttr.create("fkIkStatePosition", "fisp", attrInFkIkPositionX, attrInFkIkPositionY, attrInFkIkPositionZ);
 	nAttr.setStorable(true);
 	nAttr.setStorable(true);
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
 
-	attrInMode = nAttr.create("inMode", "imod", MFnNumericData::kShort);
+	attrInFkIk = nAttr.create("fkIk", "fkIk", MFnNumericData::kDouble);
 	nAttr.setStorable(true);
 	nAttr.setKeyable(false);
 	nAttr.setChannelBox(true);
-
+	nAttr.setMin(0.0);
+	nAttr.setMax(100.0);
 
 
 	// Add attributes
 	addAttributes(
-		localRotateX, localRotateY, localRotateZ,
+		localRotate,
 		shapeAttr, fillShapeAttr, fillTransparencyAttr, lineWidthAttr,
-		attrInDrawLine, attrInDrawLineTo,	attrInDrawText,
-		attrInTextPositionX, attrInTextPositionY, attrInTextPositionZ,
-		attrInMode
+		attrInDrawLine, attrInDrawLineTo,
+		attrInDrawFkIkState, attrInFkIkPosition,
+		attrInFkIk
 	);
 
 	return MS::kSuccess;

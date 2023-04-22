@@ -46,9 +46,7 @@ public:
 	static const MString drawRegistrationId;
 
 	// Node's Input Attributes
-	static MObject localRotateX;
-	static MObject localRotateY;
-	static MObject localRotateZ;
+	static MObject localRotateX, localRotateY, localRotateZ, localRotate;
 
 	static MObject shapeAttr;
 	static MObject fillShapeAttr;
@@ -58,13 +56,11 @@ public:
 	static MObject attrInDrawLine;
 	static Attribute attrInDrawLineTo;
 
-	static MObject attrInDrawText;
-	static MObject attrInTextPositionX;
-	static MObject attrInTextPositionY;
-	static MObject attrInTextPositionZ;
+	static MObject attrInDrawFkIkState;
+	static MObject attrInFkIkPositionX, attrInFkIkPositionY, attrInFkIkPositionZ, attrInFkIkPosition;
 	static MObject attrInText;
 
-	static MObject attrInMode;
+	static MObject attrInFkIk;
 
 	MObject objSelf;
 	MDagPath pathSelf;

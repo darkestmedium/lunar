@@ -41,15 +41,18 @@ public:
 	MPointArray fTriangleList;
 	MPointArray listLine;
 
+	double fkIk;
 	bool fillShape;
 	bool bDrawline;
 	float lineWidth;
+	short shapeIndex;
 	MColor _wfColor;
 	MColor fillColor;
 
-	bool bDrawText;
-	MPoint posText;
-	MString strDrawText;
+	// Fk Ik state
+	bool bDrawFkIkState;
+	MPoint posFkIkState;
+	MString strFkIkState;
 
 	unsigned int DepthPriority;
 	bool DrawInXray;
@@ -58,6 +61,8 @@ public:
 	// CtrlData() : MUserData(false) {}; // Don't delete after draw
 	CtrlData()
 		: MUserData()
+		, fkIk(0.0)
+		, strFkIkState("fk")
 	{};  // Don't delete after draw
 
 	// Destructor

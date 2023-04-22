@@ -22,12 +22,12 @@ const char* IkCommand::ikHandleFlagLong = "-ikHandle";
 const char* IkCommand::poleVectorFlagShort = "-pv";
 const char* IkCommand::poleVectorFlagLong = "-poleVector";
 // Joints
-const char* IkCommand::jntStartFlagShort = "-jns";
-const char* IkCommand::jntStartFlagLong = "-jntStart";
-const char* IkCommand::jntMidFlagShort = "-jnm";
-const char* IkCommand::jntMidFlagLong = "-jntMid";
-const char* IkCommand::jntEndFlagShort = "-jne";
-const char* IkCommand::jntEndFlagLong = "-jntEnd";
+const char* IkCommand::outStartFlagShort = "-os";
+const char* IkCommand::outStartFlagLong = "-outStart";
+const char* IkCommand::outMidFlagShort = "-om";
+const char* IkCommand::outMidFlagLong = "-outMid";
+const char* IkCommand::outEndFlagShort = "-oe";
+const char* IkCommand::outEndFlagLong = "-outEnd";
 
 const char* IkCommand::modeFlagShort = "-mod";
 const char* IkCommand::modeFlagLong = "-mode";
@@ -57,9 +57,9 @@ MSyntax IkCommand::syntaxCreator() {
 	sytnax.addFlag(ikHandleFlagShort, ikHandleFlagLong, MSyntax::kString);
 	sytnax.addFlag(poleVectorFlagShort, poleVectorFlagLong, MSyntax::kString);
 
-	sytnax.addFlag(jntStartFlagShort, jntStartFlagLong, MSyntax::kString);
-	sytnax.addFlag(jntMidFlagShort, jntMidFlagLong, MSyntax::kString);
-	sytnax.addFlag(jntEndFlagShort, jntEndFlagLong, MSyntax::kString);
+	sytnax.addFlag(outStartFlagShort, outStartFlagLong, MSyntax::kString);
+	sytnax.addFlag(outMidFlagShort, outMidFlagLong, MSyntax::kString);
+	sytnax.addFlag(outEndFlagShort, outEndFlagLong, MSyntax::kString);
 
 	sytnax.addFlag(modeFlagShort, modeFlagLong, MSyntax::kString);
 
@@ -98,9 +98,9 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		helpStr += "   -fke   -fkEnd                String     Name of the fk end transform input.\n";
 		helpStr += "   -ikh   -ikHandle             String     Name of the ik handle transform input.\n";
 		helpStr += "   -pv    -poleVector           String     Name of the pole vector transform input (optional).\n";
-		helpStr += "   -jns   -jntStart             String     Name of the start joint input.\n";
-		helpStr += "   -jnm   -jntMid               String     Name of the mid joint input.\n";
-		helpStr += "   -jne   -jntEnd               String     Name of the end joint input.\n";
+		helpStr += "   -os    -outStart             String     Name of the start joint input.\n";
+		helpStr += "   -om    -outMid               String     Name of the mid joint input.\n";
+		helpStr += "   -oe    -outEnd               String     Name of the end joint input.\n";
 		helpStr += "   -mod   -mode                 String     Solver mode 'fk' or 'ik'.\n";
 		helpStr += "   -h     -help                 N/A        Display this text.\n";
 		MGlobal::displayInfo(helpStr);
@@ -172,35 +172,35 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 	}
 
 	// Joint Start Flag
-	if (argData.isFlagSet(jntStartFlagShort)) {
+	if (argData.isFlagSet(outStartFlagShort)) {
 		MDagPath dpJntStart;
-		status = LMObject::getDagPathFromString(argData.flagArgumentString(jntStartFlagShort, 0, &status), dpJntStart);
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(outStartFlagShort, 0, &status), dpJntStart);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		fnJntStart.setObject(dpJntStart);
 	} else {
-		MGlobal::displayError("jntStart flag is required.");
+		MGlobal::displayError("outStart flag is required.");
 		return MS::kFailure;
 	}
 
 	// Joint Mid Flag
-	if (argData.isFlagSet(jntMidFlagShort)) {
+	if (argData.isFlagSet(outMidFlagShort)) {
 		MDagPath dpJntMid;
-		status = LMObject::getDagPathFromString(argData.flagArgumentString(jntMidFlagShort, 0, &status), dpJntMid);
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(outMidFlagShort, 0, &status), dpJntMid);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		fnJntMid.setObject(dpJntMid);
 	} else {
-		MGlobal::displayError("jntMid flag is required.");
+		MGlobal::displayError("outMid flag is required.");
 		return MS::kFailure;
 	}
 
 	// Joint End Flag
-	if (argData.isFlagSet(jntEndFlagShort)) {
+	if (argData.isFlagSet(outEndFlagShort)) {
 		MDagPath dpJntEnd;
-		status = LMObject::getDagPathFromString(argData.flagArgumentString(jntEndFlagShort, 0, &status), dpJntEnd);
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(outEndFlagShort, 0, &status), dpJntEnd);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		fnJntEnd.setObject(dpJntEnd);
 	} else {
-		MGlobal::displayError("jntEnd flag is required.");
+		MGlobal::displayError("outEnd flag is required.");
 		return MS::kFailure;
 	}
 
@@ -209,10 +209,10 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		MString strMode = argData.flagArgumentString(modeFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		if (strMode == "fk") {
-			mode = 0;
+			mode = 0.0;
 		}
 		if (strMode == "ik") {
-			mode = 1;
+			mode = 100.0;
 		}
 	}
 
@@ -271,9 +271,9 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		MPlug plugInIkHandle = fnIk2bSolver.findPlug("ikHandle", false);
 		MPlug plugInPoleVector = fnIk2bSolver.findPlug("poleVector", false);
 
-		MPlug plugInJntStart = fnIk2bSolver.findPlug("jntStart", false);
-		MPlug plugInJntMid = fnIk2bSolver.findPlug("jntMid", false);
-		MPlug plugInJntEnd = fnIk2bSolver.findPlug("jntEnd", false);
+		MPlug plugInOutStart = fnIk2bSolver.findPlug("outStart", false);
+		MPlug plugInOutMid = fnIk2bSolver.findPlug("outMid", false);
+		MPlug plugInOutEnd = fnIk2bSolver.findPlug("outEnd", false);
 	
 		// Connect matrix plugs
 		modDg.connect(plugOutFkStartWorldMatrix0, plugInFkStart);
@@ -281,25 +281,25 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		modDg.connect(plugOutFkEndWorldMatrix0, plugInFkEnd);
 		modDg.connect(plugOutIkHandleWorldMatrix0, plugInIkHandle);
 
-		modDg.connect(plugOutJntStartWorldMatrix0, plugInJntStart);
-		modDg.connect(plugOutJntMidWorldMatrix0, plugInJntMid);
-		modDg.connect(plugOutJntEndWorldMatrix0, plugInJntEnd);
+		modDg.connect(plugOutJntStartWorldMatrix0, plugInOutStart);
+		modDg.connect(plugOutJntMidWorldMatrix0, plugInOutMid);
+		modDg.connect(plugOutJntEndWorldMatrix0, plugInOutEnd);
 
 		// Get rotation output plugs
-		MPlug plugOutStart = fnIk2bSolver.findPlug("outputStart", false);
-		MPlug plugOutMid = fnIk2bSolver.findPlug("outputMid", false);
-		MPlug plugOutEnd = fnIk2bSolver.findPlug("outputEnd", false);
+		MPlug plugOutRotStart = fnIk2bSolver.findPlug("rotateStart", false);
+		MPlug plugOutRotMid = fnIk2bSolver.findPlug("rotateMid", false);
+		MPlug plugOutRotEnd = fnIk2bSolver.findPlug("rotateEnd", false);
 
 		// Get joints rotation plugs
 		MPlug plugRotStart = fnJntStart.findPlug("rotate", false);
 		MPlug plugRotMid = fnJntMid.findPlug("rotate", false);
 		MPlug plugRotEnd = fnJntEnd.findPlug("rotate", false);
 
-		modDg.connect(plugOutStart, plugRotStart);
-		modDg.connect(plugOutMid, plugRotMid);
-		modDg.connect(plugOutEnd, plugRotEnd);
+		modDg.connect(plugOutRotStart, plugRotStart);
+		modDg.connect(plugOutRotMid, plugRotMid);
+		modDg.connect(plugOutRotEnd, plugRotEnd);
 	
-		MPlug plugOutUpdate = fnIk2bSolver.findPlug("outputUpdate", false);
+		MPlug plugOutUpdate = fnIk2bSolver.findPlug("update", false);
 		MPlug plugRotPivotX = fnJntStart.findPlug("rotatePivotX", false);
 		modDg.connect(plugOutUpdate, plugRotPivotX);
 
@@ -317,7 +317,7 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 			// modDg.connect(plugOutFkMidWorldMatrix0, plugPoleVectorDrawLineTo);
 		}
 
-		MPlug plugMode = fnIk2bSolver.findPlug("mode", false);
+		MPlug plugMode = fnIk2bSolver.findPlug("fkIk", false);
 		plugMode.setValue(mode);
 	
 		// // Connect time node
