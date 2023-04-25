@@ -151,7 +151,9 @@ def loadMocap() -> bool:
 		# If there are no new namspaces this means that mocap matches the rig so we can import onto 
 
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
-		sceneMetaData.setText(fiAnimFbx.fileName())
+		sceneMetaData.setText(fiAnimFbx.baseName())
+		# Temp override for array attributes
+		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
 	
 		# the export skeleton 
 		if not namespaceMocap:

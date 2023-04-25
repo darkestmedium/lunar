@@ -9,8 +9,9 @@ global proc AEmetaDataTemplate(string $nodeName) {
 	// Main layout
 	editorTemplate -beginScrollLayout;
 		
+		editorTemplate -addControl "metaData";
+	
 		editorTemplate -beginLayout "Meta Data Display" -collapse false;
-			editorTemplate -addControl "text";
 			editorTemplate -addControl "textPositionX";
 			editorTemplate -addControl "textPositionY";
 			editorTemplate -addControl "textSize";

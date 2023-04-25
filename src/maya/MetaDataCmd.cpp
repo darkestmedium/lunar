@@ -204,8 +204,10 @@ MStatus MetaDataCmd::redoIt() {
 
 		// SHAPE NODE
 		// Sets the plugs values based on the flag arguments
-		MPlug plugText(objShape, MetaDataNode::AttrText);
-		plugText.setValue(text);
+		MPlug plugMetaData(objShape, MetaDataNode::attrInMetaData);
+		// Get first plug in array
+		MPlug plugText0 = plugMetaData.elementByPhysicalIndex(0).child(0);
+		plugText0.setValue(text);
 
 		MPlug plugTextPositionX(objShape, MetaDataNode::AttrTextPositionX);
 		plugTextPositionX.setValue(textPosition.x);

@@ -16,9 +16,11 @@
 #include <maya/MDataHandle.h>
 #include <maya/MAnimControl.h>
 #include <maya/MDrawRegistry.h>
+#include <maya/MStringArray.h>
 
 // Function Sets
 #include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnNumericData.h>
 #include <maya/MFnNumericAttribute.h>
@@ -54,7 +56,8 @@ public:
 	static const MString drawRegistrationId;
 
 	// Node's Input Attributes
-	static MObject AttrText;
+	static MObject attrInMetaData;
+	static MObject attrInText;
 	static MObject AttrTextPositionX;
 	static MObject AttrTextPositionY;
 	static MObject AttrTextSize;
@@ -89,7 +92,12 @@ public:
 // User data
 class MetaDataNodeData : public MUserData {
 public:
-	MString Text;
+
+	// MPlug arrayMetaData;
+	unsigned int countMetaData;
+	
+	std::vector<MString> vectorText;
+
 	MPoint TextPosition;
 	int TextSize;
 	MColor TextColor;
@@ -100,6 +108,8 @@ public:
 	{};  // Don't delete after draw
 	// Destructor
 	virtual ~MetaDataNodeData() override {};
+
+	void getText(const MObject& obj);
 };
 
 

@@ -996,12 +996,12 @@ void CtrlData::getText(const MObject& obj) {
 	);
 	fkIk = MPlug(obj, Ctrl::attrInFkIk).asDouble();
 	if (fkIk == 0.0) {
-		strFkIkState = MString("fk");
+		strFkIkState = MString("Fk");
 	} else if (fkIk > 0.0 && fkIk < 100.0) {
 		MString strFkIk = LMText::doublePrecision(MPlug(obj, Ctrl::attrInFkIk).asDouble(), 0).c_str();
-		strFkIkState = MString("fk | ik " + strFkIk);
+		strFkIkState = MString("FkIk " + strFkIk);
 	} else if (fkIk == 100.0) {
-		strFkIkState = MString("ik");
+		strFkIkState = MString("Ik");
 	}
 }
  

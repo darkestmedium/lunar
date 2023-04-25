@@ -1733,7 +1733,7 @@ class LMLunarCtrl(LMHumanIk):
 
 	def setCtrlsIkToFk(self):
 
-		ctrlSwitch = self.returnNodeWithNameSpace("head_switch_ctrl")
+		ctrlSwitch = self.returnNodeWithNameSpace("fkik_ctrl")
 		cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
 		cmds.setAttr(f"{ctrlSwitch}.headTwist", 0)
 

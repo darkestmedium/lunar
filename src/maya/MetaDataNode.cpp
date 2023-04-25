@@ -8,7 +8,9 @@ const MString MetaDataNode::drawDbClassification = "drawdb/geometry/metaData";
 const MString MetaDataNode::drawRegistrationId = "metaDataNode";
 
 // Node's Input Attributes
-MObject MetaDataNode::AttrText;
+MObject MetaDataNode::attrInMetaData;
+MObject MetaDataNode::attrInText;
+
 MObject MetaDataNode::AttrTextPositionX;
 MObject MetaDataNode::AttrTextPositionY;
 MObject MetaDataNode::AttrTextSize;
@@ -19,42 +21,53 @@ MObject MetaDataNode::AttrOutUpdate;
 
 
 
+
 MStatus MetaDataNode::initialize() {
 	MStatus status;
 	MFnTypedAttribute AttrTyped;
-	MFnNumericAttribute AttrNum;
+	MFnNumericAttribute attrNum;
 	MFnMatrixAttribute mAttr;
 	MFnUnitAttribute uAttr;
+	MFnCompoundAttribute cAttr;
 
 	// Node's Input Attributes
-	AttrText = AttrTyped.create("text", "txt", MFnData::kString);
-	AttrNum.setKeyable(false);
-	AttrNum.setReadable(false);
 
-	AttrTextPositionX = AttrNum.create("textPositionX", "tpX", MFnNumericData::kInt, 50);
-	AttrNum.setKeyable(false);
-	AttrNum.setChannelBox(true);
-	AttrNum.setStorable(true);
-	AttrNum.setWritable(true);
-	AttrNum.setMin(0);
-	AttrTextPositionY = AttrNum.create("textPositionY", "tpY", MFnNumericData::kInt, 50);
-	AttrNum.setKeyable(false);
-	AttrNum.setChannelBox(true);
-	AttrNum.setStorable(true);
-	AttrNum.setWritable(true);
-	AttrNum.setMin(0);
-	AttrTextSize = AttrNum.create("textSize", "txts", MFnNumericData::kInt, 12);
-	AttrNum.setKeyable(false);
-	AttrNum.setChannelBox(true);
-	AttrNum.setStorable(true);
-	AttrNum.setWritable(true);
-	AttrNum.setMin(9);
-	AttrNum.setMax(32);
 
-	AttrTextColor = AttrNum.createColor("textColor", "tcol");
-	AttrNum.setDefault(2.0f, 2.0f, 2.0f);
+	/* metaData:
+	-- metaData
+		 | -- text
+	*/
+	attrInText = AttrTyped.create("text", "txt", MFnData::kString);
+	attrInMetaData = cAttr.create("metaData", "mdat");
+	cAttr.addChild(attrInText);
+	cAttr.setArray(true);
+	attrNum.setKeyable(false);
+	attrNum.setReadable(false);
 
-	addAttributes(AttrText,	AttrTextPositionX, AttrTextPositionY,	AttrTextSize,	AttrTextColor);
+	AttrTextPositionX = attrNum.create("textPositionX", "tpX", MFnNumericData::kInt, 50);
+	attrNum.setKeyable(false);
+	attrNum.setChannelBox(true);
+	attrNum.setStorable(true);
+	attrNum.setWritable(true);
+	attrNum.setMin(0);
+	AttrTextPositionY = attrNum.create("textPositionY", "tpY", MFnNumericData::kInt, 50);
+	attrNum.setKeyable(false);
+	attrNum.setChannelBox(true);
+	attrNum.setStorable(true);
+	attrNum.setWritable(true);
+	attrNum.setMin(0);
+	AttrTextSize = attrNum.create("textSize", "txts", MFnNumericData::kInt, 12);
+	attrNum.setKeyable(false);
+	attrNum.setChannelBox(true);
+	attrNum.setStorable(true);
+	attrNum.setWritable(true);
+	attrNum.setMin(9);
+	attrNum.setMax(22);
+
+	AttrTextColor = attrNum.createColor("textColor", "tcol");
+	attrNum.setDefault(2.0f, 2.0f, 2.0f);
+
+	addAttributes(attrInMetaData,	AttrTextPositionX, AttrTextPositionY,	AttrTextSize,	AttrTextColor);
 
 	return MS::kSuccess;
 }
@@ -116,6 +129,22 @@ void MetaDataNode::postConstructor() {
 }
 
 
+void MetaDataNodeData::getText(const MObject& obj) {
+	/*Gets the string array from metaData attribute
+	*/
+
+	MPlug arrayMetaData = MPlug(obj, MetaDataNode::attrInMetaData);
+	countMetaData = arrayMetaData.numElements();
+	vectorText.clear();
+	if (countMetaData > 0) {
+		for (unsigned int i = 0; i < countMetaData; ++i) {
+			vectorText.push_back(arrayMetaData.elementByPhysicalIndex(i).child(0).asString());
+		}
+		std::reverse(vectorText.begin(), vectorText.end());
+	}
+}
+
+
 MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) {
 	/* Called by Maya whenever the object is dirty and needs to update for draw.
 
@@ -158,13 +187,14 @@ MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, con
 	MObject ObjNode = objPath.node(&status);
 
 	if (!data) {data=new MetaDataNodeData;}
-	
-	data->Text = MPlug(ObjNode, MetaDataNode::AttrText).asString();
+
+	data->getText(ObjNode);
+
+	data->TextSize = MPlug(ObjNode, MetaDataNode::AttrTextSize).asInt();
 	data->TextPosition = MPoint(
 		MPlug(ObjNode, MetaDataNode::AttrTextPositionX).asInt(),
-		MPlug(ObjNode, MetaDataNode::AttrTextPositionY).asInt()
+		MPlug(ObjNode, MetaDataNode::AttrTextPositionY).asInt() - 20
 	);
-	data->TextSize = MPlug(ObjNode, MetaDataNode::AttrTextSize).asInt();
 	MPlug PlugColor(ObjNode, MetaDataNode::AttrTextColor);
 	data->TextColor = MColor(
 		PlugColor.child(0).asFloat(),
@@ -200,11 +230,16 @@ void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender
 	drawManager.setColor(pMetaDataNodeData->TextColor);
 	drawManager.setFontSize(pMetaDataNodeData->TextSize);
 
-	drawManager.text2d(
-		pMetaDataNodeData->TextPosition,
-		pMetaDataNodeData->Text,
-		MUIDrawManager::kLeft
-	);
+	// Render text if string array is not empty
+	if (pMetaDataNodeData->countMetaData > 0 ) {
+		for (unsigned int i = 0; i < pMetaDataNodeData->countMetaData; ++i) {
+			drawManager.text2d(
+				pMetaDataNodeData->TextPosition += MPoint(0, 20, 0),
+				pMetaDataNodeData->vectorText[i],
+				MUIDrawManager::kLeft
+			);
+		}
+	}
 
 	drawManager.endDrawable();
 }

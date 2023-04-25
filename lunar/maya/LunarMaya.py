@@ -18,6 +18,7 @@ from lunar.abstract.fbx import AbstractFbx
 
 
 
+
 class LMFbx(AbstractFbx):
 	"""Maya Fbx class, inherited from AbstractFbx.
 
@@ -534,7 +535,7 @@ class LMScene():
 
 	"""
 
-	log = logging.getLogger("MScene")
+	log = logging.getLogger("LMScene")
 
 	@classmethod
 	def getNamespaces(cls) -> list:
@@ -587,7 +588,7 @@ class LMMetaData():
 	def __init__(self,
 		name:str="sceneMetaData",
 		text:str="untitled",
-		textPosition:tuple=(100, 100),
+		textPosition:tuple=(50, 50),
 		textColor:tuple=(2.0, 2.0, 2.0),
 		textVisibility:bool=True,
 	):
@@ -616,11 +617,14 @@ class LMMetaData():
 
 		self.transfom, self.shape = cmds.metaData(
 			name=self.name,
-			text=self.text,
+			# text=self.text,
 			textPosition=self.textPosition,
 			textColor=self.textColor,
 			textVisibility=self.textVisibility,
 		)
+		# Temp override for array attributes
+		cmds.setAttr(f"{self.shape}.metaData[0].text", self.text, type="string")
+
 		self.name = self.transfom
 		self.log.info(f"Initiated from a new object")
 
@@ -648,22 +652,22 @@ class LMMetaData():
 
 
 	def setText(self, text:str):
-		cmds.setAttr(f"{self.name}.text", text, type="string")
+		cmds.setAttr(f"{self.shape}.metaData[0].text", text, type="string")
 
 
 	def setTextPosition(self, value:tuple):
-		cmds.setAttr(f"{self.name}.textPositionX", value[0])
-		cmds.setAttr(f"{self.name}.textPositionY", value[1])
+		cmds.setAttr(f"{self.shape}.textPositionX", value[0])
+		cmds.setAttr(f"{self.shape}.textPositionY", value[1])
 
 
 	def setTextColor(self, value:tuple):
-		cmds.setAttr(f"{self.name}.textColorR", value[0])
-		cmds.setAttr(f"{self.name}.textColorG", value[1])
-		cmds.setAttr(f"{self.name}.textColorB", value[2])
+		cmds.setAttr(f"{self.shape}.textColorR", value[0])
+		cmds.setAttr(f"{self.shape}.textColorG", value[1])
+		cmds.setAttr(f"{self.shape}.textColorB", value[2])
 
 
 	def getText(self):
-		return cmds.getAttr(f"{self.name}.text")
+		return cmds.getAttr(f"{self.shape}.metaData[0].text")
 
 
 
@@ -787,7 +791,6 @@ class LMAttribute():
 		return attrName
 
 
-	
 	@classmethod
 	def lockControlChannels(cls, object:str, lockChannels:list):
 		"""Locks the given attributes.
@@ -799,7 +802,39 @@ class LMAttribute():
 					[singleAttributeLockList.append(f"{lockChannel}{axis}") for axis in ["X", "Y", "Z"]]
 				else:
 					singleAttributeLockList.append(lockChannel)
-			[cmds.setAttr(f"{object}.{attr}", lock=True, keyable=False, channelBox=False) for attr in singleAttributeLockList]
+			[cmds.setAttr(f"{object}.{attr}", channelBox=False, keyable=False, lock=True) for attr in singleAttributeLockList]
+
+
+	@classmethod
+	def lockControlPlugs(cls, object:str, lockChannels:list):
+		"""Locks the given attributes.
+		"""
+		mObj = LMObject.getObjFromString(object)
+		fnObj = om.MFnDependencyNode(mObj)
+
+		if lockChannels != []:
+			singleAttributeLockList = []
+			for channel in lockChannels:
+				if channel in ["translate", "rotate", "scale"]:
+					[singleAttributeLockList.append(f"{channel}{axis}") for axis in ["X", "Y", "Z"]]
+				else:
+					singleAttributeLockList.append(channel)
+
+			for attr in singleAttributeLockList:
+				plug = fnObj.findPlug(attr, False)
+				plug.setKeyable(False)
+				plug.setChannelBox(False)
+				plug.setLocked(True)
+			# [cmds.setAttr(f"{object}.{attr}", lock=True, keyable=False, channelBox=False) for attr in singleAttributeLockList]
+
+
+
+
+	@classmethod
+	def lockTransforms(cls, object:str, lockChannels:list=["translate", "rotate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"]):
+		"""Locks all transform attributes on the given object.
+		"""
+		cls.lockControlChannels(object, lockChannels)
 
 
 	@classmethod
@@ -816,7 +851,6 @@ class LMAttribute():
 		cls.unlockIfLocked(name)
 		cmds.setAttr(name, value)
 		if relock: cmds.setAttr(name, lock=True)
-
 
 
 	@classmethod
@@ -857,7 +891,6 @@ class LMTransformUtils():
 		# Get child obj
 		if cmds.objExists(source) and type(source) != "NoneType":
 			target = cmds.listRelatives(source, children=True, type="transform")
-			# print(target)
 			if target == None:
 				return False
 			else:
@@ -880,7 +913,6 @@ class LMTransformUtils():
 		if skinMatrixAttr:
 			cmds.connectAttr(f"{destination}{worldMatrix0Attr}", f"{skinMatrixAttr}", force=True)
 		
-	
 
 	@classmethod
 	def postCtrlTransform(cls, listJoint:dict, side:str=""):
