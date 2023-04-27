@@ -154,6 +154,7 @@ def loadMocap() -> bool:
 		sceneMetaData.setText(fiAnimFbx.baseName())
 		# Temp override for array attributes
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
+		cmds.setAttr(f"{sceneMetaData.shape}.metaData[0].displayInViewport", True)
 	
 		# the export skeleton 
 		if not namespaceMocap:
@@ -186,8 +187,9 @@ def exportAnimation(exportAs=False):
 		if strFilePath != None:
 			FiAnimFbx = qtc.QFileInfo(strFilePath[0])
 			# Source and bake to export skeleton
-			exportSkeleton.setSourceAndBake(ctrlRig, rootMotion=True)
-			exportSkeleton.exportAnimation(FiAnimFbx.filePath())
+			exportSkeleton.setSourceAndBakeLunarOut(ctrlRig, FiAnimFbx.filePath())
+			# exportSkeleton.setSourceAndBake(ctrlRig, rootMotion=True)
+			# exportSkeleton.exportAnimation(FiAnimFbx.filePath())
 			return True
 
 		cmds.warning("Operation was cancelled.")

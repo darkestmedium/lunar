@@ -10,6 +10,7 @@ const MString MetaDataNode::drawRegistrationId = "metaDataNode";
 // Node's Input Attributes
 MObject MetaDataNode::attrInMetaData;
 MObject MetaDataNode::attrInText;
+MObject MetaDataNode::attrInDisplayInViewport;
 
 MObject MetaDataNode::AttrTextPositionX;
 MObject MetaDataNode::AttrTextPositionY;
@@ -32,17 +33,18 @@ MStatus MetaDataNode::initialize() {
 
 	// Node's Input Attributes
 
-
 	/* metaData:
 	-- metaData
 		 | -- text
 	*/
 	attrInText = AttrTyped.create("text", "txt", MFnData::kString);
+	attrInDisplayInViewport = attrNum.create("displayInViewport", "divp", MFnNumericData::kBoolean);
 	attrInMetaData = cAttr.create("metaData", "mdat");
 	cAttr.addChild(attrInText);
+	cAttr.addChild(attrInDisplayInViewport);
 	cAttr.setArray(true);
-	attrNum.setKeyable(false);
-	attrNum.setReadable(false);
+	cAttr.setKeyable(false);
+	cAttr.setReadable(false);
 
 	AttrTextPositionX = attrNum.create("textPositionX", "tpX", MFnNumericData::kInt, 50);
 	attrNum.setKeyable(false);
@@ -138,7 +140,10 @@ void MetaDataNodeData::getText(const MObject& obj) {
 	vectorText.clear();
 	if (countMetaData > 0) {
 		for (unsigned int i = 0; i < countMetaData; ++i) {
-			vectorText.push_back(arrayMetaData.elementByPhysicalIndex(i).child(0).asString());
+			bool displayText = arrayMetaData.elementByPhysicalIndex(i).child(1).asBool();
+			if (displayText) {
+				vectorText.push_back(arrayMetaData.elementByPhysicalIndex(i).child(0).asString());
+			}
 		}
 		std::reverse(vectorText.begin(), vectorText.end());
 	}
@@ -231,8 +236,8 @@ void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender
 	drawManager.setFontSize(pMetaDataNodeData->TextSize);
 
 	// Render text if string array is not empty
-	if (pMetaDataNodeData->countMetaData > 0 ) {
-		for (unsigned int i = 0; i < pMetaDataNodeData->countMetaData; ++i) {
+	if (pMetaDataNodeData->vectorText.size() > 0 ) {
+		for (unsigned int i = 0; i < pMetaDataNodeData->vectorText.size(); ++i) {
 			drawManager.text2d(
 				pMetaDataNodeData->TextPosition += MPoint(0, 20, 0),
 				pMetaDataNodeData->vectorText[i],

@@ -1920,6 +1920,157 @@ class LMLunarExport(LMMannequinUe5):
 	
 	# ModDg = om.MDGModifier()
 
+	def setSourceAndBakeLunarOut(self, source, filePath):
+		"""Bakes anim from the lunar out controls.
+
+		Temp workaround hik limitations
+
+		"""
+		# Get target namespace
+		# targetNamespace = self.extractNameSpace(source)
+		# currentNameSpace = self.extractNameSpace(self.name)
+		tarns = f"{source.nameSpace}:"
+		srcns = f"{self.nameSpace}:"
+		# Construct list for constraints
+		listConstraints= []
+
+		# turn off autokey if it is enabled to - prevent setting keys while setting apose
+		stateAutoKey = oma.MAnimControl.autoKeyMode()
+		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
+
+		# setAPoses
+		source.setAPose()
+		self.setAPose()
+		# connect constraints
+		listConstraints.append(cmds.parentConstraint(f"{tarns}root_ctrl", f"{srcns}root", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pelvis_ctrl", f"{srcns}pelvis", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_01_ctrl", f"{srcns}spine_01", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_02_ctrl", f"{srcns}spine_02", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_03_ctrl", f"{srcns}spine_03", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_04_ctrl", f"{srcns}spine_04", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_05_ctrl", f"{srcns}spine_05", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}neck_01_out", f"{srcns}neck_01", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}neck_02_out", f"{srcns}neck_02", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}head_out", f"{srcns}head", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_l_ctrl", f"{srcns}clavicle_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_l_out", f"{srcns}upperarm_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_l_ctrl", f"{srcns}upperarm_twist_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_l_ctrl", f"{srcns}upperarm_twist_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_l_out", f"{srcns}lowerarm_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_l_ctrl", f"{srcns}lowerarm_twist_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_l_ctrl", f"{srcns}lowerarm_twist_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}hand_l_out", f"{srcns}hand_l",  maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_l_ctrl", f"{srcns}thumb_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_l_ctrl", f"{srcns}thumb_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_l_ctrl", f"{srcns}thumb_03_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_l_ctrl", f"{srcns}index_metacarpal_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_l_ctrl", f"{srcns}index_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_l_ctrl", f"{srcns}index_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_l_ctrl", f"{srcns}index_03_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_l_ctrl", f"{srcns}middle_metacarpal_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_l_ctrl", f"{srcns}middle_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_l_ctrl", f"{srcns}middle_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_l_ctrl", f"{srcns}middle_03_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_l_ctrl", f"{srcns}pinky_metacarpal_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_l_ctrl", f"{srcns}pinky_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_l_ctrl", f"{srcns}pinky_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_l_ctrl", f"{srcns}pinky_03_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_l_ctrl", f"{srcns}ring_metacarpal_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_l_ctrl", f"{srcns}ring_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_l_ctrl", f"{srcns}ring_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_l_ctrl", f"{srcns}ring_03_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_r_ctrl", f"{srcns}clavicle_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_r_out", f"{srcns}upperarm_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_r_ctrl", f"{srcns}upperarm_twist_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_r_ctrl", f"{srcns}upperarm_twist_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_r_out", f"{srcns}lowerarm_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_r_ctrl", f"{srcns}lowerarm_twist_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_r_ctrl", f"{srcns}lowerarm_twist_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}hand_r_out", f"{srcns}hand_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_r_ctrl", f"{srcns}thumb_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_r_ctrl", f"{srcns}thumb_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_r_ctrl", f"{srcns}thumb_03_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_r_ctrl", f"{srcns}index_metacarpal_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_r_ctrl", f"{srcns}index_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_r_ctrl", f"{srcns}index_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_r_ctrl", f"{srcns}index_03_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_r_ctrl", f"{srcns}middle_metacarpal_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_r_ctrl", f"{srcns}middle_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_r_ctrl", f"{srcns}middle_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_r_ctrl", f"{srcns}middle_03_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_r_ctrl", f"{srcns}pinky_metacarpal_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_r_ctrl", f"{srcns}pinky_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_r_ctrl", f"{srcns}pinky_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_r_ctrl", f"{srcns}pinky_03_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_r_ctrl", f"{srcns}ring_metacarpal_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_r_ctrl", f"{srcns}ring_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_r_ctrl", f"{srcns}ring_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_r_ctrl", f"{srcns}ring_03_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_l_out", f"{srcns}thigh_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_l_ctrl", f"{srcns}thigh_twist_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_l_ctrl", f"{srcns}thigh_twist_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_l_out", f"{srcns}calf_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_l_ctrl", f"{srcns}calf_twist_01_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_l_ctrl", f"{srcns}calf_twist_02_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}foot_l_out", f"{srcns}foot_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ball_l_ctrl", f"{srcns}ball_l", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_r_out", f"{srcns}thigh_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_r_ctrl", f"{srcns}thigh_twist_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_r_ctrl", f"{srcns}thigh_twist_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_r_out", f"{srcns}calf_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_r_ctrl", f"{srcns}calf_twist_01_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_r_ctrl", f"{srcns}calf_twist_02_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}foot_r_out", f"{srcns}foot_r", maintainOffset=True))
+		listConstraints.append(cmds.parentConstraint(f"{tarns}ball_r_ctrl", f"{srcns}ball_r", maintainOffset=True))
+
+		# bake
+		self.bakeAnimationLunarOut()
+		# # remove constraints
+		[cmds.delete(obj) for obj in listConstraints]
+		# # export
+		self.exportAnimation(filePath)
+
+		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
+
+
+	def bakeAnimationLunarOut(self, startFrame=None, endFrame=None) -> bool:
+		"""Bakes the animation of characterized nodes.
+
+		Args:
+			startFrame (int): First frame, if none it will query the timesliders start frame.
+			endFrame (int): Last frame, if none it will query the timesliders end frame.
+			oversamplingRate (int): Number of frames in between full frames, use for upresing the animation
+				from 30 to 60 fps.
+
+		Returns:
+			bool: True if the operation was successful, False if an	error occured during the operation.
+
+		"""
+		if self.isValid():
+			nodes = self.getCharacterNodes()
+			nodes.append(self.rootMotion)
+
+			if len(nodes) >= len(self.minimalDefinition):
+
+				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
+				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
+
+				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
+				self.filterRotations(nodes)
+
+				# self.cleanUpPairBlendNodes()
+				# if self.rootCnst: cmds.delete(self.rootCnst)
+
+				# if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
+				# 	cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
+
+				# self.setSource("None")
+
+				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
+				return True
+
+		return False
+
 
 	def exportAnimation(self, filePath, startFrame=None, endFrame=None, bake=False) -> bool:
 		"""Exports the animation to the specified path.

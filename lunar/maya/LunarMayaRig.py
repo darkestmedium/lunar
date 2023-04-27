@@ -865,7 +865,7 @@ class Out2bLimbComponent():
 
 	def __init__(self, 
 	  	parent:str, start:str, mid:str, end:str, root:str=None,
-		  
+			# upperTwist1:str=None, upperTwis2:str=None, lowerTwist1:str=None lowerTwist2:str=None, 
 			drawFkIkState:bool=True, fkIkStatePosition:tuple=(0.0, 0.0, 0.0),
 			side:str="center"
 		) -> None:
@@ -1288,11 +1288,11 @@ class OutArmComponent():
 
 
 	def getMainCtrls(self):
-		return (self.CtrlShoulder, self.CtrlArm,	self.CtrlForeArm, self.CtrlHand)
+		return (self.CtrlArm,	self.CtrlForeArm, self.CtrlHand)
 	
 
-	# def getRollCtrls(self):
-	# 	return (self.CtrlArmRoll1,  self.CtrlArmRoll2, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2)
+	def getRollCtrls(self):
+		return (self.CtrlArmRoll1,  self.CtrlArmRoll2, self.CtrlForeArmRoll1, self.CtrlForeArmRoll2)
 
 
 
@@ -1312,7 +1312,6 @@ class Ik2bLimbComponent():
 	  name:str, parent:str, rotateTo:str, 
 		fkStart:str, fkMid:str, fkEnd:str,
 		outStart:str, outMid:str, outEnd:str,
-		upperTwist1:str, upperTwis2:str, lowerTwist1:str, lowerTwist2:str, 
 		poleVector:str="",
 		side:str="left", mode:str="ik",
 		) -> None:

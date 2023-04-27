@@ -624,6 +624,7 @@ class LMMetaData():
 		)
 		# Temp override for array attributes
 		cmds.setAttr(f"{self.shape}.metaData[0].text", self.text, type="string")
+		cmds.setAttr(f"{self.shape}.metaData[0].displayInViewport", True)
 
 		self.name = self.transfom
 		self.log.info(f"Initiated from a new object")
@@ -653,6 +654,7 @@ class LMMetaData():
 
 	def setText(self, text:str):
 		cmds.setAttr(f"{self.shape}.metaData[0].text", text, type="string")
+		cmds.setAttr(f"{self.shape}.metaData[0].displayInViewport", True)
 
 
 	def setTextPosition(self, value:tuple):

@@ -58,6 +58,8 @@ public:
 	// Node's Input Attributes
 	static MObject attrInMetaData;
 	static MObject attrInText;
+	static MObject attrInDisplayInViewport;
+
 	static MObject AttrTextPositionX;
 	static MObject AttrTextPositionY;
 	static MObject AttrTextSize;
