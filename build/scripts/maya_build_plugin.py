@@ -90,21 +90,23 @@ class LMBuildPlugin():
 				isAppRunning = True
 			else:
 				print(f"Launching {self.mayaName}")
-				subprocess.run(['open', '-a', 'maya'])
+				if self.namePlatform == "Darwin": 
+					subprocess.run([f"/Applications/Autodesk/maya{self.mayaVersion}/Maya.app/Contents/bin/maya"])
+				# subprocess.run([f"maya{self.mayaVersion}"])
 
 
 	@classmethod
 	def getPlatformData(cls):
-		namePlatform = platform.system()
-		if namePlatform == "Darwin": 
+		cls.namePlatform = platform.system()
+		if cls.namePlatform == "Darwin": 
 			cls.nameOs = "macos"
 			cls.generator = "Unix Makefiles"
 			cls.pluginExt = ".bundle"
-		if namePlatform == "Linux": 
+		if cls.namePlatform == "Linux": 
 			cls.nameOs = "linux"
 			cls.generator = "Unix Makefiles"
 			cls.pluginExt = ".so"
-		if namePlatform == "Windows": 
+		if cls.namePlatform == "Windows": 
 			cls.nameOs = "windows"
 			cls.generator = "Visual Studio 17 2022"
 			cls.pluginExt = ".mll"

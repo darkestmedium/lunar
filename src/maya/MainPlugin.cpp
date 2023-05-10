@@ -15,9 +15,11 @@
 
 
 // Callback variables
+static MCallbackIdArray callbackIds;
 static MCallbackId afterNewCallbackId;
 static MCallbackId afterOpenCallbackId;
-static MCallbackIdArray callbackIds;
+
+static MCallbackId afterSaveSetMetaDataNodeCbId;
 
 
 
@@ -25,6 +27,12 @@ void setMelConfig(void*) {
 	/* Sets the selection priority for locators to 999. */
 	MGlobal::executeCommandOnIdle("cycleCheck -e 0");
 	MGlobal::executeCommandOnIdle("selectPriority -locator 999");
+}
+
+static void onSceneSaved(void* clientData) {
+
+	MGlobal::executePythonCommandOnIdle("import lunar.maya.LunarMaya as lm");
+	MGlobal::executePythonCommandOnIdle("lm.LMMetaData().setFromSceneName()");
 }
 
 
@@ -133,6 +141,10 @@ MStatus initializePlugin(MObject obj) {
 		afterNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterNew, setMelConfig, NULL, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		callbackIds.append(afterNewCallbackId);
+
+		afterSaveSetMetaDataNodeCbId = MSceneMessage::addCallback(MSceneMessage::kAfterSave, onSceneSaved, NULL, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		callbackIds.append(afterSaveSetMetaDataNodeCbId);
 
 		afterOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, setMelConfig, NULL, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);

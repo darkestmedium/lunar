@@ -585,6 +585,9 @@ class LMScene():
 class LMMetaData():
 	"""Wrapper class for the metaData node.
 	"""
+
+	# log = logging.getLogger("LMMetaData")
+
 	def __init__(self,
 		name:str="sceneMetaData",
 		text:str="untitled",
@@ -602,7 +605,7 @@ class LMMetaData():
 
 		self.validate()
 
-		self.text = self.getText()
+		# self.text = self.getText()
 
 
 	def validate(self) -> bool:
@@ -636,7 +639,7 @@ class LMMetaData():
 
 		if self.objOfTypeExists(self.name, "transform"):
 			self.transfom = self.name
-			self.shape = cmds.listRelatives(self.transfom, shapes=True)
+			self.shape = cmds.listRelatives(self.transfom, shapes=True)[0]
 			if self.shape:
 				if self.objOfTypeExists(self.shape, "metaData"):
 					return True
@@ -645,9 +648,9 @@ class LMMetaData():
 
 
 	def objOfTypeExists(self, object:str, type:str) -> bool:
-		if cmds.objExists(object):
-			if cmds.objectType(object) == type:
-				return True
+
+		if cmds.objExists(object) and cmds.objectType(object) == type:
+			return True
 
 		return False
 
@@ -671,6 +674,10 @@ class LMMetaData():
 	def getText(self):
 		return cmds.getAttr(f"{self.shape}.metaData[0].text")
 
+
+	def setFromSceneName(self):
+		cmds.setAttr(f"{self.shape}.metaData[0].text", cmds.file(query=True, sceneName=True, shortName=True), type="string")
+		
 
 
 

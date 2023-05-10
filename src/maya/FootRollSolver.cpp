@@ -106,7 +106,7 @@ bool FootRollSolver::isPassiveOutput(const MPlug& plug) const {
 		bool: Wheter or not he specified plug is passive - true indicates passive.
 
 	*/
-	if (plug == attrOutUpdate) 	{
+	if (plug == attrOutUpdate) {
 		return true;
 	}
 	return MPxNode::isPassiveOutput(plug);
@@ -238,7 +238,7 @@ MStatus FootRollSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	status = updateOutput(plug, dataBlock);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	// Cache time change
+	// Cache position and time
 	timeCached = timeCurrent;
 
 	return MS::kSuccess;

@@ -26,7 +26,6 @@ MObject Ik2bSolver::attrOutEndX, Ik2bSolver::attrOutEndY, Ik2bSolver::attrOutEnd
 MObject Ik2bSolver::attrOutFkVisibility;
 MObject Ik2bSolver::attrOutIkVisibility;
 
-
 Attribute Ik2bSolver::attrInJntStart;
 Attribute Ik2bSolver::attrInJntMid;
 Attribute Ik2bSolver::attrInJntEnd;
