@@ -43,6 +43,7 @@ MStatus MetaDataNode::initialize() {
 	cAttr.addChild(attrInText);
 	cAttr.addChild(attrInDisplayInViewport);
 	cAttr.setArray(true);
+	cAttr.setStorable(true);
 	cAttr.setKeyable(false);
 	cAttr.setReadable(false);
 

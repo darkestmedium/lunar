@@ -18,7 +18,6 @@ from lunar.abstract.fbx import AbstractFbx
 
 
 
-
 class LMFbx(AbstractFbx):
 	"""Maya Fbx class, inherited from AbstractFbx.
 
@@ -590,7 +589,7 @@ class LMMetaData():
 
 	def __init__(self,
 		name:str="sceneMetaData",
-		text:str="untitled",
+		text:str="",
 		textPosition:tuple=(50, 50),
 		textColor:tuple=(2.0, 2.0, 2.0),
 		textVisibility:bool=True,
@@ -605,7 +604,7 @@ class LMMetaData():
 
 		self.validate()
 
-		# self.text = self.getText()
+		self.text = self.getText()
 
 
 	def validate(self) -> bool:
@@ -620,7 +619,7 @@ class LMMetaData():
 
 		self.transfom, self.shape = cmds.metaData(
 			name=self.name,
-			# text=self.text,
+			# text=self.text, // this is not implemented in the cpp part due to compound array attrs
 			textPosition=self.textPosition,
 			textColor=self.textColor,
 			textVisibility=self.textVisibility,
@@ -633,7 +632,7 @@ class LMMetaData():
 		self.log.info(f"Initiated from a new object")
 
 		return True
-			
+
 
 	def isValid(self) -> bool:
 
@@ -643,7 +642,7 @@ class LMMetaData():
 			if self.shape:
 				if self.objOfTypeExists(self.shape, "metaData"):
 					return True
-				
+
 		return False
 
 

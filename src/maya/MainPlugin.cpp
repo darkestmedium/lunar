@@ -31,8 +31,9 @@ void setMelConfig(void*) {
 
 static void onSceneSaved(void* clientData) {
 
-	MGlobal::executePythonCommandOnIdle("import lunar.maya.LunarMaya as lm");
-	MGlobal::executePythonCommandOnIdle("lm.LMMetaData().setFromSceneName()");
+	MGlobal::executePythonCommand("import lunar.maya.LunarMaya as lm");
+	MGlobal::executePythonCommand("lm.LMMetaData().setFromSceneName()");
+
 }
 
 
@@ -142,13 +143,13 @@ MStatus initializePlugin(MObject obj) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		callbackIds.append(afterNewCallbackId);
 
-		afterSaveSetMetaDataNodeCbId = MSceneMessage::addCallback(MSceneMessage::kAfterSave, onSceneSaved, NULL, &status);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-		callbackIds.append(afterSaveSetMetaDataNodeCbId);
-
 		afterOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, setMelConfig, NULL, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 		callbackIds.append(afterOpenCallbackId);
+	
+		afterSaveSetMetaDataNodeCbId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSaved, NULL, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		callbackIds.append(afterSaveSetMetaDataNodeCbId);
 
 		// // Creates the maya main menu items
 		// MGlobal::executePythonCommandOnIdle("from lunar.maya.resources.scripts.ctrlMainMenu import CtrlMainMenu");
@@ -160,7 +161,7 @@ MStatus initializePlugin(MObject obj) {
 
 
 
-MStatus uninitializePlugin(MObject obj){
+MStatus uninitializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin pluginFn(obj);
 

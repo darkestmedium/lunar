@@ -224,7 +224,7 @@ def importMhFaceCtrlAnimatino():
 
 	wrapRetargeters()
 
-	strFilePath = lm.MFile.importDialog(fileFilter="JSON ( .json ) (*.json)")
+	strFilePath = lm.LMFile.importDialog(fileFilter="JSON ( .json ) (*.json)")
 	if strFilePath != None:
 		lmr.MMetaHumanUtils.loadFaceCtrlAnimation(strFilePath[0])
 		return True

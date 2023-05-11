@@ -2023,7 +2023,7 @@ class LMLunarExport(LMMannequinUe5):
 		listConstraints.append(cmds.parentConstraint(f"{tarns}foot_r_out", f"{srcns}foot_r", maintainOffset=True))
 		listConstraints.append(cmds.parentConstraint(f"{tarns}ball_r_ctrl", f"{srcns}ball_r", maintainOffset=True))
 
-		# bake
+		# Bake
 		self.bakeAnimationLunarOut()
 		# # remove constraints
 		[cmds.delete(obj) for obj in listConstraints]
