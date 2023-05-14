@@ -59,14 +59,13 @@ fiPlayerRig = qtc.QFileInfo(f"{fiPlayerRigs.filePath()}/RIG_Player.ma")
 
 
 namespaceRig = None
-# NamespaceMocap = None
 
 ctrlRig = None
 exportSkeleton = None
+sceneMetaData = None
 
 fiAnimFbx = None
 
-sceneMetaData = None
 
 
 # 1 Build New scene,
@@ -92,13 +91,13 @@ def wrapRetargeters():
 	global exportSkeleton
 	global sceneMetaData
 
-	if not namespaceRig:
-		namespaceRig = lm.LMScene.getNamespaces()
+	if namespaceRig is None:
+		namespaceRig = lm.LMScene.getNamespaces()[0]
 		if not namespaceRig: namespaceRig=""
 
-	if not ctrlRig:	ctrlRig = lmrtg.LMLunarCtrl(f"{namespaceRig}:Ctrl")
-	if not exportSkeleton: exportSkeleton = lmrtg.LMLunarExport(f"{namespaceRig}:Export")
-	if not sceneMetaData: sceneMetaData = lm.LMMetaData()
+	if ctrlRig is None:	ctrlRig = lmrtg.LMLunarCtrl(f"{namespaceRig}:Ctrl")
+	if exportSkeleton is None: exportSkeleton = lmrtg.LMLunarExport(f"{namespaceRig}:Export")
+	if sceneMetaData is None: sceneMetaData = lm.LMMetaData()
 
 	
 def buildNewAnimationScene() -> bool:
@@ -121,7 +120,7 @@ def buildNewAnimationScene() -> bool:
 	return False
 
 
-def loadMocap() -> bool:
+def loadMocap(hikTemplate="MannequinUe5") -> bool:
 	"""Import mocap to the control rig from an fbx file.
 	"""
 	global fiAnimFbx
@@ -148,7 +147,9 @@ def loadMocap() -> bool:
 		)
 		# Get the namespace from fbx
 		namespaceMocap = list(set(lm.LMScene.getNamespaces()).difference(listSceneNamespaces))
-		# If there are no new namspaces this means that mocap matches the rig so we can import onto 
+		# If there are no new namspaces this means that mocap matches the rig so we can import onto
+
+		# om.MGlobal.displayWarning(f"MOCAP NAMESPACE: {namespaceMocap}")
 
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 		sceneMetaData.setText(fiAnimFbx.baseName())
@@ -156,18 +157,26 @@ def loadMocap() -> bool:
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[0].displayInViewport", True)
 	
-		# the export skeleton 
-		if not namespaceMocap:
-			ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
-			if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
-			return True
 
-		mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
-		ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
+		if hikTemplate == "HumanIk":
+			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap[0]}:Mocap")
+			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
-		# Clean up namespaces
+		elif hikTemplate == 'MannequinUe5':
+			# if imported namesapce is the same as the ctrl rig bake from the skeleton since fbx will match replace the animation
+			if not namespaceMocap:
+				ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
+				if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
+				return True
+
+			mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
+			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
+
+		# Clean up 
 		om.MNamespace.removeNamespace(namespaceMocap[0], True)
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
+		mocapSkeleton.deleteCharacterDefinition()
+		mocapSkeleton = None
 
 		return True
 	
@@ -175,31 +184,34 @@ def loadMocap() -> bool:
 	return False
 
 
-def exportAnimation(exportAs=False):
+def exportAnimation(exportAs=True, bake=True):
 	"""Export animaiton to the engine.
 	"""
-	# global fiAnimFbx
+	global fiAnimFbx
+	global namespaceRig
+	global ctrlRig
+	global exportSkeleton
 	global sceneMetaData
-	# wrapRetargeters()
+
+	# namespaceRig = lm.LMScene.getNamespaces()[0]
+	wrapRetargeters()
 
 	if exportAs:
 		strFilePath = lm.LMFile.exportDialog(f"{fiAnimations.filePath()}/{sceneMetaData.getText()}")
 		if strFilePath != None:
-			FiAnimFbx = qtc.QFileInfo(strFilePath[0])
+			fiAnimFbx = qtc.QFileInfo(strFilePath[0])
+
 			# Source and bake to export skeleton
-			exportSkeleton.setSourceAndBakeLunarOut(ctrlRig, FiAnimFbx.filePath())
-			# exportSkeleton.setSourceAndBake(ctrlRig, rootMotion=True)
-			# exportSkeleton.exportAnimation(FiAnimFbx.filePath())
+			if bake:
+				exportSkeleton.setCtrlRigAsSourceAndBake(ctrlRig)
+
+			exportSkeleton.exportAnimation(fiAnimFbx.filePath())
 			return True
 
 		cmds.warning("Operation was cancelled.")
 		return False
 
-	# Source and bake to export skeleton
-	# exportSkeleton.setSourceAndBake(ctrlRig)
-	# # exportSkeleton.exportAnimation(f"{fiAnimations.filePath()}/{fiAnimFbx.fileName()}")
-
-	# return True
+	return True
 
 
 def createTimeEditorClip():
@@ -218,6 +230,7 @@ def createTimeEditorClip():
 	return True
 
 
+
 def importMhFaceCtrlAnimatino():
 	"""Imports the metahuman face animation onto the ctrls from a json file."""
 	global namespaceRig
@@ -232,6 +245,27 @@ def importMhFaceCtrlAnimatino():
 	cmds.warning("Operation was cancelled.")
 	return False
 
+
+
+def bakeToAnother(ctrlsToSkeleton=True, skeletonToCtrls=False):
+	"""Aniamtion shelf wrapper for baking animation between the control rig and skeleton.
+	"""
+	global namespaceRig
+	global ctrlRig
+	global exportSkeleton
+
+	if ctrlsToSkeleton and skeletonToCtrls:
+		cmds.warning("Only one flag can be set to true at the same time - can't bake both at the same time.")
+		return False
+	
+	wrapRetargeters()
+
+	if ctrlsToSkeleton:
+		exportSkeleton.setCtrlRigAsSourceAndBake(ctrlRig)
+	
+	if skeletonToCtrls:
+		ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
+	
 
 
 

@@ -61,7 +61,7 @@ global proc shelf_Bambaa_Animation () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Import Animation." 
+        -annotation "Imports animation onto the control rig from a fbx file." 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
@@ -84,6 +84,10 @@ global proc shelf_Bambaa_Animation () {
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
+        -mi "Import MannequinUe5" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap()" )
+        -mip 0
+        -mi "Import HumanIk" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"HumanIk\")" )
+        -mip 1
     ;
     shelfButton
         -enableCommandRepeat 1
@@ -95,7 +99,7 @@ global proc shelf_Bambaa_Animation () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Export Animation." 
+        -annotation "Exports animation onto the control rig from a fbx file." 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
@@ -114,11 +118,14 @@ global proc shelf_Bambaa_Animation () {
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
-        -command "from lunar.maya.toolset import animation\n\nanimation.exportAnimation(True)\n" 
+        -command "from lunar.maya.toolset import animation\n\nanimation.exportAnimation()" 
         -sourceType "python" 
-        -doubleClickCommand "\n" 
         -commandRepeatable 1
         -flat 1
+        -mi "Export from Ctrls" ( "from lunar.maya.toolset import animation\n\nanimation.exportAnimation(bake=True)" )
+        -mip 0
+        -mi "Export from Skeleton" ( "from lunar.maya.toolset import animation\n\nanimation.exportAnimation(bake=False)" )
+        -mip 1
     ;
     shelfButton
         -enableCommandRepeat 1
@@ -130,7 +137,7 @@ global proc shelf_Bambaa_Animation () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "User Script" 
+        -annotation "Import animation to the metahuman face control rig." 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
@@ -142,6 +149,7 @@ global proc shelf_Bambaa_Animation () {
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
+        -imageOverlayLabel "IFA" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
         -image "commandButton.png" 
@@ -187,6 +195,45 @@ global proc shelf_Bambaa_Animation () {
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Bake between control rig and skeleton" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "BakeToAnother" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "bakeToAnother.png" 
+        -image1 "bakeToAnother.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "from lunar.maya.toolset import animation\n\nanimation.bakeToAnother(ctrlsToSkeleton=True)" 
+        -sourceType "python" 
+        -doubleClickCommand "from lunar.maya.toolset import animation\n\nanimation.bakeToAnother(ctrlsToSkeleton=False, skeletonToCtrls=True)" 
+        -commandRepeatable 1
+        -flat 1
+        -mi "Bake Ctrls to Skeleton" ( "from lunar.maya.toolset import animation\n\nanimation.bakeToAnother(ctrlsToSkeleton=True)" )
+        -mip 0
+        -mi "Bake Skeleton to Ctrls" ( "from lunar.maya.toolset import animation\n\nanimation.bakeToAnother(ctrlsToSkeleton=False, skeletonToCtrls=True)" )
+        -mip 1
     ;
     separator
         -enable 1
@@ -285,19 +332,19 @@ global proc shelf_Bambaa_Animation () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
+        -width 39
         -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Opens the TimeEditor." 
+        -annotation "Opens the Graph Editor, a tool for editing animation curves" 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "TEW" 
+        -label "Graph Editor" 
         -labelOffset 0
         -rotation 0
         -flipX 0
@@ -306,13 +353,47 @@ global proc shelf_Bambaa_Animation () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "timeEditor.png" 
-        -image1 "timeEditor.png" 
+        -image "teGraphEditor.png" 
+        -image1 "teGraphEditor.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
-        -command "\ncmds.TimeEditorWindow()" 
-        -sourceType "python" 
+        -command "GraphEditor" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Opens the Time Editor, a clip-based non-linear tool for creating, editing and mixing animation and audio" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Time Editor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "getCTE.png" 
+        -image1 "getCTE.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "TimeEditorWindow" 
+        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;

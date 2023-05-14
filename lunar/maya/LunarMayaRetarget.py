@@ -329,7 +329,7 @@ class LMHumanIk():
 				if cmds.getAttr(attrNs, settable=True):	cmds.setAttr(attrNs, pose[node][attr])
 
 
-	def setTPose(self, moveToOrigin=False) -> bool:
+	def setTPose(self, moveToOrigin=True) -> bool:
 		"""Set a T-Pose in order to characterize the character / creature.
 
 		Args:
@@ -343,19 +343,29 @@ class LMHumanIk():
 		for i in self.definition:
 			node = self.returnNodeWithNameSpace(self.definition[i]["node"])
 			if not cmds.objExists(node): continue
-			for attr in ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]:
+			for attr in ["rotateX", "rotateY", "rotateZ"]:
 				try: cmds.setAttr(f'{node}.{attr}', 0)
 				except:	pass
 
 		if moveToOrigin:
-			hipNode = self.returnNodeWithNameSpace(self.minimalDefinition["Hips"]["node"])
-			if not cmds.objExists(hipNode): return False
-			for attr in ["translateX", "translateZ"]:
-				hipAttr = f'{hipNode}.{attr}'
-				if cmds.getAttr(hipAttr, settable=True):
-					cmds.setAttr(f'{hipNode}.{attr}', 0)
+			# get hip joint position in world
+			hipNode = self.returnNodeWithNameSpace(self.definition["Hips"]["node"])
+			# get toe joint position in world
+			toeNode = self.returnNodeWithNameSpace(self.definition["LeftToeBase"]["node"])
+			if not cmds.objExists(hipNode) or not cmds.objExists(toeNode): 
+				return False
 
-		self.log.info(f"T-pose was set for '{self.character}'")
+			posHip = cmds.xform(hipNode, q=True, ws=True, t=True)
+			posToe = cmds.xform(toeNode, q=True, ws=True, t=True)
+			# hip pos - joint length
+			cmds.xform(hipNode, t=(0, posHip[1] - posToe[1], 0), ws=True)
+
+			# for attr in ["translateX", "translateZ"]:
+			# 	hipAttr = f'{hipNode}.{attr}'
+			# 	if cmds.getAttr(hipAttr, settable=True):
+			# 		cmds.setAttr(f'{hipNode}.{attr}', 0)
+
+		self.log.info(f"T-Pose was set for '{self.character}'")
 
 		return True
 
@@ -394,14 +404,14 @@ class LMHumanIk():
 		return True
 
 
-	def getRootMotion(self):
+	def getRootMotion(self) -> str or None:
 
 		node = self.returnNodeWithNameSpace(self.rootMotion)
 		if cmds.objExists(node):
 			return node
 		
-		logging.critical(f"Root motion node could not be retrieved for '{self.character}' character.")
-		return False
+		logging.warning(f"Root motion node could not be retrieved for '{self.character}' character.")
+		return None
 
 
 	def getRoot(self) -> str or bool:
@@ -475,7 +485,7 @@ class LMHumanIk():
 
 		"""
 		self.setTPose()
-		self.fixFloorContact()
+		# self.fixFloorContact()
 		self.createCharacterDefinition()
 		self.characterize()
 		self.lockCharacter()
@@ -1493,6 +1503,7 @@ class LMLunarCtrl(LMHumanIk):
 		self.CtrlMain = self.getCtrlMain()
 		self.root = self.getRoot()
 		self.rootMotion = self.getRootMotion()
+		self.rootCnst = None
 
 
 	def getCtrlMain(self):
@@ -1542,16 +1553,6 @@ class LMLunarCtrl(LMHumanIk):
 		return True
 	
 
-	# def connectIK(self, start:str, mid:str, end:str, ikHande:str, pv:str):
-	# 	cmds.parentConstraint(end, ikHande)
-	# 	posArmPvL = lmr.LMRigUtils.getPoleVectorPosition(start, mid, end)
-	# 	# posArmPvL = lmr.LMRigUtils.getPoleVectorPosition("upperarm_l", "lowerarm_l", "hand_l")
-	# 	locArmPvL = cmds.spaceLocator(name="locLeftArm")[0]
-	# 	cmds.xform(locArmPvL, translation=(posArmPvL.x, posArmPvL.y, posArmPvL.z), ws=True)
-	# 	cmds.parentConstraint(mid, locArmPvL, maintainOffset=True)
-	# 	cmds.parentConstraint(locArmPvL, pv, maintainOffset=False, skipRotate=["x", "y", "z"])
-
-
 	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
 		"""Set source for the specified character.
 
@@ -1561,7 +1562,6 @@ class LMLunarCtrl(LMHumanIk):
 		if source == "None":
 			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
 			self._updateUI(updateSource=True)
-
 		else:
 			if self.valid:
 				if self._isSourceValid(source):
@@ -1616,60 +1616,13 @@ class LMLunarCtrl(LMHumanIk):
 						cmds.xform(self.locRightLegPv, translation=(posRightLegPv.x, posRightLegPv.y, posRightLegPv.z), ws=True)
 						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_r_ctrl"), self.locRightLegPv, maintainOffset=True)
 						cmds.parentConstraint(self.locRightLegPv, self.returnNodeWithNameSpace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
-						
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmHandle"]),
-						# 	f"{self.nodeState2Sk}.LeftHandT",
-						# 	f"{self.nodeState2Sk}.LeftHandR",
-						# )
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftArmPv"]),
-						# 	f"{self.nodeState2Sk}.LeftForeArmT",
-						# 	# f"{self.nodeState2Sk}.LeftForeArmR",
-						# )
 
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmHandle"]),
-						# 	f"{self.nodeState2Sk}.RightHandT",
-						# 	f"{self.nodeState2Sk}.RightHandR",
-						# )
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightArmPv"]),
-						# 	f"{self.nodeState2Sk}.RightForeArmT",
-						# 	# f"{self.nodeState2Sk}.RightForeArmR",
-						# )
-	
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegHandle"]),
-						# 	f"{self.nodeState2Sk}.LeftFootT",
-						# 	f"{self.nodeState2Sk}.LeftFootR",
-						# )
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["LeftLegPv"]),
-						# 	f"{self.nodeState2Sk}.LeftLegT",
-						# 	# f"{self.nodeState2Sk}.LeftLegR",
-						# )
-
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegHandle"]),
-						# 	f"{self.nodeState2Sk}.RightFootT",
-						# 	f"{self.nodeState2Sk}.RightFootR",
-						# )
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["RightLegPv"]),
-						# 	f"{self.nodeState2Sk}.RightLegT",
-						# 	# f"{self.nodeState2Sk}.RightLegR",
-						# )
-						# self.connectSourceAndSaveAnimNew(
-						# 	self.returnNodeWithNameSpace(self.ctrlIkEffectors["HeadHandle"]),
-						# 	f"{self.nodeState2Sk}.HeadT",
-						# 	f"{self.nodeState2Sk}.HeadR",
-						# )
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
-							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
-							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
+							if source.rootMotion is not None:
+								self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
+								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
 						self._updateUI(updateSource=True)
 
@@ -1804,43 +1757,53 @@ class LMLunarCtrl(LMHumanIk):
 
 				# Clean up
 				self.cleanUpPairBlendNodes()
-				if self.rootCnst: cmds.delete(self.rootCnst)
+				if self.rootCnst: 
+					cmds.delete(self.rootCnst)
+					self.rootCnst = None
 				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
 					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
 				
-
-				if self.cnstHeadIkHandle: cmds.delete(self.cnstHeadIkHandle)
+				if self.cnstHeadIkHandle:
+					cmds.delete(self.cnstHeadIkHandle)
+					self.cnstHeadIkHandle = None
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("head_ik_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("head_ik_ctrl"), attribute="blendParent1")
 
-				if self.cnstLeftArmIkHandle: cmds.delete(self.cnstLeftArmIkHandle)
+				if self.cnstLeftArmIkHandle:
+					cmds.delete(self.cnstLeftArmIkHandle)
+					self.cnstLeftArmIkHandle = None
 				if cmds.objExists(self.locLeftArmPv): cmds.delete(self.locLeftArmPv)
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_l_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_l_ctrl"), attribute="blendParent1")
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_l_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_l_ctrl"), attribute="blendParent1")
 
-				if self.cnstRightArmIkHandle: cmds.delete(self.cnstRightArmIkHandle)
+				if self.cnstRightArmIkHandle:
+					cmds.delete(self.cnstRightArmIkHandle)
+					self.cnstRightArmIkHandle = None
 				if cmds.objExists(self.locRightArmPv): cmds.delete(self.locRightArmPv)
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_r_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_r_ctrl"), attribute="blendParent1")
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_r_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_r_ctrl"), attribute="blendParent1")
 
-				if self.cnstLeftLegIkHandle: cmds.delete(self.cnstLeftLegIkHandle)
+				if self.cnstLeftLegIkHandle:
+					cmds.delete(self.cnstLeftLegIkHandle)
+					self.cnstLeftLegIkHandle = None
 				if cmds.objExists(self.locLeftLegPv): cmds.delete(self.locLeftLegPv)
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_l_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_l_ctrl"), attribute="blendParent1")
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_l_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_l_ctrl"), attribute="blendParent1")
 
-				if self.cnstRightLegIkHandle: cmds.delete(self.cnstRightLegIkHandle)
+				if self.cnstRightLegIkHandle:
+					cmds.delete(self.cnstRightLegIkHandle)
+					self.cnstRightLegIkHandle = None
 				if cmds.objExists(self.locRightLegPv): cmds.delete(self.locRightLegPv)
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_r_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_r_ctrl"), attribute="blendParent1")
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_r_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_r_ctrl"), attribute="blendParent1")
-
 
 
 				self.setSource("None")
@@ -1920,120 +1883,150 @@ class LMLunarExport(LMMannequinUe5):
 	
 	# ModDg = om.MDGModifier()
 
-	def setSourceAndBakeLunarOut(self, source, filePath):
+
+	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
+		"""Set source for the specified character.
+
+		TODO Try to make it work without the ui
+		TODO validate source
+
+		"""
+		if source == "None":
+			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
+			self._updateUI(updateSource=False)
+
+		else:
+			if self.valid:
+				if self._isSourceValid(source):
+					if self.active != self.character: self.setActive()
+					if source != self.source():
+						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
+
+						# Root motion setup outside Hik feautres. (Manual override)
+						if rootMotion:
+							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
+							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
+
+						self._updateUI(updateSource=True)
+						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
+					else:
+						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
+
+					return source
+
+				self.log.critical(f"'{source}' could not be validated as source input for '{self.character}'")
+
+		return None
+
+
+	def setCtrlRigAsSource(self, source:LMLunarCtrl):
 		"""Bakes anim from the lunar out controls.
 
 		Temp workaround hik limitations
 
 		"""
-		# Get target namespace
-		# targetNamespace = self.extractNameSpace(source)
-		# currentNameSpace = self.extractNameSpace(self.name)
+		# Get namespaces
 		tarns = f"{source.nameSpace}:"
 		srcns = f"{self.nameSpace}:"
 		# Construct list for constraints
-		listConstraints= []
+		self.listConstraints = []
 
 		# turn off autokey if it is enabled to - prevent setting keys while setting apose
 		stateAutoKey = oma.MAnimControl.autoKeyMode()
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
 
+		# just to make sure we don't have any inputs from hik
+		self.setSource("None")
+
 		# setAPoses
 		source.setAPose()
 		self.setAPose()
 		# connect constraints
-		listConstraints.append(cmds.parentConstraint(f"{tarns}root_ctrl", f"{srcns}root", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pelvis_ctrl", f"{srcns}pelvis", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_01_ctrl", f"{srcns}spine_01", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_02_ctrl", f"{srcns}spine_02", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_03_ctrl", f"{srcns}spine_03", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_04_ctrl", f"{srcns}spine_04", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}spine_05_ctrl", f"{srcns}spine_05", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}neck_01_out", f"{srcns}neck_01", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}neck_02_out", f"{srcns}neck_02", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}head_out", f"{srcns}head", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_l_ctrl", f"{srcns}clavicle_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_l_out", f"{srcns}upperarm_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_l_ctrl", f"{srcns}upperarm_twist_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_l_ctrl", f"{srcns}upperarm_twist_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_l_out", f"{srcns}lowerarm_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_l_ctrl", f"{srcns}lowerarm_twist_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_l_ctrl", f"{srcns}lowerarm_twist_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}hand_l_out", f"{srcns}hand_l",  maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_l_ctrl", f"{srcns}thumb_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_l_ctrl", f"{srcns}thumb_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_l_ctrl", f"{srcns}thumb_03_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_l_ctrl", f"{srcns}index_metacarpal_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_l_ctrl", f"{srcns}index_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_l_ctrl", f"{srcns}index_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_l_ctrl", f"{srcns}index_03_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_l_ctrl", f"{srcns}middle_metacarpal_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_l_ctrl", f"{srcns}middle_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_l_ctrl", f"{srcns}middle_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_l_ctrl", f"{srcns}middle_03_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_l_ctrl", f"{srcns}pinky_metacarpal_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_l_ctrl", f"{srcns}pinky_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_l_ctrl", f"{srcns}pinky_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_l_ctrl", f"{srcns}pinky_03_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_l_ctrl", f"{srcns}ring_metacarpal_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_l_ctrl", f"{srcns}ring_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_l_ctrl", f"{srcns}ring_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_l_ctrl", f"{srcns}ring_03_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_r_ctrl", f"{srcns}clavicle_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_r_out", f"{srcns}upperarm_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_r_ctrl", f"{srcns}upperarm_twist_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_r_ctrl", f"{srcns}upperarm_twist_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_r_out", f"{srcns}lowerarm_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_r_ctrl", f"{srcns}lowerarm_twist_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_r_ctrl", f"{srcns}lowerarm_twist_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}hand_r_out", f"{srcns}hand_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_r_ctrl", f"{srcns}thumb_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_r_ctrl", f"{srcns}thumb_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_r_ctrl", f"{srcns}thumb_03_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_r_ctrl", f"{srcns}index_metacarpal_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_r_ctrl", f"{srcns}index_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_r_ctrl", f"{srcns}index_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_r_ctrl", f"{srcns}index_03_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_r_ctrl", f"{srcns}middle_metacarpal_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_r_ctrl", f"{srcns}middle_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_r_ctrl", f"{srcns}middle_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_r_ctrl", f"{srcns}middle_03_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_r_ctrl", f"{srcns}pinky_metacarpal_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_r_ctrl", f"{srcns}pinky_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_r_ctrl", f"{srcns}pinky_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_r_ctrl", f"{srcns}pinky_03_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_r_ctrl", f"{srcns}ring_metacarpal_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_r_ctrl", f"{srcns}ring_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_r_ctrl", f"{srcns}ring_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_r_ctrl", f"{srcns}ring_03_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_l_out", f"{srcns}thigh_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_l_ctrl", f"{srcns}thigh_twist_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_l_ctrl", f"{srcns}thigh_twist_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_l_out", f"{srcns}calf_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_l_ctrl", f"{srcns}calf_twist_01_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_l_ctrl", f"{srcns}calf_twist_02_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}foot_l_out", f"{srcns}foot_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ball_l_ctrl", f"{srcns}ball_l", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_r_out", f"{srcns}thigh_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_r_ctrl", f"{srcns}thigh_twist_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_r_ctrl", f"{srcns}thigh_twist_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_r_out", f"{srcns}calf_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_r_ctrl", f"{srcns}calf_twist_01_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_r_ctrl", f"{srcns}calf_twist_02_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}foot_r_out", f"{srcns}foot_r", maintainOffset=True))
-		listConstraints.append(cmds.parentConstraint(f"{tarns}ball_r_ctrl", f"{srcns}ball_r", maintainOffset=True))
-
-		# Bake
-		self.bakeAnimationLunarOut()
-		# # remove constraints
-		[cmds.delete(obj) for obj in listConstraints]
-		# # export
-		self.exportAnimation(filePath)
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}root_ctrl", f"{srcns}root", maintainOffset=True))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pelvis_rot_ctrl", f"{srcns}pelvis", maintainOffset=True))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}spine_01_ctrl", f"{srcns}spine_01", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}spine_02_ctrl", f"{srcns}spine_02", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}spine_03_ctrl", f"{srcns}spine_03", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}spine_04_ctrl", f"{srcns}spine_04", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}spine_05_ctrl", f"{srcns}spine_05", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}neck_01_out", f"{srcns}neck_01", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}neck_02_out", f"{srcns}neck_02", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}head_out", f"{srcns}head", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_l_ctrl", f"{srcns}clavicle_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_l_out", f"{srcns}upperarm_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_l_ctrl", f"{srcns}upperarm_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_l_ctrl", f"{srcns}upperarm_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_l_out", f"{srcns}lowerarm_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_l_ctrl", f"{srcns}lowerarm_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_l_ctrl", f"{srcns}lowerarm_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}hand_l_out", f"{srcns}hand_l",  maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_l_ctrl", f"{srcns}thumb_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_l_ctrl", f"{srcns}thumb_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_l_ctrl", f"{srcns}thumb_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_l_ctrl", f"{srcns}index_metacarpal_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_l_ctrl", f"{srcns}index_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_l_ctrl", f"{srcns}index_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_l_ctrl", f"{srcns}index_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_l_ctrl", f"{srcns}middle_metacarpal_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_l_ctrl", f"{srcns}middle_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_l_ctrl", f"{srcns}middle_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_l_ctrl", f"{srcns}middle_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_l_ctrl", f"{srcns}pinky_metacarpal_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_l_ctrl", f"{srcns}pinky_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_l_ctrl", f"{srcns}pinky_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_l_ctrl", f"{srcns}pinky_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_l_ctrl", f"{srcns}ring_metacarpal_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_l_ctrl", f"{srcns}ring_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_l_ctrl", f"{srcns}ring_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_l_ctrl", f"{srcns}ring_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}clavicle_r_ctrl", f"{srcns}clavicle_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_r_out", f"{srcns}upperarm_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_01_r_ctrl", f"{srcns}upperarm_twist_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}upperarm_twist_02_r_ctrl", f"{srcns}upperarm_twist_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_r_out", f"{srcns}lowerarm_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_r_ctrl", f"{srcns}lowerarm_twist_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_r_ctrl", f"{srcns}lowerarm_twist_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}hand_r_out", f"{srcns}hand_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_r_ctrl", f"{srcns}thumb_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_r_ctrl", f"{srcns}thumb_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_r_ctrl", f"{srcns}thumb_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_metacarpal_r_ctrl", f"{srcns}index_metacarpal_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_01_r_ctrl", f"{srcns}index_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_02_r_ctrl", f"{srcns}index_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}index_03_r_ctrl", f"{srcns}index_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_metacarpal_r_ctrl", f"{srcns}middle_metacarpal_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_01_r_ctrl", f"{srcns}middle_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_02_r_ctrl", f"{srcns}middle_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}middle_03_r_ctrl", f"{srcns}middle_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_metacarpal_r_ctrl", f"{srcns}pinky_metacarpal_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_01_r_ctrl", f"{srcns}pinky_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_02_r_ctrl", f"{srcns}pinky_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}pinky_03_r_ctrl", f"{srcns}pinky_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_metacarpal_r_ctrl", f"{srcns}ring_metacarpal_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_r_ctrl", f"{srcns}ring_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_r_ctrl", f"{srcns}ring_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_r_ctrl", f"{srcns}ring_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_l_out", f"{srcns}thigh_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_l_ctrl", f"{srcns}thigh_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_l_ctrl", f"{srcns}thigh_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_l_out", f"{srcns}calf_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_l_ctrl", f"{srcns}calf_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_l_ctrl", f"{srcns}calf_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}foot_l_out", f"{srcns}foot_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ball_l_ctrl", f"{srcns}ball_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_r_out", f"{srcns}thigh_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_r_ctrl", f"{srcns}thigh_twist_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_r_ctrl", f"{srcns}thigh_twist_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_r_out", f"{srcns}calf_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_01_r_ctrl", f"{srcns}calf_twist_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}calf_twist_02_r_ctrl", f"{srcns}calf_twist_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}foot_r_out", f"{srcns}foot_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ball_r_ctrl", f"{srcns}ball_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 
 
-	def bakeAnimationLunarOut(self, startFrame=None, endFrame=None) -> bool:
+	def bakeAnimationFromCtrlRig(self, startFrame=None, endFrame=None) -> bool:
 		"""Bakes the animation of characterized nodes.
 
 		Args:
@@ -2058,18 +2051,27 @@ class LMLunarExport(LMMannequinUe5):
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
 				self.filterRotations(nodes)
 
-				# self.cleanUpPairBlendNodes()
-				# if self.rootCnst: cmds.delete(self.rootCnst)
-
-				# if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
-				# 	cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
-
-				# self.setSource("None")
+				# clean up
+				if self.listConstraints:
+					[cmds.delete(obj) for obj in self.listConstraints]
+					self.listConstraints = []
+				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
+					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
 				return True
 
 		return False
+
+
+	def setCtrlRigAsSourceAndBake(self, source, startFrame=None, endFrame=None):
+		"""Wrapper method for setting the source and baking in one go.
+		"""
+		if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
+		if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
+
+		self.setCtrlRigAsSource(source)
+		self.bakeAnimationFromCtrlRig(startFrame, endFrame)
 
 
 	def exportAnimation(self, filePath, startFrame=None, endFrame=None, bake=False) -> bool:
@@ -2094,7 +2096,7 @@ class LMLunarExport(LMMannequinUe5):
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Get the main ctrl with namespace
-		CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
+		# CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
 		# FnMainCtrl = om.MFnDependencyNode(coreApi.getObjectFromString(mainCtrl))
 		# PlugExportSkeletonVisibility = FnMainCtrl.findPlug("exportSkeletonVisibility", False)
 		# # Check if visibility is off,
@@ -2106,24 +2108,24 @@ class LMLunarExport(LMMannequinUe5):
 		# 	self.ModDg.doIt()
 
 		# Check if visibility is off, if it is turn it off check if referenced file
-		IsVisible = cmds.getAttr(f"{CtrlMain}.exportSkeletonVisibility")
-		IsSelectable = cmds.getAttr(f"{CtrlMain}.exportSkeletonDisplayType")
-		if not IsVisible:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", True)
-		if IsSelectable != 0:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", 0)
+		# IsVisible = cmds.getAttr(f"{CtrlMain}.exportSkeletonVisibility")
+		# IsSelectable = cmds.getAttr(f"{CtrlMain}.exportSkeletonDisplayType")
+		# if not IsVisible:
+		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", True)
+		# if IsSelectable != 0:
+		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", 0)
 
 		cmds.select(self.rootMotion)
 
 		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
-		# Hide it back
-		if not IsVisible:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", False)
-			# PlugExportSkeletonVisibility.setBool(False)
-			# self.ModDg.doIt()
-		if IsSelectable != 0:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", IsSelectable)
+		# # Hide it back
+		# if not IsVisible:
+		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", False)
+		# 	# PlugExportSkeletonVisibility.setBool(False)
+		# 	# self.ModDg.doIt()
+		# if IsSelectable != 0:
+		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", IsSelectable)
 
 
 
