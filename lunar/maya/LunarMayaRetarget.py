@@ -70,7 +70,7 @@ class LMHumanIk():
 
 	Logic Flow:
 	__init__():
-		_initSetup():
+		initSetup():
 			if isValid() ->	characterExists() -> isLocked() -> getPropertiesNode()
 			
 			if not valid ->	validateDefinition()
@@ -96,14 +96,14 @@ class LMHumanIk():
 		self.nameSpace = self.extractNameSpace(name)
 		self.character = name
 
-		self._initSetup()
+		self.initSetup()
 
 		self.root = self.getRoot()
 		self.rootMotion = self.getRootMotion()
 		self.rootCnst = None
 
 
-	def _initSetup(self):
+	def initSetup(self):
 		"""Tries to setup the character directly in the __init__ method.
 
 		In case a character with the initiated name already exists, check if it is validated and assign
@@ -192,7 +192,7 @@ class LMHumanIk():
 		return True
 
 
-	def _isSourceValid(self, source) -> bool:
+	def isSourceValid(self, source) -> bool:
 		"""Validates if the source is a valid HiK character.
 
 		1 Check if character exists.
@@ -217,7 +217,7 @@ class LMHumanIk():
 		return False
 
 
-	def _updateUI(self, updateCharacter:bool=False, updateSource:bool=False) -> None:
+	def updateHikUi(self, updateCharacter:bool=False, updateSource:bool=False) -> None:
 		"""Updates the contextual HumanIk UI - not available in batch mode.
 
 		Args:
@@ -405,6 +405,8 @@ class LMHumanIk():
 
 
 	def getRootMotion(self) -> str or None:
+		"""Gets the rootmotion node.
+		"""
 
 		node = self.returnNodeWithNameSpace(self.rootMotion)
 		if cmds.objExists(node):
@@ -564,12 +566,12 @@ class LMHumanIk():
 		"""
 		if none == False:
 			mel.eval(f'global string $gHIKCurrentCharacter; $gHIKCurrentCharacter=""')
-			self._updateUI(updateCharacter=True)
+			self.updateHikUi(updateCharacter=True)
 			
 		if none == True:
 			if self.valid:
 				mel.eval(f'global string $gHIKCurrentCharacter; $gHIKCurrentCharacter="{self.character}"')
-				self._updateUI(updateCharacter=True)
+				self.updateHikUi(updateCharacter=True)
 				self.log.debug(f"'{self.character}' was set as the active character.")
 				return self.character
 
@@ -609,14 +611,14 @@ class LMHumanIk():
 		"""
 		if source == "None":
 			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self._updateUI(updateSource=True)
+			self.updateHikUi(updateSource=True)
 		else:
 			if self.valid:
-				if self._isSourceValid(source):
+				if self.isSourceValid(source):
 					if self.active != self.character: self.setActive()
 					if source != self.source():
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
-						self._updateUI(updateSource=True)
+						self.updateHikUi(updateSource=True)
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
 						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
@@ -1137,11 +1139,11 @@ class LMMetaHuman(LMHumanIk):
 		"""
 		if source == "None":
 			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self._updateUI(updateSource=True)
+			self.updateHikUi(updateSource=True)
 
 		else:
 			if self.valid:
-				if self._isSourceValid(source):
+				if self.isSourceValid(source):
 					if self.active != self.character: self.setActive()
 					if source != self.source():
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
@@ -1151,7 +1153,7 @@ class LMMetaHuman(LMHumanIk):
 							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
 							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
-						self._updateUI(updateSource=True)
+						self.updateHikUi(updateSource=True)
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
 						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
@@ -1495,7 +1497,7 @@ class LMLunarCtrl(LMHumanIk):
 		self.nameSpace = self.extractNameSpace(name)
 		self.character = name
 
-		self._initSetup()
+		self.initSetup()
 
 		self.nodeProperties = self.getPropertiesNode()
 		self.nodeState2Sk = self.getState2SkNode()
@@ -1561,10 +1563,10 @@ class LMLunarCtrl(LMHumanIk):
 		"""
 		if source == "None":
 			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self._updateUI(updateSource=True)
+			self.updateHikUi(updateSource=True)
 		else:
 			if self.valid:
-				if self._isSourceValid(source):
+				if self.isSourceValid(source):
 					if self.active != self.character: self.setActive()
 					if source != self.source():
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
@@ -1624,7 +1626,7 @@ class LMLunarCtrl(LMHumanIk):
 								self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
-						self._updateUI(updateSource=True)
+						self.updateHikUi(updateSource=True)
 
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
@@ -1893,11 +1895,11 @@ class LMLunarExport(LMMannequinUe5):
 		"""
 		if source == "None":
 			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self._updateUI(updateSource=False)
+			self.updateHikUi(updateSource=False)
 
 		else:
 			if self.valid:
-				if self._isSourceValid(source):
+				if self.isSourceValid(source):
 					if self.active != self.character: self.setActive()
 					if source != self.source():
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
@@ -1907,7 +1909,7 @@ class LMLunarExport(LMMannequinUe5):
 							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
 							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
-						self._updateUI(updateSource=True)
+						self.updateHikUi(updateSource=True)
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
 						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
@@ -2096,7 +2098,7 @@ class LMLunarExport(LMMannequinUe5):
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Get the main ctrl with namespace
-		# CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
+		CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
 		# FnMainCtrl = om.MFnDependencyNode(coreApi.getObjectFromString(mainCtrl))
 		# PlugExportSkeletonVisibility = FnMainCtrl.findPlug("exportSkeletonVisibility", False)
 		# # Check if visibility is off,
@@ -2108,24 +2110,24 @@ class LMLunarExport(LMMannequinUe5):
 		# 	self.ModDg.doIt()
 
 		# Check if visibility is off, if it is turn it off check if referenced file
-		# IsVisible = cmds.getAttr(f"{CtrlMain}.exportSkeletonVisibility")
-		# IsSelectable = cmds.getAttr(f"{CtrlMain}.exportSkeletonDisplayType")
-		# if not IsVisible:
-		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", True)
-		# if IsSelectable != 0:
-		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", 0)
+		IsVisible = cmds.getAttr(f"{CtrlMain}.exportSkeletonVisibility")
+		IsSelectable = cmds.getAttr(f"{CtrlMain}.exportSkeletonDisplayType")
+		if not IsVisible:
+			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", True)
+		if IsSelectable != 0:
+			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", 0)
 
 		cmds.select(self.rootMotion)
 
 		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
-		# # Hide it back
-		# if not IsVisible:
-		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", False)
-		# 	# PlugExportSkeletonVisibility.setBool(False)
-		# 	# self.ModDg.doIt()
-		# if IsSelectable != 0:
-		# 	cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", IsSelectable)
+		# Hide it back
+		if not IsVisible:
+			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", False)
+			# PlugExportSkeletonVisibility.setBool(False)
+			# self.ModDg.doIt()
+		if IsSelectable != 0:
+			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", IsSelectable)
 
 
 
@@ -2636,17 +2638,16 @@ if __name__ == "__main__":
 
 	cmds.file(new=True, force=True)
 
-	# Source list
-	sourceList = lm.LMFinder.getFilesInDirectory("/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal")
-	# print(sourceList)
-	alredyRetargetedList = lm.LMFinder.getFilesInDirectory("/Users/luky/Desktop/thug")
-	alredyRetargetedFileNameList = [retargeted.fileName() for retargeted in alredyRetargetedList]
-	missingRetargetList = []
-	for anim in sourceList:
-		if anim.fileName() not in alredyRetargetedFileNameList:
-			missingRetargetList.append(anim.filePath())
+	# # Source list
+	# sourceList = lm.LMFinder.getFilesInDirectory("/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal")
+	# # print(sourceList)
+	# alredyRetargetedList = lm.LMFinder.getFilesInDirectory("/Users/luky/Desktop/thug")
+	# alredyRetargetedFileNameList = [retargeted.fileName() for retargeted in alredyRetargetedList]
+	# missingRetargetList = []
+	# for anim in sourceList:
+	# 	if anim.fileName() not in alredyRetargetedFileNameList:
+	# 		missingRetargetList.append(anim.filePath())
 
-	
 
 	retargeter = LMRetargeter(
 		# sources=missingRetargetList,
@@ -2654,23 +2655,32 @@ if __name__ == "__main__":
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal",
-			"/Users/luky/Desktop/thug_fucked",
+			"/Users/luky/My Drive/Mocap/Player/stress",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/thug",
+		outputDirectory="/Users/luky/Desktop/Stress",
 		# sourceNameSpace="Anton",
-		sourceTemplate="SinnersDev1",
+		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe5",
 		targetNameSpace="Player",
 		targetTemplate="LunarExport",
 	)
 
 	retargeter.retarget(
-		preserveFolderHierarchy=False,
-		# trimStart=1,  # if baking from sinnersDev set
+		preserveFolderHierarchy=True,
+		trimStart=1,  # if baking from sinnersDev set
 		matchSource=True,
 		# reachActorChest=1.0,
 		oversamplingRate=1,
-		# rootMotion=True,
+		rootMotion=True,
 		rootRotationOffset=-90, # if baking from sinnersDev set
 	)
+	# retargeter.retarget(
+	# 	preserveFolderHierarchy=True,
+	# 	# trimStart=1,  # if baking from sinnersDev set
+	# 	matchSource=True,
+	# 	# reachActorChest=1.0,
+	# 	oversamplingRate=1,
+	# 	rootMotion=True,
+	# 	# rootRotationOffset=-90, # if baking from sinnersDev set
+	# )

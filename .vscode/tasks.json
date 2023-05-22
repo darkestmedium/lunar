@@ -12,7 +12,24 @@
 			},
 			"group": {
 				"kind": "build",
-				"isDefault": true
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Clean lunar from trash files.",
+			"type": "shell",
+			"command": "sh ./build/scripts/clean_workspace_git.sh",
+			// "windows": {
+			// 	"command": ".\\build\\scripts\\maya_build_plugin.cmd"
+			// },
+			"group": {
+				"kind": "build",
+				"isDefault": false
 			},
 			"presentation": {
 				"reveal": "always",

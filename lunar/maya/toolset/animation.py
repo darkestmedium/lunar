@@ -160,6 +160,11 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 
 		if hikTemplate == "HumanIk":
 			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap[0]}:Mocap")
+
+			om.MGlobal.displayWarning(f"Importing from HumanIk namespace: {namespaceMocap}")
+			om.MGlobal.displayWarning(f"HumanIk character nodes: {mocapSkeleton.getExportNodes()}")
+			om.MGlobal.displayWarning(f"HumanIk character name: {mocapSkeleton.character}")
+
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
 		elif hikTemplate == 'MannequinUe5':
@@ -248,7 +253,7 @@ def importMhFaceCtrlAnimatino():
 
 
 def bakeToAnother(ctrlsToSkeleton=True, skeletonToCtrls=False):
-	"""Aniamtion shelf wrapper for baking animation between the control rig and skeleton.
+	"""Animation shelf wrapper for baking animation between the control rig and skeleton.
 	"""
 	global namespaceRig
 	global ctrlRig
