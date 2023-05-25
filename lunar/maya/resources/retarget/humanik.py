@@ -19,7 +19,8 @@ templateHik = {
 		"Head": 									{"id": 15,	"node": "Head"},
 	},
 	"definition": {
-		"Reference": 							{"id": 0, 	"node": "Reference"},
+		"Reference": 							{"id": 999, 	"node": "Root"},
+		# "Root": 									{"id": 999,	"node": "Root"},
 		# Base (required)
 		"Hips":										{"id": 1, 	"node": "Hips"},
 		"LeftUpLeg": 							{"id": 2, 	"node": "LeftUpLeg"},

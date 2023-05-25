@@ -31,11 +31,11 @@
 				"kind": "build",
 				"isDefault": false
 			},
-			"presentation": {
-				"reveal": "always",
-				"panel": "new"
-			},
-			"problemMatcher": []
+			// "presentation": {
+			// 	"reveal": "always",
+			// 	"panel": "new"
+			// },
+			// "problemMatcher": []
 		},
 	]
 }

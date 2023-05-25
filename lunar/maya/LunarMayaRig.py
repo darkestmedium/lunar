@@ -39,7 +39,7 @@ class Ctrl():
 		rotateTo="",
 		localPosition=(0.0,	0.0, 0.0),
 		localRotate=(0.0, 0.0, 90.0),
-		localScale=(2.0, 2.0, 2.0),
+		localScale=(3.0, 3.0, 3.0),
 		shape="circle",
 		fillShape=False,
 		drawFkIkState=False,
@@ -835,6 +835,16 @@ class FkHandComponent():
 			rotateTo="{}{}".format(listJoints["Hand"]["Pinky3"], sideSuffix),
 			color=color,
 		)
+	
+		# Weapon
+		self.ctrlWeapon = Ctrl(
+			name="{}{}_ctrl".format(listJoints["Hand"]["Weapon"], sideSuffix),
+			parent=parent,
+			translateTo="{}{}".format(listJoints["Hand"]["Weapon"], sideSuffix),
+			rotateTo="{}{}".format(listJoints["Hand"]["Weapon"], sideSuffix),
+			shape="cube",
+			color=color,
+		)
 		lm.LMTransformUtils.postCtrlTransform(listJoints["Hand"], sideSuffix)
 
 
@@ -845,6 +855,7 @@ class FkHandComponent():
 			self.ctrlInHandMiddle, self.ctrlMiddle1, self.ctrlMiddle2, self.ctrlMiddle3,
 			self.ctrlInHandRing, self.ctrlRing1, self.ctrlRing2, self.ctrlRing3,
 			self.ctrlInHandPinky, self.ctrlPinky1, self.ctrlPinky2, self.ctrlPinky3,
+			self.ctrlWeapon,
 		)
 	
 	def getMainCtrls(self):
@@ -1664,6 +1675,12 @@ class HandComponent():
 			child=self.fk.ctrlInHandRing.transform,
 			offset=compRig.ctrlMain.transform, 
 			sourceNode="{}{}".format((listJoints["Hand"]["InHandRing"]), sideSuffix)
+		)
+		self.cnstWeapon = LMRigUtils.createMatrixConstraint(
+			parent=attachTo, 
+			child=self.fk.ctrlWeapon.transform,
+			offset=compRig.ctrlMain.transform, 
+			sourceNode="{}{}".format((listJoints["Hand"]["Weapon"]), sideSuffix)
 		)
 
 

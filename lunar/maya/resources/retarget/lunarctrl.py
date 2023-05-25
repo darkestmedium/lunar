@@ -1,5 +1,5 @@
-#--------------------------------------------------------------------------------------------------
 # Lunar Ctrls
+#--------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------
 
 
@@ -25,7 +25,8 @@ templateLC = {
 		"Head":										{"id": 15, 	"node": "head_ctrl"},
 	},
 	"definition": {
-		"Reference": 							{"id": 0, 	"node": "main_ctrl"},
+		"Reference": 							{"id": 999,	"node": "root_ctrl"},
+		# "Root": 									{"id": 0, 	"node": "root_ctrl"},
 		# Base (required)
 		# "HipsTranslation": 				{"id": 49, 	"node": "pelvis_pos_ctrl"},
 		"Hips":										{"id": 1, 	"node": "pelvis_ctrl"},
@@ -448,7 +449,23 @@ templateLC = {
 		'upperarm_twist_01_l_ctrl': {'rotateX': 0.0},
 		'upperarm_twist_01_r_ctrl': {'rotateX': 0.0},
 		'upperarm_twist_02_l_ctrl': {'rotateX': 0.0},
-		'upperarm_twist_02_r_ctrl': {'rotateX': 0.0}
+		'upperarm_twist_02_r_ctrl': {'rotateX': 0.0},
+		'weapon_l_ctrl': {
+			'rotateX': 0.0,
+			'rotateY': 0.0,
+			'rotateZ': 0.0,
+			'translateX': 0.0,
+			'translateY': 0.0,
+			'translateZ': 0.0,
+    },
+		'weapon_r_ctrl': {
+			'rotateX': 0.0,
+			'rotateY': 0.0,
+			'rotateZ': 0.0,
+			'translateX': 0.0,
+			'translateY': 0.0,
+			'translateZ': 0.0,
+    },
 	},
 	"aPose": {
 		'arm_ik_l_ctrl': {'rotateX': -5.724998426634331e-14,
@@ -653,7 +670,23 @@ templateLC = {
 		'upperarm_twist_01_l_ctrl': {'rotateX': 0.0},
 		'upperarm_twist_01_r_ctrl': {'rotateX': 0.0},
 		'upperarm_twist_02_l_ctrl': {'rotateX': 0.0},
-		'upperarm_twist_02_r_ctrl': {'rotateX': 0.0}
+		'upperarm_twist_02_r_ctrl': {'rotateX': 0.0},
+		'weapon_l_ctrl': {
+			'rotateX': 0.0,
+			'rotateY': 0.0,
+			'rotateZ': 0.0,
+			'translateX': 0.0,
+			'translateY': 0.0,
+			'translateZ': 0.0,
+    },
+		'weapon_r_ctrl': {
+			'rotateX': 0.0,
+			'rotateY': 0.0,
+			'rotateZ': 0.0,
+			'translateX': 0.0,
+			'translateY': 0.0,
+			'translateZ': 0.0,
+    },
 	}
 }
 

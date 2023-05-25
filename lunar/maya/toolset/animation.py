@@ -161,9 +161,9 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 		if hikTemplate == "HumanIk":
 			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap[0]}:Mocap")
 
-			om.MGlobal.displayWarning(f"Importing from HumanIk namespace: {namespaceMocap}")
-			om.MGlobal.displayWarning(f"HumanIk character nodes: {mocapSkeleton.getExportNodes()}")
-			om.MGlobal.displayWarning(f"HumanIk character name: {mocapSkeleton.character}")
+			# om.MGlobal.displayWarning(f"Importing from HumanIk namespace: {namespaceMocap}")
+			# om.MGlobal.displayWarning(f"HumanIk character nodes: {mocapSkeleton.getExportNodes()}")
+			# om.MGlobal.displayWarning(f"HumanIk character name: {mocapSkeleton.character}")
 
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
@@ -182,6 +182,7 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 		mocapSkeleton.deleteCharacterDefinition()
 		mocapSkeleton = None
+		namespaceMocap = None
 
 		return True
 	

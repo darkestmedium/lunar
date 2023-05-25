@@ -25,10 +25,11 @@ templateMH = {
 		"Head":										{"id": 15, 	"node": "head"},
 	},
 	"definition": {
-		"Reference": 							{"id": 0, 	"node": "reference"},
+		"Reference": 							{"id": 999, "node": "root"},
+		# "Root": 									{"id": 999, "node": "root"},
 		# Base (required)
 		"Hips":										{"id": 1, 	"node": "pelvis"},
-		"HipsTranslation": 				{"id": 49, 	"node": "hipstranslation"},
+		# "HipsTranslation": 				{"id": 49, 	"node": "hipstranslation"},
 		"LeftUpLeg": 							{"id": 2, 	"node": "thigh_l"},
 		"LeftLeg": 								{"id": 3, 	"node": "calf_l"},
 		"LeftFoot": 							{"id": 4, 	"node": "foot_l"},
@@ -3069,14 +3070,14 @@ templateMH = {
 
 templateUe5 = {
 	"tPose": {
-		'hipstranslation': {
-    	'rotateX': -90.0,
-			'rotateY': -90.0,
-			'rotateZ': 90.0,
-			'translateX': -3.4314998759166215e-17,
-			'translateY': -2.2808661460876465,
-			'translateZ': 95.89678192138672
-    },
+		# 'hipstranslation': {
+    # 	'rotateX': -90.0,
+		# 	'rotateY': -90.0,
+		# 	'rotateZ': 90.0,
+		# 	'translateX': -3.4314998759166215e-17,
+		# 	'translateY': -2.2808661460876465,
+		# 	'translateZ': 95.89678192138672
+    # },
 		'ball_l': {'rotateX': 0.0,
 								'rotateY': 0.0,
 								'rotateZ': -89.99999999999997,
@@ -3571,14 +3572,14 @@ templateUe5 = {
 									'translateZ': -0.519517362117778}
 	},
 	"aPose": {
-		'hipstranslation': {
-    	'rotateX': -90.0,
-			'rotateY': -86.36689305003244,
-			'rotateZ': 90.0,
-			'translateX': -3.4314998759166215e-17,
-			'translateY': -2.2808661460876465,
-			'translateZ': 95.89678192138672
-    },
+		# 'hipstranslation': {
+    # 	'rotateX': -90.0,
+		# 	'rotateY': -86.36689305003244,
+		# 	'rotateZ': 90.0,
+		# 	'translateX': -3.4314998759166215e-17,
+		# 	'translateY': -2.2808661460876465,
+		# 	'translateZ': 95.89678192138672
+    # },
 		'ball_l': {'rotateX': 9.044702375411874e-15,
 								'rotateY': -6.361109362927037e-15,
 								'rotateZ': -90.00000000000001,

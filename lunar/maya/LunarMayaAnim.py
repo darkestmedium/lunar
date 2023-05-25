@@ -71,10 +71,10 @@ class LMTimeEditor():
 
 
 class LMAnimBake():
-	"""Wrappper class for custom baking."""
+	"""Wrappper class for custom baking.
+	"""
 
 	log = logging.getLogger("LMAnimBake")
-
 
 	@classmethod
 	def bakeTransform(cls, nodes:list, startEnd:tuple, simulation:bool=False, attributes:bool=['tx','ty','tz','rx','ry','rz']):

@@ -68,12 +68,11 @@ if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): loadDependencies()
 class LMHumanIk():
 	"""Retargeting with HumanIk in Maya, inherited from AbstractRetarget.
 
-	Logic Flow:
-	__init__():
-		initSetup():
-			if isValid() ->	characterExists() -> isLocked() -> getPropertiesNode()
-			
-			if not valid ->	validateDefinition()
+	Validation order:
+		__init__():
+			initSetup():
+				if isValid() ->	characterExists() -> isLocked() -> getPropertiesNode()
+				if not valid ->	validateDefinition()
 
 	TODO:
 	 	bakeAnimation -> Add animationLayer support
@@ -85,7 +84,6 @@ class LMHumanIk():
 	minimalDefinition = lmrrhi.templateHik["minimalDefinition"]
 	definition = lmrrhi.templateHik["definition"]
 
-	rootMotion = "root"
 
 	def __init__(self, name:str="HiK") -> None:
 		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
@@ -99,7 +97,6 @@ class LMHumanIk():
 		self.initSetup()
 
 		self.root = self.getRoot()
-		self.rootMotion = self.getRootMotion()
 		self.rootCnst = None
 
 
@@ -404,19 +401,7 @@ class LMHumanIk():
 		return True
 
 
-	def getRootMotion(self) -> str or None:
-		"""Gets the rootmotion node.
-		"""
-
-		node = self.returnNodeWithNameSpace(self.rootMotion)
-		if cmds.objExists(node):
-			return node
-		
-		logging.warning(f"Root motion node could not be retrieved for '{self.character}' character.")
-		return None
-
-
-	def getRoot(self) -> str or bool:
+	def getRoot(self) -> str or None:
 		"""Gets the root joint from the character definition dictionary.
 
 		If the Reference slot is empty it will attempt to get get the HipsTranslation node and if that
@@ -432,35 +417,17 @@ class LMHumanIk():
 		if cmds.objExists(node):
 			return node
 		else:
-			# Secondly attempt to get the Hips node
-			node = self.returnNodeWithNameSpace(self.definition['Hips']['node'])
+			# Secondly attempt to get the HipsTranslation node
+			node = self.returnNodeWithNameSpace(self.definition['HipsTranslation']['node'])
 			if cmds.objExists(node):
 				return node
 			else:
-				# Thirdly attempt to get the HipsTranslation node
-				node = self.returnNodeWithNameSpace(self.definition['HipsTranslation']['node'])
+				# Thirdly attempt to get the Hips node
+				node = self.returnNodeWithNameSpace(self.definition['Hips']['node'])
 				if cmds.objExists(node):
 					return node
 
-		logging.critical(f"Root node could not be retrieved.")
-		return False
-
-
-	def getExportNodes(self) -> list or None:
-		"""Get the export nodes.
-
-		Returns:
-			list or None: All nodes that will be exported, otherwise None will be returned.
-
-		"""
-		if self.getRoot():
-			nodes = cmds.listRelatives(self.root, allDescendents=True, type="joint")
-			nodes.append(self.root)
-			# Make sure that at least the minimalDefinition set exists for export
-			if nodes.__len__() >= self.minimalDefinition.__len__():
-				return nodes
-		
-		self.log.critical(f"Could not retrieve minimal joint set.")
+		logging.critical(f"Root node could not be retrieved - it doesn't exist.")
 		return None
 
 
@@ -510,7 +477,7 @@ class LMHumanIk():
 		"""
 		for i in self.definition:
 			node = self.returnNodeWithNameSpace(self.definition[i]["node"])
-			if not cmds.objExists(node): continue
+			if not cmds.objExists(node) or self.definition[i]["id"] == 999: continue
 			mel.eval(f'setCharacterObject("{node}", "{self.character}", {self.definition[i]["id"]}, 0);')
 
 
@@ -597,7 +564,7 @@ class LMHumanIk():
 		return None
 
 
-	def setSource(self, source) -> str or None:
+	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> str or None:
 		"""Sets the specifed input as source for the current object.
 
 		TODO ADD support for setting the stance, control rig option.
@@ -618,6 +585,15 @@ class LMHumanIk():
 					if self.active != self.character: self.setActive()
 					if source != self.source():
 						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
+
+						# Root motion setup outside Hik feautres. (Manual override)
+						if rootMotion:
+							if source.root is not None:
+								self.rootCnst = cmds.parentConstraint(source.root, self.root, mo=False)[0]
+								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
+							else:
+								self.log.warning(f"Root node not found for source input '{source}', skipping root setup.")
+
 						self.updateHikUi(updateSource=True)
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
 					else:
@@ -656,6 +632,25 @@ class LMHumanIk():
 			return mel.eval(f'hikGetSkeletonNodes "{self.character}"')
 
 		return False
+
+
+	def getExportNodes(self) -> list or None:
+		"""Get the export nodes.
+
+		Returns:
+			list or None: All nodes that will be exported, otherwise None will be returned.
+
+		"""
+		if self.isValid():
+			nodes = cmds.listRelatives(self.root, allDescendents=True, type="joint")
+			if nodes:
+				if self.root is not None:
+					nodes.append(self.root)
+				if nodes.__len__() >= self.minimalDefinition.__len__():
+					return nodes
+		
+		self.log.critical(f"Could not retrieve minimal joint set.")
+		return None
 
 
 	def getNode(self, node, attribute, type, source, destination):
@@ -850,30 +845,24 @@ class LMHumanIk():
 		return False
 
 
-	def getExportNodes(self) -> bool:
-		"""Gets the export nodes.
-
-		The export nodes may be different than the character nodes there more a seprate
-		method is nesseccary for quering them between different rigs.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		if self.isValid():
-			nodes = self.getCharacterNodes()
-
-			if len(nodes) >= 1: return nodes
-
-		return False
-
-
 	def cleanUpPairBlendNodes(self):
 		# Clean up pairBlend nodes after bake
 		# TODO this could be probably better
 		state2SKNode = self.getState2SkNode()
 		pairBlendNodes = cmds.listConnections(state2SKNode, type='pairBlend')
 		if pairBlendNodes: cmds.delete(pairBlendNodes)
+
+
+	def cleanUpBakeNodes(self):
+		"""Cleans up constraints and pairBlendNodes after bake.
+		"""
+		self.cleanUpPairBlendNodes()
+
+		if self.rootCnst is not None: 
+			cmds.delete(self.rootCnst)
+			self.rootCnst = None
+			if cmds.attributeQuery("blendParent1", node=self.root, exists=True):
+				cmds.deleteAttr(self.root, attribute="blendParent1")
 
 	
 	def connectSourceAndSaveAnimNew(self, pTransform:str, pSrcT:str="", pSrcR:str="", forcePairBlendCreation:bool=True):
@@ -947,7 +936,7 @@ class LMHumanIk():
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
 				self.filterRotations(nodes)
 
-				self.cleanUpPairBlendNodes()
+				self.cleanUpBakeNodes()
 
 				self.setSource("None")
 
@@ -978,14 +967,9 @@ class LMHumanIk():
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
-		# Check if visibility is off, if it is turn it off
-		# attribute.editLocked(f"{self.root}.visibility", True)
-
 		cmds.select(self.root)
 
 		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
-
-		# cmds.setAttr(f"{self.root}.visibility", False)
 
 
 	def deleteAnimation(self) -> bool:
@@ -1069,6 +1053,21 @@ class LMMetaHuman(LMHumanIk):
 	aPose = lmrrue.templateMH["aPose"]
 
 
+	def __init__(self, name:str="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
+
+		# Get and set internal character name variables
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
+
+		self.initSetup()
+
+		self.root = self.getRoot()
+		self.rootCnst = None
+
+
 	def accessoryJoints(self, value:bool=False):
 		"""Hides additional joints on the metahuman rig."""
 
@@ -1123,104 +1122,12 @@ class LMMetaHuman(LMHumanIk):
 
 	def importSetup(self):
 		"""Wrapper method for setup from scratch with import."""
-		self.setUpAxis()
-		self.orient()
+		# self.setUpAxis()
+		# self.orient()
 		self.accessoryJoints()
 		self.setupCharacter()
 		self.setAPose()
 
-
-	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
-		"""Set source for the specified character.
-
-		TODO Try to make it work without the ui
-		TODO validate source
-
-		"""
-		if source == "None":
-			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self.updateHikUi(updateSource=True)
-
-		else:
-			if self.valid:
-				if self.isSourceValid(source):
-					if self.active != self.character: self.setActive()
-					if source != self.source():
-						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
-
-						# Root motion setup outside Hik feautres. (Manual override)
-						if rootMotion:
-							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
-							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
-
-						self.updateHikUi(updateSource=True)
-						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
-					else:
-						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
-
-					return source
-
-				self.log.critical(f"'{source}' could not be validated as source input for '{self.character}'")
-
-		return None
-
-
-	def getExportNodes(self) -> bool:
-		"""Gets the export nodes.
-
-		The exports nodes may be different than the character nodes there more a seprate
-		method is nesseccary for quering them between different rigs.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the
-				operation.
-
-		"""
-		if self.isValid():
-			nodes = cmds.listRelatives(self.rootMotion, allDescendents=True, type="joint")
-			nodes.append(self.rootMotion)
-			if len(nodes) >= 1: return nodes
-
-		return False
-
-
-	def bakeAnimation(self, startFrame=None, endFrame=None) -> bool:
-		"""Bakes the animation of characterized nodes.
-
-		Args:
-			startFrame (int): First frame, if none it will query the timesliders start frame.
-			endFrame (int): Last frame, if none it will query the timesliders end frame.
-			oversamplingRate (int): Number of frames in between full frames, use for upresing the animation
-				from 30 to 60 fps.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		if self.isValid():
-			nodes = self.getCharacterNodes()
-			nodes.append(self.rootMotion)
-
-			if len(nodes) >= len(self.minimalDefinition):
-
-				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
-				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
-
-				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
-				self.filterRotations(nodes)
-
-				self.cleanUpPairBlendNodes()
-				if self.rootCnst: cmds.delete(self.rootCnst)
-
-				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
-					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
-
-				self.setSource("None")
-
-				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
-				return True
-
-		return False
 
 
 
@@ -1237,9 +1144,19 @@ class LMMannequinUe5(LMMetaHuman):
 	aPose = lmrrue.templateUe5["aPose"]
 
 
-	def setTPose(self):
-		"""Sets the character / creature in T-Pose."""
-		self.setPose(self.tPose)
+	def __init__(self, name:str="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
+
+		# Get and set internal character name variables
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
+
+		self.initSetup()
+
+		self.root = self.getRoot()
+		self.rootCnst = None
 
 
 	def importSetup(self):
@@ -1250,6 +1167,7 @@ class LMMannequinUe5(LMMetaHuman):
 		self.setupCharacter()
 
 		self.setAPose()
+
 
 
 
@@ -1266,7 +1184,23 @@ class LMMannequinUe4(LMMetaHuman):
 	aPose = lmrrue.templateUe4["aPose"]
 
 
+	def __init__(self, name:str="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
+		# Get and set internal character name variables
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
+
+		self.initSetup()
+
+		self.root = self.getRoot()
+		self.rootCnst = None
+
+
+
+# DEPRACTED
 class LMMannequinAsRig(LMMetaHuman):
 	"""Class for setting up the UE5 manneuqin rigged with Advanced Skeleton in Maya.
 
@@ -1396,6 +1330,7 @@ class LMMannequinAsRig(LMMetaHuman):
 
 
 
+# DEPRACTED
 class LMMannequinAsSkeleton(LMMetaHuman):
 	"""Class for setting up the UE5 manneuqin export skeleton in Maya.
 
@@ -1455,42 +1390,29 @@ class LMLunarCtrl(LMHumanIk):
 
 	TODO:
 		Sync with other modules / classes
-	
+
 	"""
+	minimalDefinition = lmrrlc.templateLC["minimalDefinition"]
 	definition = lmrrlc.templateLC["definition"]
 	tPose = lmrrlc.templateLC["tPose"]
 	aPose = lmrrlc.templateLC["aPose"]
 
-	CtrlMain = "main_ctrl"
-	rootMotion = "root_ctrl"
-	exportRoot = "root"
+	ctrlMain = "main_ctrl"
 
-	CtrlIk = [
+	cnstLeftWeapon = None
+	cnstRightWeapon = None
+
+
+	ctrlsIk = [
 		"arm_ik_l_ctrl", "arm_ik_r_ctrl", "arm_pv_l_ctrl", "arm_pv_r_ctrl",
 		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
 		"head_ik_ctrl",
 	]
 
-	ctrlIkEffectors = {
-		"LeftArmHandle":		"arm_ik_l_ctrl",
-		"LeftArmPv": 				"arm_pv_l_ctrl",
-		"RightArmHandle": 	"arm_ik_r_ctrl",
-		"RightArmPv": 			"arm_pv_r_ctrl",
-		"LeftLegHandle": 		"leg_ik_l_ctrl",
-		"LeftLegPv": 				"leg_pv_l_ctrl",
-		"RightLegHandle": 	"leg_ik_r_ctrl",
-		"RightLegPv": 			"leg_pv_r_ctrl",
-		"HeadHandle": 			"head_ik_ctrl",
-	}
-	CtrlIkHandles = ["arm_ik_l_ctrl", "arm_ik_r_ctrl", "leg_ik_l_ctrl", "leg_ik_r_ctrl"]
-	CtrlSwitches = ["head_switch_ctrl", "arm_switch_l_ctrl", "arm_switch_r_ctrl", "leg_switch_l_ctrl", "leg_switch_r_ctrl"]
-	CtrlHandSwitches = ["arm_switch_l_ctrl", "arm_switch_r_ctrl"]
-
-	AttrIk = ["headFkIk", "leftArmFkIk", "rightArmFkIk", "leftLegFkIk", "rightLegFkIk"]
-
 
 	def __init__(self, name="HiK") -> None:
-		"""Maya human ik init function for wrapping the in scene skeleton to the python object."""
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
 		# Get and set internal character name variables
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 		
@@ -1499,23 +1421,24 @@ class LMLunarCtrl(LMHumanIk):
 
 		self.initSetup()
 
+		# why do we need it here?? 
 		self.nodeProperties = self.getPropertiesNode()
 		self.nodeState2Sk = self.getState2SkNode()
 	
-		self.CtrlMain = self.getCtrlMain()
+		self.ctrlMain = self.getCtrlMain()
 		self.root = self.getRoot()
-		self.rootMotion = self.getRootMotion()
 		self.rootCnst = None
 
 
-	def getCtrlMain(self):
-
-		node = self.returnNodeWithNameSpace(self.CtrlMain)
+	def getCtrlMain(self) -> str or None:
+		"""Gets the main controll from the lunar rig.
+		"""
+		node = self.returnNodeWithNameSpace(self.ctrlMain)
 		if cmds.objExists(node):
 			return node
 		
 		logging.critical(f"Main ctrl could not be retrieved for '{self.character}' character.")
-		return False
+		return None
 
 
 	def setTPose(self):
@@ -1525,9 +1448,9 @@ class LMLunarCtrl(LMHumanIk):
 
 	def setAPose(self):
 		"""Sets the character / creature in A-Pose.
-		
+
 		Since the lunar rig is set to 0 values for transformation call the parent class set t-pose method.
-		
+
 		"""
 		self.setPose(self.aPose)
 
@@ -1619,11 +1542,21 @@ class LMLunarCtrl(LMHumanIk):
 						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_r_ctrl"), self.locRightLegPv, maintainOffset=True)
 						cmds.parentConstraint(self.locRightLegPv, self.returnNodeWithNameSpace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
+						# Left Weapon
+						sourceLeftWeapon = f"{source.nameSpace}:weapon_l"
+						if cmds.objExists(sourceLeftWeapon):
+							# om.MGlobal.displayWarning(sourceLeftWeapon)
+							self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.returnNodeWithNameSpace("weapon_l_ctrl"), maintainOffset=False)
+						# Right Weapon
+						sourceRightWeapon = f"{source.nameSpace}:weapon_r"
+						if cmds.objExists(sourceLeftWeapon):
+							# om.MGlobal.displayWarning(sourceRightWeapon)
+							self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.returnNodeWithNameSpace("weapon_r_ctrl"), maintainOffset=False)
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
-							if source.rootMotion is not None:
-								self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
+							if source.root is not None:
+								self.rootCnst = cmds.parentConstraint(source.root, self.root, mo=False)[0]
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
 						self.updateHikUi(updateSource=True)
@@ -1639,8 +1572,12 @@ class LMLunarCtrl(LMHumanIk):
 		return None
 
 
-	def getExportNodes(self) -> list:
-		"""Gets the export nodes.
+	def getExportNodes(self) -> list or None:
+		"""Override - Gets the export nodes. (We need to get transforms - not joints)
+
+		Overrides base method:
+			nodes = cmds.listRelatives(self.root, allDescendents=True, type="joint")
+			nodes = cmds.listRelatives(self.ctrlMain, allDescendents=True, type="transform")
 
 		The exports nodes may be different than the character nodes there more a seprate
 		method is nesseccary for quering them between different rigs.
@@ -1651,21 +1588,24 @@ class LMLunarCtrl(LMHumanIk):
 
 		"""
 		if self.isValid():
-			nodes = cmds.listRelatives(self.CtrlMain, allDescendents=True, type="transform")
-			nodes.append(self.CtrlMain)
-			if len(nodes) >= 1: return nodes
+			nodes = cmds.listRelatives(self.ctrlMain, allDescendents=True, type="transform")
+			if nodes:
+				nodes.append(self.ctrlMain)
+				if nodes.__len__() >= self.minimalDefinition.__len__():
+					return nodes
 
-		return []
+		return None
 
 
-	def getCtrlsIk(self) -> bool:
-
+	def getCtrlsIk(self) -> list or None:
+		"""Returns a list with all the ik controls.
+		"""
 		if self.isValid():
 			ikCtrlsWithNameSpace = []
-			[ikCtrlsWithNameSpace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlIk]
+			[ikCtrlsWithNameSpace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.ctrlsIk]
 			return ikCtrlsWithNameSpace
 
-		return False
+		return None
 
 
 	def getCtrlSwitches(self):
@@ -1687,6 +1627,8 @@ class LMLunarCtrl(LMHumanIk):
 	
 
 	def setCtrlsIkToFk(self):
+		"""Resets fk / ik controls for retargeting mocap.
+		"""
 
 		ctrlSwitch = self.returnNodeWithNameSpace("fkik_ctrl")
 		cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
@@ -1703,28 +1645,6 @@ class LMLunarCtrl(LMHumanIk):
 	
 		cmds.setAttr(f"{ctrlSwitch}.rightLegTwist", 0)
 		cmds.setAttr(f"{ctrlSwitch}.rightLegTwist", 0)
-
-		# listSwitches = self.getCtrlSwitches()
-		# listHandSwitches = self.getCtrlHandSwitches()
-		# [cmds.setAttr(f"{self.CtrlMain}.{attr}", 0) for attr in self.AttrIk]
-
-		# [cmds.setAttr(f"{ctrl}.mode", 0) for ctrl in listSwitches]
-		# [cmds.setAttr(f"{ctrl}.softness", 0) for ctrl in listSwitches]
-		# [cmds.setAttr(f"{ctrl}.twist", 0) for ctrl in listSwitches]
-
-		# [cmds.setAttr(f"{ctrl}.fist", 50) for ctrl in listHandSwitches]
-		# [cmds.setAttr(f"{ctrl}.spread", 50) for ctrl in listHandSwitches]
-
-
-	def __validateIkCtrlsBeforeBaking(self, ikCtrls):
-		for ctrl in ikCtrls:
-			if cmds.objExists(ctrl):
-				animAttributes = cmds.listAnimatable(ctrl)
-				for attribute in animAttributes:
-					numKeyframes = cmds.keyframe(attribute, query=True, keyframeCount=True)
-					if numKeyframes == 0:
-						print(f"ctrl: {ctrl} has no animation, setting keyframe")
-						cmds.setKeyframe(ctrl)
 
 
 	def bakeAnimation(self, startFrame=None, endFrame=None, oversamplingRate=1) -> bool:
@@ -1748,23 +1668,12 @@ class LMLunarCtrl(LMHumanIk):
 				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
 				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
 
-				# Ok so we need to update two frames to get the polevector work from the sovler since their (like a pre-roll)
-				# are connected to fore limb translation which in case of fk is 0 0 0 and the solver calculates
-				# it in real time, other was the animations 1 or 2 frame will not be baked properly on those frames
-				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame-2, om.MTime.uiUnit()))
-				# oma.MAnimControl.setCurrentTime(om.MTime(startFrame-1, om.MTime.uiUnit()))
-
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), False)
 				self.filterRotations(nodes)
 
-				# Clean up
-				self.cleanUpPairBlendNodes()
-				if self.rootCnst: 
-					cmds.delete(self.rootCnst)
-					self.rootCnst = None
-				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
-					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
-				
+				# Clean up -> include the rest in a overriden cleanUpBakeNodes method
+				self.cleanUpBakeNodes()
+
 				if self.cnstHeadIkHandle:
 					cmds.delete(self.cnstHeadIkHandle)
 					self.cnstHeadIkHandle = None
@@ -1807,36 +1716,24 @@ class LMLunarCtrl(LMHumanIk):
 				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_r_ctrl"), exists=True):
 					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_r_ctrl"), attribute="blendParent1")
 
+				# Weapon cleanup
+				if self.cnstLeftWeapon:
+					cmds.delete(self.cnstLeftWeapon)
+					self.cnstLeftWeapon = None
+					if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("weapon_l_ctrl"), exists=True):
+						cmds.deleteAttr(self.returnNodeWithNameSpace("weapon_l_ctrl"), attribute="blendParent1")
+
+				if self.cnstRightWeapon:
+					cmds.delete(self.cnstRightWeapon)
+					self.cnstRightWeapon = None
+					if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("weapon_r_ctrl"), exists=True):
+						cmds.deleteAttr(self.returnNodeWithNameSpace("weapon_r_ctrl"), attribute="blendParent1")
+
 
 				self.setSource("None")
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
-				return True
-
-		return False
-
-
-	def deleteAnimationOnIk(self) -> bool:
-		"""Deletes all animation curve nodes on the current object.
-
-		TODO ADD animationLayer support
-		TODO fix pairBlend connection
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		# get character nodes
-		nodes = self.getCtrlsIk()
-		if nodes:
-			# get all animation curve nodes
-			animCurves = cmds.listConnections(nodes, type='animCurve')
-			if animCurves:
-				# check if it is from a referenced source
-				for animCurve in animCurves:
-					if not cmds.referenceQuery(animCurve, isNodeReferenced=True):
-						cmds.delete(animCurve)
 				return True
 
 		return False
@@ -1875,6 +1772,7 @@ class LMLunarCtrl(LMHumanIk):
 
 
 
+
 class LMLunarExport(LMMannequinUe5):
 	"""Class for setting up the Maya Lunar Export Skeleton rig in Maya.
 
@@ -1885,40 +1783,19 @@ class LMLunarExport(LMMannequinUe5):
 	
 	# ModDg = om.MDGModifier()
 
-
-	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
-		"""Set source for the specified character.
-
-		TODO Try to make it work without the ui
-		TODO validate source
-
+	def __init__(self, name:str="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
 		"""
-		if source == "None":
-			mel.eval(f'hikSetCharacterInput("{self.character}", "")')
-			self.updateHikUi(updateSource=False)
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
-		else:
-			if self.valid:
-				if self.isSourceValid(source):
-					if self.active != self.character: self.setActive()
-					if source != self.source():
-						mel.eval(f'hikSetCharacterInput("{self.character}", "{source}")')
+		# Get and set internal character name variables
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
 
-						# Root motion setup outside Hik feautres. (Manual override)
-						if rootMotion:
-							self.rootCnst = cmds.parentConstraint(source.rootMotion, self.rootMotion, mo=False)[0]
-							cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
+		self.initSetup()
 
-						self.updateHikUi(updateSource=True)
-						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
-					else:
-						self.log.debug(f"'{source}' is already set as source input for '{self.character}'")
-
-					return source
-
-				self.log.critical(f"'{source}' could not be validated as source input for '{self.character}'")
-
-		return None
+		self.root = self.getRoot()
+		self.rootCnst = None
 
 
 	def setCtrlRigAsSource(self, source:LMLunarCtrl):
@@ -1961,7 +1838,9 @@ class LMLunarExport(LMMannequinUe5):
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_l_out", f"{srcns}lowerarm_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_l_ctrl", f"{srcns}lowerarm_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_l_ctrl", f"{srcns}lowerarm_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
-		self.listConstraints.append(cmds.parentConstraint(f"{tarns}hand_l_out", f"{srcns}hand_l",  maintainOffset=True, skipTranslate=["x", "y", "z"]))
+
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}hand_l_out", f"{srcns}hand_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}weapon_l_ctrl", f"{srcns}weapon_l", maintainOffset=True))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_l_ctrl", f"{srcns}thumb_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_l_ctrl", f"{srcns}thumb_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_l_ctrl", f"{srcns}thumb_03_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
@@ -1988,7 +1867,9 @@ class LMLunarExport(LMMannequinUe5):
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_r_out", f"{srcns}lowerarm_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_01_r_ctrl", f"{srcns}lowerarm_twist_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}lowerarm_twist_02_r_ctrl", f"{srcns}lowerarm_twist_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}hand_r_out", f"{srcns}hand_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+		self.listConstraints.append(cmds.parentConstraint(f"{tarns}weapon_r_ctrl", f"{srcns}weapon_r", maintainOffset=True))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_01_r_ctrl", f"{srcns}thumb_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_02_r_ctrl", f"{srcns}thumb_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thumb_03_r_ctrl", f"{srcns}thumb_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
@@ -2008,6 +1889,7 @@ class LMLunarExport(LMMannequinUe5):
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_01_r_ctrl", f"{srcns}ring_01_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_02_r_ctrl", f"{srcns}ring_02_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ring_03_r_ctrl", f"{srcns}ring_03_r", maintainOffset=True, skipTranslate=["x", "y", "z"]))
+
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_l_out", f"{srcns}thigh_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_01_l_ctrl", f"{srcns}thigh_twist_01_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}thigh_twist_02_l_ctrl", f"{srcns}thigh_twist_02_l", maintainOffset=True, skipTranslate=["x", "y", "z"]))
@@ -2042,10 +1924,10 @@ class LMLunarExport(LMMannequinUe5):
 
 		"""
 		if self.isValid():
-			nodes = self.getCharacterNodes()
-			nodes.append(self.rootMotion)
+			nodes = self.getExportNodes()
+			# nodes.append(self.root)
 
-			if len(nodes) >= len(self.minimalDefinition):
+			if nodes.__len__() >= self.minimalDefinition.__len__():
 
 				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
 				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
@@ -2057,8 +1939,8 @@ class LMLunarExport(LMMannequinUe5):
 				if self.listConstraints:
 					[cmds.delete(obj) for obj in self.listConstraints]
 					self.listConstraints = []
-				if cmds.attributeQuery("blendParent1", node=self.rootMotion, exists=True):
-					cmds.deleteAttr(self.rootMotion, attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.root, exists=True):
+					cmds.deleteAttr(self.root, attribute="blendParent1")
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
 				return True
@@ -2098,36 +1980,25 @@ class LMLunarExport(LMMannequinUe5):
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Get the main ctrl with namespace
-		CtrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.CtrlMain)
-		# FnMainCtrl = om.MFnDependencyNode(coreApi.getObjectFromString(mainCtrl))
-		# PlugExportSkeletonVisibility = FnMainCtrl.findPlug("exportSkeletonVisibility", False)
-		# # Check if visibility is off,
-		# # We need to do this with the api since the file can be referenced and we don't want to chek for that
-		# IsVisible = PlugExportSkeletonVisibility.asBool()
-		# if not IsVisible:
-		# 	if PlugExportSkeletonVisibility.isLocked:	PlugExportSkeletonVisibility.setLocked(False)
-		# 	PlugExportSkeletonVisibility.setBool(True)
-		# 	self.ModDg.doIt()
+		ctrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.ctrlMain)
 
 		# Check if visibility is off, if it is turn it off check if referenced file
-		IsVisible = cmds.getAttr(f"{CtrlMain}.exportSkeletonVisibility")
-		IsSelectable = cmds.getAttr(f"{CtrlMain}.exportSkeletonDisplayType")
+		IsVisible = cmds.getAttr(f"{ctrlMain}.exportSkeletonVisibility")
+		IsSelectable = cmds.getAttr(f"{ctrlMain}.exportSkeletonDisplayType")
 		if not IsVisible:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", True)
+			cmds.setAttr(f"{ctrlMain}.exportSkeletonVisibility", True)
 		if IsSelectable != 0:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", 0)
+			cmds.setAttr(f"{ctrlMain}.exportSkeletonDisplayType", 0)
 
-		cmds.select(self.rootMotion)
+		cmds.select(self.root)
 
 		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
 
 		# Hide it back
 		if not IsVisible:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonVisibility", False)
-			# PlugExportSkeletonVisibility.setBool(False)
-			# self.ModDg.doIt()
+			cmds.setAttr(f"{ctrlMain}.exportSkeletonVisibility", False)
 		if IsSelectable != 0:
-			cmds.setAttr(f"{CtrlMain}.exportSkeletonDisplayType", IsSelectable)
+			cmds.setAttr(f"{ctrlMain}.exportSkeletonDisplayType", IsSelectable)
 
 
 
@@ -2151,7 +2022,27 @@ class LMSinnersDev2(LMHumanIk):
 	tPose = lmrrsd.templateSD2["tPose"]
 	aPose = lmrrsd.templateSD2["aPose"]
 
-	rootMotion = "trajectory"
+	# rootMotion = "trajectory"
+
+
+	def __init__(self, name="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		# Get and set internal character name variables
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
+		
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
+
+		self.initSetup()
+
+		# why do we need it here?? 
+		# self.nodeProperties = self.getPropertiesNode()
+		# self.nodeState2Sk = self.getState2SkNode()
+	
+		# self.CtrlMain = self.getCtrlMain()
+		self.root = self.getRoot()
+		self.rootCnst = None
 
 
 	def accessoryJoints(self, value=False):
@@ -2237,7 +2128,26 @@ class LMSinnersDev1(LMHumanIk):
 	tPose = lmrrsd.templateSD1["tPose"]
 	aPose = lmrrsd.templateSD1["aPose"]
 
-	rootMotion = "NUXRoot"
+	# rootMotion = "NUXRoot"
+
+	def __init__(self, name="HiK") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		# Get and set internal character name variables
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
+		
+		self.nameSpace = self.extractNameSpace(name)
+		self.character = name
+
+		self.initSetup()
+
+		# why do we need it here?? 
+		# self.nodeProperties = self.getPropertiesNode()
+		# self.nodeState2Sk = self.getState2SkNode()
+	
+		# self.CtrlMain = self.getCtrlMain()
+		self.root = self.getRoot()
+		self.rootCnst = None
 
 
 	def accessoryJoints(self, value=False):
@@ -2509,9 +2419,9 @@ class LMRetargeter():
 			locator = cmds.spaceLocator(name='scaleGrp')
 			cmds.parent('trajectory', locator)
 			cmds.scale(100, 100, 100, locator)
-			rootMotion = "trajectory"
-			nodes = cmds.listRelatives(rootMotion, allDescendents=True, type="joint")
-			nodes.append(rootMotion)
+			root = "trajectory"
+			nodes = cmds.listRelatives(root, allDescendents=True, type="joint")
+			nodes.append(root)
 			[cmds.setAttr(f'{node}.radius', 0.01) for node in nodes]
 		
 		# Temp Sinners1 override
