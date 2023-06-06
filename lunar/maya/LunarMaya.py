@@ -836,8 +836,6 @@ class LMAttribute():
 			# [cmds.setAttr(f"{object}.{attr}", lock=True, keyable=False, channelBox=False) for attr in singleAttributeLockList]
 
 
-
-
 	@classmethod
 	def lockTransforms(cls, object:str, lockChannels:list=["translate", "rotate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"]):
 		"""Locks all transform attributes on the given object.
@@ -870,6 +868,24 @@ class LMAttribute():
 
 		"""
 		if cmds.getAttr(name, lock=True):	cmds.setAttr(name, lock=False)
+
+
+	@classmethod
+	def unlockPlugIfLocked(cls, node:str, attributes:list):
+		"""Unlocks the given attributes if they're locked.
+
+		TODO:
+			Replace with the api method to unlock Attributes from referenced files 8-)
+
+		"""
+		fnNode = om.MFnDependencyNode(LMObject.getObjFromString(node))
+		# for attr in attributes:
+		# 	plug = fnNode.findPlug(attr, False)
+		# 	if plug.isLocked():	
+		# 		plug.setLocked(False)
+		[fnNode.findPlug(attr, False).setLocked(False) for attr in attributes if fnNode.findPlug(attr, False).isLocked()]
+
+		cls.dgMod.doIt()
 
 
 	@classmethod

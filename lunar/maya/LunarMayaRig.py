@@ -1471,7 +1471,8 @@ class Leg2bComponent():
 			lowerTwist1=listJoints["Leg"]["LegRoll1"]["Root"],
 			lowerTwist2=listJoints["Leg"]["LegRoll2"]["Root"],
 			fkIkStatePosition=fkIkStatePosition, 
-			side=side
+			side=side,
+			createTwistSolver=False,
 		)
 
 		self.ik = Ik2bLimbComponent(
@@ -1586,7 +1587,8 @@ class Arm2bComponent():
 			lowerTwist1=listJoints["Arm"]["ForeArmRoll1"],
 			lowerTwist2=listJoints["Arm"]["ForeArmRoll2"],
 			fkIkStatePosition=fkIkStatePosition, 
-			side=side
+			side=side,
+			createTwistSolver=False,
 		)
 
 		self.ik = Ik2bLimbComponent(
