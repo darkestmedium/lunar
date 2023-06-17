@@ -855,7 +855,7 @@ class FkHandComponent():
 			self.ctrlInHandMiddle, self.ctrlMiddle1, self.ctrlMiddle2, self.ctrlMiddle3,
 			self.ctrlInHandRing, self.ctrlRing1, self.ctrlRing2, self.ctrlRing3,
 			self.ctrlInHandPinky, self.ctrlPinky1, self.ctrlPinky2, self.ctrlPinky3,
-			self.ctrlWeapon,
+			# self.ctrlWeapon,
 		)
 	
 	def getMainCtrls(self):
@@ -1441,7 +1441,9 @@ class Leg2bComponent():
 	"""Class for building the head component.
 	"""
 
-	def __init__(self, compRig, attachTo:str, listJoints:list, fkIkStatePosition:tuple=(0,0,0), side:str="left") -> None:
+	def __init__(self, compRig, attachTo:str, listJoints:list, fkIkStatePosition:tuple=(0,0,0), side:str="left",
+		createTwistSolver:bool=True,
+	) -> None:
 
 		if side == "left":
 			sideSuffix = "_l"
@@ -1472,7 +1474,7 @@ class Leg2bComponent():
 			lowerTwist2=listJoints["Leg"]["LegRoll2"]["Root"],
 			fkIkStatePosition=fkIkStatePosition, 
 			side=side,
-			createTwistSolver=False,
+			createTwistSolver=createTwistSolver,
 		)
 
 		self.ik = Ik2bLimbComponent(
@@ -1554,8 +1556,9 @@ class Arm2bComponent():
 	"""Class for building the head component.
 	"""
 
-	def __init__(self, compRig, attachTo:str, listJoints:list, fkIkStatePosition:tuple=(0,0,0), side:str="left") -> None:
-
+	def __init__(self, compRig, attachTo:str, listJoints:list, fkIkStatePosition:tuple=(0,0,0), side:str="left",
+		createTwistSolver:bool=True,
+	) -> None:
 		if side == "left":
 			sideSuffix = "_l"
 			color = "lightorange"
@@ -1588,7 +1591,7 @@ class Arm2bComponent():
 			lowerTwist2=listJoints["Arm"]["ForeArmRoll2"],
 			fkIkStatePosition=fkIkStatePosition, 
 			side=side,
-			createTwistSolver=False,
+			createTwistSolver=createTwistSolver,
 		)
 
 		self.ik = Ik2bLimbComponent(

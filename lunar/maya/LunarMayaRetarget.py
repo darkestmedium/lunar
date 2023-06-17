@@ -1559,6 +1559,45 @@ class LMLunarCtrl(LMHumanIk):
 								self.rootCnst = cmds.parentConstraint(source.root, self.root, mo=False)[0]
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
+						# Twist ctrls override
+							# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
+							# "LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
+							# "LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
+							# "LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
+							# "LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
+							# "LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
+							# "LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
+							# "LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
+
+							# "LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
+							# "LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
+							# "LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
+							# "LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
+							# "LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
+							# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
+							# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
+							# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
+		
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll2R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll2R")
+
+
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll2R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll2R")
+
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll2R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll1R")
+						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll2R")
+
 						self.updateHikUi(updateSource=True)
 
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")

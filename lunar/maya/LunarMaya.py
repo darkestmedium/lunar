@@ -133,6 +133,7 @@ class LMFbx(AbstractFbx):
 
 	@classmethod
 	def __setImportMocapSettings(cls, mode:str="add") -> bool:
+	# def __setImportMocapSettings(cls, mode:str="exmerge") -> bool:
 		"""Sets import settings for bare bone mocap import.
 
 		Args:

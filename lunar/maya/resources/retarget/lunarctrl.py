@@ -58,22 +58,23 @@ templateLC = {
 		# Neck
 		"Neck1": 									{"id": 32, 	"node": "neck_02_ctrl"},
 		# Roll - Leaf
-		"LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
-		"LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
-		"LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
-		"LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
-		"LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
-		"LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
-		"LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
-		"LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
-		"LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
-		"LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
-		"LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
-		"LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
-		"LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
-		"LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
-		"LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
-		"LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
+		# We don't bake the twist ctrls because they're calculated in the solver
+		# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
+		# "LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
+		# "LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
+		# "LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
+		# "LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
+		# "LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
+		# "LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
+		# "LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
+		# "LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
+		# "LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
+		# "LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
+		# "LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
+		# "LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
+		# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
+		# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
+		# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
 		# Left Hand
 		"LeftHandThumb1": 				{"id": 50, 	"node": "thumb_01_l_ctrl"},
 		"LeftHandThumb2": 				{"id": 51, 	"node": "thumb_02_l_ctrl"},
@@ -196,7 +197,7 @@ templateLC = {
 		'clavicle_l_ctrl': {'rotateX': -3.4333294468700877,
 												'rotateY': -8.777245010360375,
 												'rotateZ': -2.6611805835416873},
-		'clavicle_r_ctrl': {'rotateX': 356.566670553178,
+		'clavicle_r_ctrl': {'rotateX': -3.4333294468700877,
 												'rotateY': -8.777245008565831,
 												'rotateZ': -2.6611805838597316},
 		'foot_l_ctrl': {'rotateX': 0.14801845934854388,
@@ -239,7 +240,7 @@ templateLC = {
 			# 'rightLegFkIk': 0,
 			'rightLegSoftness': 0.0,
 			'rightLegTwist': 0.0
-    },
+		},
 		'index_01_l_ctrl': {'rotateX': 0.0,
 												'rotateY': 0.0,
 												'rotateZ': -23.372999646513968},
@@ -289,7 +290,7 @@ templateLC = {
 											'translateX': 1.296,
 											'translateY': 1.501,
 											'translateZ': 14.994
-    },
+		},
 		'leg_pv_r_ctrl': {
 			# 'space': 2,
 			# 								'spaceUseRotate': False,
@@ -297,7 +298,7 @@ templateLC = {
 											'translateX': -1.295,
 											'translateY': -1.501,
 											'translateZ': -14.994
-    },
+		},
 		'lowerarm_l_ctrl': {'rotateZ': 38.95697362510834},
 		'lowerarm_r_ctrl': {'rotateZ': 38.95697352574442},
 		'lowerarm_twist_01_l_ctrl': {'rotateX': 0.0},
@@ -457,7 +458,7 @@ templateLC = {
 			'translateX': 0.0,
 			'translateY': 0.0,
 			'translateZ': 0.0,
-    },
+		},
 		'weapon_r_ctrl': {
 			'rotateX': 0.0,
 			'rotateY': 0.0,
@@ -465,7 +466,7 @@ templateLC = {
 			'translateX': 0.0,
 			'translateY': 0.0,
 			'translateZ': 0.0,
-    },
+		},
 	},
 	"aPose": {
 		'arm_ik_l_ctrl': {'rotateX': -5.724998426634331e-14,
@@ -550,7 +551,7 @@ templateLC = {
 			# 'rightLegFkIk': 0,
 			'rightLegSoftness': 0.0,
 			'rightLegTwist': 0.0
-    },
+		},
 		'index_01_l_ctrl': {'rotateX': 0.0, 'rotateY': 0.0, 'rotateZ': 0.0},
 		'index_01_r_ctrl': {'rotateX': 0.0, 'rotateY': 0.0, 'rotateZ': 0.0},
 		'index_02_l_ctrl': {'rotateX': 0.0, 'rotateY': 0.0, 'rotateZ': 0.0},
@@ -678,7 +679,7 @@ templateLC = {
 			'translateX': 0.0,
 			'translateY': 0.0,
 			'translateZ': 0.0,
-    },
+		},
 		'weapon_r_ctrl': {
 			'rotateX': 0.0,
 			'rotateY': 0.0,
@@ -686,7 +687,6 @@ templateLC = {
 			'translateX': 0.0,
 			'translateY': 0.0,
 			'translateZ': 0.0,
-    },
+		},
 	}
 }
-
