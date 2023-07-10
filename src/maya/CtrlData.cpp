@@ -956,26 +956,13 @@ void CtrlData::getShape(const MObject& obj, const MDagPath& pathObj, MMatrix mat
 		fLineList.append(MPoint(listPointsLine[0][0], listPointsLine[0][1], listPointsLine[0][2]) * matrix);
 		fLineList.append(MPoint(listPointsLine[1][0], listPointsLine[1][1], listPointsLine[1][2]) * matrix);
 	}
-	// } else if (shapeIndex == 8) {
-	// 	fLineList.append(MPoint(0.0, 0.0, 0.0) * matrix);
-	// 	fLineList.append(MPoint(1.0, 1.0, 1.0) * matrix);
-	// }
-	// }	else if (shapeIndex == 8) {  	// Joint Line
-	// 	MFnDagNode fnShape = pathObj;
-	// 	MFnTransform fnChild;
-	// 	MDagPath dpChild;
-	// 	status = MDagPath::getAPathTo(fnShape.parent(0), dpChild);
-	// 	if (status == MS::kSuccess) {
-	// 		fnChild.setObject(dpChild);
-	// 	} else {
-	// 		fnChild.setObject(MObject::kNullObj);
-	// 	}
 
-	// 	MPoint posFnChild = fnChild.rotatePivot(MSpace::kWorld);
-
-	// 	listLine.append(MPoint() * matrix);
-	// 	listLine.append(MPoint() * pathObj.exclusiveMatrixInverse());
-	// 	// listLine.append(posFnChild * pathObj.exclusiveMatrixInverse());
+	// if (showOrientation) {
+	// 	currentInd++;
+	// 	MPointArray& linesPointsCenterOrientation = this->fLineList[currentInd];
+	// 	linesPointsCenterOrientation.clear();
+	// 	for (int i = 0; i < lookAtCount; i++)
+	// 		linesPointsCenterOrientation.append(MPoint(listLinesLookat[i][0] * centerScale, listLinesLookat[i][1] * centerScale, listLinesLookat[i][2] * centerScale));
 	// }
 
 	// Draw line for pole vectors

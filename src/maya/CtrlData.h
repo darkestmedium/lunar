@@ -55,7 +55,7 @@ public:
 	MString strFkIkState;
 
 	unsigned int DepthPriority;
-	bool DrawInXray;
+	// bool DrawInXray;
 
 	// Constructors
 	// CtrlData() : MUserData(false) {}; // Don't delete after draw

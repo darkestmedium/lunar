@@ -150,6 +150,8 @@ static float listPointsNull[6][3] = {
 static int nullCount = 6;
 static float nullBB[2][3] = {{-0.500f, -0.500f, -0.500f}, {0.500f, 0.500f, 0.500f}};
 
+
+
 // Line
 static float listPointsLine[2][3] = {
 	{0.500f, 0.000f, 0.000f},
@@ -157,3 +159,22 @@ static float listPointsLine[2][3] = {
 };
 static int lineCount = 2;
 static float lineBB[2][3] = {{-0.500f, 0.000f, 0.000f}, {0.500f, 0.000f, 0.000f}};
+
+
+
+// Lookat
+static float listLinesLookat[13][3] = { { 0.000f, -0.075f,0.000f } ,
+{ 0.000f, 0.188f,0.000f } ,
+{ -0.000f, 0.188f,-0.062f } ,
+{ -0.000f, 0.250f,0.000f } ,
+{ -0.000f, 0.188f,0.062f } ,
+{ 0.000f, 0.188f,0.000f } ,
+{ 0.000f, 0.075f,0.000f } ,
+{ 0.000f, 0.075f,0.325f } ,
+{ 0.000f, 0.150f,0.325f } ,
+{ 0.000f, 0.000f,0.500f } ,
+{ 0.000f, -0.150f,0.325f } ,
+{ 0.000f, -0.075f,0.325f } ,
+{ 0.000f, -0.075f,0.000f } };
+static int lookAtCount = 13;
+static float lookAtBB[2][3] = { { -0.00f, -0.15f, -0.06f } ,{ 0.00f, 0.25f, 0.50f } };

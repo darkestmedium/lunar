@@ -77,9 +77,9 @@ MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagP
 
 	data->_wfColor = MHWRender::MGeometryUtilities::wireframeColor(objPath);
 
-	// If XRay Joints Draw in XRay Mode
-	if (frameContext.getDisplayStyle() & MHWRender::MFrameContext::kXrayJoint) {data->DrawInXray = true;}
-	else {data->DrawInXray = false;}
+	// // If XRay Joints Draw in XRay Mode
+	// if (frameContext.getDisplayStyle() & MHWRender::MFrameContext::kXrayJoint) {data->DrawInXray = true;}
+	// else {data->DrawInXray = false;}
 
 	switch (MHWRender::MGeometryUtilities::displayStatus(objPath))
 	{
@@ -126,8 +126,8 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 
 	drawManager.setDepthPriority(pCtrlData->DepthPriority);
 
-	// If XRay Joints Draw in XRay Mode
-	if (pCtrlData->DrawInXray) {drawManager.beginDrawInXray();}
+	// // If XRay Joints Draw in XRay Mode
+	// if (pCtrlData->DrawInXray) {drawManager.beginDrawInXray();}
 	
 	// Draw the fill shape
 	if (pCtrlData->fillShape)	{
@@ -147,8 +147,8 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 		drawManager.text(pCtrlData->posFkIkState, pCtrlData->strFkIkState, drawManager.kCenter);
 	}
 
-	// End drawable
-	if (pCtrlData->DrawInXray) {drawManager.endDrawInXray();}
+	// // End drawable
+	// if (pCtrlData->DrawInXray) {drawManager.endDrawInXray();}
 
 	drawManager.endDrawable();
 }
