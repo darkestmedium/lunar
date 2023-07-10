@@ -60,11 +60,12 @@ public:
 	// Node's Input Attributes
 	static MObject attrInFkIk;
 	static Attribute attrInFkStart, attrInFkMid, attrInFkEnd;
+	static Attribute attrInIkStart, attrInIkMid, attrInIkEnd;
 	static Attribute attrInIkHandle;
 	static MObject attrInPvX, attrInPvY, attrInPvZ, attrInPv;
 	static Attribute attrInTwist;
 	static MObject attrInSoftness;
-	static Attribute attrInJntStart, attrInJntMid, attrInJntEnd;
+	static Attribute attrInOutStart, attrInOutMid, attrInOutEnd;
 
 	// Nodes's Output Attributes
 	static MObject attrOutStartX, attrOutStartY, attrOutStartZ, attrOutStart;
@@ -76,29 +77,29 @@ public:
 	// static MObject attrInTime;
 
 	// In data
-	MMatrix matInFkStart, matInFkMid, matInFkEnd, matInIkHandle;
+	MMatrix matInFkStart, matInFkMid, matInFkEnd;
+	MMatrix matInIkStart, matInIkMid, matInIkEnd;
+	MMatrix matInIkHandle;
 	MVector posInPv;
 	MAngle twist;
 	double fkIk, softness;
 	bool bIsPvConnected, bFkVisibility, bIkVisibility;
 	MAngle::Unit uiUnitAngle;
 
-	MTransformationMatrix mtrnInStart, mtrnInMid, mtrnInEnd;
 	MEulerRotation eulFkStart, eulFkMid, eulFkEnd;
 
 	// Function sets
-	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd, fnIkHandle, fnPv;
+	MFnTransform fnRoot, fnFkStart, fnFkMid, fnFkEnd;
+	MFnTransform fnIkStart, fnIkMid, fnIkEnd, fnIkHandle, fnPv;
 	MFnTransform fnOutStart, fnOutMid, fnOutEnd;
 
 	// Position
-	MVector posFkRoot, posFkStart, posFkMid, posFkEnd, posFkHandle, posFkPv;
 	MVector posIkRoot, posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv;
-	MVector posOutStart, posOutMid, posOutEnd, posOutHandle, posOutPv;
 
 	// Quats
-	MQuaternion quatFkStart, quatFkMid, quatFkEnd, quatFkHandle;
-	MQuaternion quatIkStart, quatIkMid, quatIkEnd, quatIkHandle;
-	MQuaternion quatOutStart, quatOutMid, quatOutEnd, quatOutHandle;
+	MQuaternion quatFkStart, quatFkMid, quatFkEnd;
+	MQuaternion quatIkStart, quatIkMid, quatIkEnd;
+	MQuaternion quatOutStart, quatOutMid, quatOutEnd;
 	
 	MObject objSelf;
 

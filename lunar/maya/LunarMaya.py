@@ -78,7 +78,7 @@ class LMFbx(AbstractFbx):
 		"""
 		mel.eval("FBXPushSettings")  # Save current settings
 
-		cls.__setImportMocapSettings(mode)
+		cls.setImportMocapSettings(mode)
 
 		mel.eval(f'FBXImport -f "{filePath}" -t {takeIndex}')
 
@@ -89,6 +89,20 @@ class LMFbx(AbstractFbx):
 
 		# Restore settings saved by the push command
 		mel.eval("FBXPopSettings")
+
+	@classmethod
+	def loadAnimation(cls, filePath:str, mode:str="exmerge"):
+		"""Wrapper method for importing fbx animation.
+		"""
+		LMFile.load(filePath)
+		# Import fbx animation (gather takes)
+		takes = LMFbx.gatherTakes(filePath)
+		take = list(takes.keys())[0]
+		LMFbx.importAnimation(
+			filePath,
+			takes[take]['startFrame'], takes[take]['endFrame'], takes[take]['index'],
+			mode
+		)
 
 
 	@classmethod
@@ -112,7 +126,7 @@ class LMFbx(AbstractFbx):
 		# Save current settings
 		mel.eval("FBXPushSettings")
 
-		cls.__setExportAnimationSettings()
+		cls.setExportAnimationSettings()
 
 		LMFinder.createDirectory(qtc.QFileInfo(filePath).absolutePath())
 
@@ -132,7 +146,7 @@ class LMFbx(AbstractFbx):
 
 
 	@classmethod
-	def __setImportMocapSettings(cls, mode:str="add") -> bool:
+	def setImportMocapSettings(cls, mode:str="add") -> bool:
 	# def __setImportMocapSettings(cls, mode:str="exmerge") -> bool:
 		"""Sets import settings for bare bone mocap import.
 
@@ -161,7 +175,7 @@ class LMFbx(AbstractFbx):
 	
 
 	@classmethod
-	def __setExportAnimationSettings(cls):
+	def setExportAnimationSettings(cls):
 		"""Sets export settings for bare bone mocap export."""
 	
 		mel.eval("FBXResetExport")
@@ -274,8 +288,8 @@ class LMFinder(qtc.QObject):
 
 	@classmethod
 	def getFilesInDirectory(cls,
-		path,
-		nameFilters=[],
+		path:str,
+		nameFilters:list=[],
 		filters=qtc.QDir.Files,
 		includeSubDirectories=qtc.QDirIterator.Subdirectories,
 	) -> list[qtc.QFileInfo] or False:

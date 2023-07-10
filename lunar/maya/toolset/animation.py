@@ -113,10 +113,9 @@ def buildNewAnimationScene() -> bool:
 		lm.LMFile.load(fiPlayerRig.filePath(), namespaceRig)
 		# sceneMetaData = lm.MMetaData(text="untitled")
 		wrapRetargeters()
-
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
-
 		return True
+
 	return False
 
 
@@ -136,21 +135,13 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 		listSceneNamespaces = lm.LMScene.getNamespaces()
 
 		fiAnimFbx = qtc.QFileInfo(strFilePath[0])
-		
-		lm.LMFile.load(fiAnimFbx.filePath())  # Import mocap source skeletonß
-		# Import fbx animation
-		takes = lm.LMFbx.gatherTakes(fiAnimFbx.filePath())
-		take = list(takes.keys())[0]
-		lm.LMFbx.importAnimation(
-			fiAnimFbx.filePath(),
-			takes[take]['startFrame'], takes[take]['endFrame'], takes[take]['index']
-		)
+
+		lm.LMFbx.loadAnimation(fiAnimFbx.filePath())
 		# Get the namespace from fbx
-		namespaceMocap = list(set(lm.LMScene.getNamespaces()).difference(listSceneNamespaces))
 		# If there are no new namspaces this means that mocap matches the rig so we can import onto
+		namespaceMocap = list(set(lm.LMScene.getNamespaces()).difference(listSceneNamespaces))
 
 		# om.MGlobal.displayWarning(f"MOCAP NAMESPACE: {namespaceMocap}")
-
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 		sceneMetaData.setText(fiAnimFbx.baseName())
 		# Temp override for array attributes
@@ -160,11 +151,6 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 
 		if hikTemplate == "HumanIk":
 			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap[0]}:Mocap")
-
-			# om.MGlobal.displayWarning(f"Importing from HumanIk namespace: {namespaceMocap}")
-			# om.MGlobal.displayWarning(f"HumanIk character nodes: {mocapSkeleton.getExportNodes()}")
-			# om.MGlobal.displayWarning(f"HumanIk character name: {mocapSkeleton.character}")
-
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
 		elif hikTemplate == 'MannequinUe5':
@@ -173,7 +159,8 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 				ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
 				if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 				return True
-
+		
+			# om.MGlobal.displayWarning(f"mocap has no namespace: {namespaceMocap}")
 			mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
 

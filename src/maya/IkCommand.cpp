@@ -10,18 +10,25 @@ const char* IkCommand::commandName = "ik";
 const char* IkCommand::nameFlagShort = "-n";
 const char* IkCommand::nameFlagLong = "-name";
 
-// Ik Controllers
+// Fk Flags
 const char* IkCommand::fkStartFlagShort = "-fks";
 const char* IkCommand::fkStartFlagLong = "-fkStart";
 const char* IkCommand::fkMidFlagShort = "-fkm";
 const char* IkCommand::fkMidFlagLong = "-fkMid";
 const char* IkCommand::fkEndFlagShort = "-fke";
 const char* IkCommand::fkEndFlagLong = "-fkEnd";
+// Ik Flags
+const char* IkCommand::ikStartFlagShort = "-iks";
+const char* IkCommand::ikStartFlagLong = "-ikStart";
+const char* IkCommand::ikMidFlagShort = "-ikm";
+const char* IkCommand::ikMidFlagLong = "-ikMid";
+const char* IkCommand::ikEndFlagShort = "-ike";
+const char* IkCommand::ikEndFlagLong = "-ikEnd";
 const char* IkCommand::ikHandleFlagShort = "-ikh";
 const char* IkCommand::ikHandleFlagLong = "-ikHandle";
 const char* IkCommand::poleVectorFlagShort = "-pv";
 const char* IkCommand::poleVectorFlagLong = "-poleVector";
-// Joints
+// Out Flags
 const char* IkCommand::outStartFlagShort = "-os";
 const char* IkCommand::outStartFlagLong = "-outStart";
 const char* IkCommand::outMidFlagShort = "-om";
@@ -50,20 +57,24 @@ MSyntax IkCommand::syntaxCreator() {
 	// Main flags
 	sytnax.addFlag(nameFlagShort, nameFlagLong, MSyntax::kString);
 
-	// Ik flags
+	// Fk Flags
 	sytnax.addFlag(fkStartFlagShort, fkStartFlagLong, MSyntax::kString);
 	sytnax.addFlag(fkMidFlagShort, fkMidFlagLong, MSyntax::kString);
 	sytnax.addFlag(fkEndFlagShort, fkEndFlagLong, MSyntax::kString);
+	// Ik Flags
+	sytnax.addFlag(ikStartFlagShort, ikStartFlagLong, MSyntax::kString);
+	sytnax.addFlag(ikMidFlagShort, ikMidFlagLong, MSyntax::kString);
+	sytnax.addFlag(ikEndFlagShort, ikEndFlagLong, MSyntax::kString);
 	sytnax.addFlag(ikHandleFlagShort, ikHandleFlagLong, MSyntax::kString);
 	sytnax.addFlag(poleVectorFlagShort, poleVectorFlagLong, MSyntax::kString);
-
+	// Out Flags
 	sytnax.addFlag(outStartFlagShort, outStartFlagLong, MSyntax::kString);
 	sytnax.addFlag(outMidFlagShort, outMidFlagLong, MSyntax::kString);
 	sytnax.addFlag(outEndFlagShort, outEndFlagLong, MSyntax::kString);
 
 	sytnax.addFlag(modeFlagShort, modeFlagLong, MSyntax::kString);
 
-	// Help flags	
+	// Help Flags	
 	sytnax.addFlag(helpFlagShort, helpFlagLong, MSyntax::kBoolean);
 
 	sytnax.useSelectionAsDefault(false);
@@ -96,6 +107,9 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		helpStr += "   -fks   -fkStart              String     Name of the fk start transform input.\n";
 		helpStr += "   -fkm   -fkMid                String     Name of the fk mid transform input.\n";
 		helpStr += "   -fke   -fkEnd                String     Name of the fk end transform input.\n";
+		helpStr += "   -iks   -ikStart              String     Name of the ik start transform input.\n";
+		helpStr += "   -ikm   -ikMid                String     Name of the ik mid transform input.\n";
+		helpStr += "   -ike   -ikEnd                String     Name of the ik end transform input.\n";
 		helpStr += "   -ikh   -ikHandle             String     Name of the ik handle transform input.\n";
 		helpStr += "   -pv    -poleVector           String     Name of the pole vector transform input (optional).\n";
 		helpStr += "   -os    -outStart             String     Name of the start joint input.\n";
@@ -113,7 +127,7 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 
-	// FkStart Flag
+	// Fk Start Flag
 	if (argData.isFlagSet(fkStartFlagShort)) {
 		MDagPath dpFkStart;
 		status = LMObject::getDagPathFromString(argData.flagArgumentString(fkStartFlagShort, 0, &status), dpFkStart);
@@ -124,7 +138,7 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		return MS::kFailure;
 	}
 
-	// FkMid Flag
+	// Fk Mid Flag
 	if (argData.isFlagSet(fkMidFlagShort)) {
 		MDagPath dpFkMid;
 		status = LMObject::getDagPathFromString(argData.flagArgumentString(fkMidFlagShort, 0, &status), dpFkMid);
@@ -135,7 +149,7 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		return MS::kFailure;
 	}
 
-	// FkEnd Flag
+	// Fk End Flag
 	if (argData.isFlagSet(fkEndFlagShort)) {
 		MDagPath dpFkEnd;
 		status = LMObject::getDagPathFromString(argData.flagArgumentString(fkEndFlagShort, 0, &status), dpFkEnd);
@@ -146,7 +160,40 @@ MStatus IkCommand::parseArguments(const MArgList& argList) {
 		return MS::kFailure;
 	}
 
-	// IkHandle Flag
+	// Ik Start Flag
+	if (argData.isFlagSet(ikStartFlagShort)) {
+		MDagPath dpIkStart;
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(ikStartFlagShort, 0, &status), dpIkStart);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		fnIkStart.setObject(dpIkStart);
+	} else {
+		MGlobal::displayError("ikStart flag is required.");
+		return MS::kFailure;
+	}
+
+	// Ik Mid Flag
+	if (argData.isFlagSet(ikMidFlagShort)) {
+		MDagPath dpIkMid;
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(ikMidFlagShort, 0, &status), dpIkMid);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		fnIkMid.setObject(dpIkMid);
+	} else {
+		MGlobal::displayError("ikkMid flag is required.");
+		return MS::kFailure;
+	}
+
+	// Ik End Flag
+	if (argData.isFlagSet(ikEndFlagShort)) {
+		MDagPath dpIkEnd;
+		status = LMObject::getDagPathFromString(argData.flagArgumentString(ikEndFlagShort, 0, &status), dpIkEnd);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		fnIkEnd.setObject(dpIkEnd);
+	} else {
+		MGlobal::displayError("ikEnd flag is required.");
+		return MS::kFailure;
+	}
+
+	// Ik Handle Flag
 	if (argData.isFlagSet(ikHandleFlagShort)) {
 		MDagPath dpIkHandle;
 		status = LMObject::getDagPathFromString(argData.flagArgumentString(ikHandleFlagShort, 0, &status), dpIkHandle);
@@ -254,12 +301,18 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		// Get function sets
 		fnIk2bSolver.setObject(objIk2bSolver);
 
-		// Get input plugs
+		// Get Fk input plugs
 		MPlug plugOutFkStartWorldMatrix0 = fnFkStart.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 		MPlug plugOutFkMidWorldMatrix0 = fnFkMid.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 		MPlug plugOutFkEndWorldMatrix0 = fnFkEnd.findPlug("worldMatrix", false).elementByLogicalIndex(0);
+
+		// Get Ik input plugs
+		MPlug plugOutIkStartWorldMatrix0 = fnIkStart.findPlug("worldMatrix", false).elementByLogicalIndex(0);
+		MPlug plugOutIkMidWorldMatrix0 = fnIkMid.findPlug("worldMatrix", false).elementByLogicalIndex(0);
+		MPlug plugOutIkEndWorldMatrix0 = fnIkEnd.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 		MPlug plugOutIkHandleWorldMatrix0 = fnIkHandle.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 
+		// Get Out input plugs
 		MPlug plugOutJntStartWorldMatrix0 = fnJntStart.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 		MPlug plugOutJntMidWorldMatrix0 = fnJntMid.findPlug("worldMatrix", false).elementByLogicalIndex(0);
 		MPlug plugOutJntEndWorldMatrix0 = fnJntEnd.findPlug("worldMatrix", false).elementByLogicalIndex(0);
@@ -268,6 +321,11 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		MPlug plugInFkStart = fnIk2bSolver.findPlug("fkStart", false);
 		MPlug plugInFkMid = fnIk2bSolver.findPlug("fkMid", false);
 		MPlug plugInFkEnd = fnIk2bSolver.findPlug("fkEnd", false);
+	
+		MPlug plugInIkStart = fnIk2bSolver.findPlug("ikStart", false);
+		MPlug plugInIkMid = fnIk2bSolver.findPlug("ikMid", false);
+		MPlug plugInIkEnd = fnIk2bSolver.findPlug("ikEnd", false);
+	
 		MPlug plugInIkHandle = fnIk2bSolver.findPlug("ikHandle", false);
 		MPlug plugInPoleVector = fnIk2bSolver.findPlug("poleVector", false);
 
@@ -279,6 +337,10 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		modDg.connect(plugOutFkStartWorldMatrix0, plugInFkStart);
 		modDg.connect(plugOutFkMidWorldMatrix0, plugInFkMid);
 		modDg.connect(plugOutFkEndWorldMatrix0, plugInFkEnd);
+	
+		modDg.connect(plugOutIkStartWorldMatrix0, plugInIkStart);
+		modDg.connect(plugOutIkMidWorldMatrix0, plugInIkMid);
+		modDg.connect(plugOutIkEndWorldMatrix0, plugInIkEnd);
 		modDg.connect(plugOutIkHandleWorldMatrix0, plugInIkHandle);
 
 		modDg.connect(plugOutJntStartWorldMatrix0, plugInOutStart);
@@ -300,8 +362,10 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 		modDg.connect(plugOutRotEnd, plugRotEnd);
 	
 		MPlug plugOutUpdate = fnIk2bSolver.findPlug("update", false);
-		MPlug plugRotPivotX = fnJntStart.findPlug("rotatePivotX", false);
-		modDg.connect(plugOutUpdate, plugRotPivotX);
+		MPlug plugRotPivotOutX = fnJntStart.findPlug("rotatePivotX", false);
+		MPlug plugRotPivotIkX = fnIkStart.findPlug("rotatePivotX", false);
+		modDg.connect(plugOutUpdate, plugRotPivotOutX);
+		// modDg.connect(plugOutUpdate, plugRotPivotIkX);
 
 		// Pole vector plugs
 		if (bIsPoleVectorSet) {
@@ -319,9 +383,6 @@ MStatus IkCommand::doIt(const MArgList& argList) {
 
 		MPlug plugMode = fnIk2bSolver.findPlug("fkIk", false);
 		plugMode.setValue(mode);
-	
-		// // Connect time node
-		// LMScene::connectSceneTime(objIk2bSolver, "inTime", modDg);
 
 	}
 

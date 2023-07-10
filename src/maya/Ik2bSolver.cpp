@@ -8,9 +8,8 @@ const MTypeId Ik2bSolver::typeId = 0x0066674;
 // Node's Input Attributes
 MObject Ik2bSolver::attrInFkIk;
 
-Attribute Ik2bSolver::attrInFkStart;
-Attribute Ik2bSolver::attrInFkMid;
-Attribute Ik2bSolver::attrInFkEnd;
+Attribute Ik2bSolver::attrInFkStart, Ik2bSolver::attrInFkMid, Ik2bSolver::attrInFkEnd;
+Attribute Ik2bSolver::attrInIkStart, Ik2bSolver::attrInIkMid, Ik2bSolver::attrInIkEnd;
 Attribute Ik2bSolver::attrInIkHandle;
 
 MObject Ik2bSolver::attrInPvX, Ik2bSolver::attrInPvY, Ik2bSolver::attrInPvZ, Ik2bSolver::attrInPv;
@@ -26,9 +25,9 @@ MObject Ik2bSolver::attrOutEndX, Ik2bSolver::attrOutEndY, Ik2bSolver::attrOutEnd
 MObject Ik2bSolver::attrOutFkVisibility;
 MObject Ik2bSolver::attrOutIkVisibility;
 
-Attribute Ik2bSolver::attrInJntStart;
-Attribute Ik2bSolver::attrInJntMid;
-Attribute Ik2bSolver::attrInJntEnd;
+Attribute Ik2bSolver::attrInOutStart;
+Attribute Ik2bSolver::attrInOutMid;
+Attribute Ik2bSolver::attrInOutEnd;
 
 MObject Ik2bSolver::attrOutUpdate;
 
@@ -64,7 +63,15 @@ MStatus Ik2bSolver::initialize() {
 	createAttribute(attrInFkStart, "fkStart", DefaultValue<MMatrix>());
 	createAttribute(attrInFkMid, "fkMid", DefaultValue<MMatrix>());
 	createAttribute(attrInFkEnd, "fkEnd", DefaultValue<MMatrix>());
+
+	createAttribute(attrInIkStart, "ikStart", DefaultValue<MMatrix>());
+	createAttribute(attrInIkMid, "ikMid", DefaultValue<MMatrix>());
+	createAttribute(attrInIkEnd, "ikEnd", DefaultValue<MMatrix>());
 	createAttribute(attrInIkHandle, "ikHandle", DefaultValue<MMatrix>());
+
+	createAttribute(attrInOutStart, "outStart", DefaultValue<MMatrix>());
+	createAttribute(attrInOutMid, "outMid", DefaultValue<MMatrix>());
+	createAttribute(attrInOutEnd, "outEnd", DefaultValue<MMatrix>());
 
 	attrInPvX = nAttr.create("poleVectorX", "pvX", MFnNumericData::kDouble, 0.0);
 	attrInPvY = nAttr.create("poleVectorY", "pvY", MFnNumericData::kDouble, 0.0);
@@ -81,10 +88,6 @@ MStatus Ik2bSolver::initialize() {
 	nAttr.setWritable(true);
 	nAttr.setMin(0.0);
 	nAttr.setMax(10.0);
-
-	createAttribute(attrInJntStart, "outStart", DefaultValue<MMatrix>());
-	createAttribute(attrInJntMid, "outMid", DefaultValue<MMatrix>());
-	createAttribute(attrInJntEnd, "outEnd", DefaultValue<MMatrix>());
 
 	// Output attributes
 	attrOutStartX = uAttr.create("rotateStartX", "rsX", MFnUnitAttribute::kAngle, 0.0);
@@ -116,9 +119,11 @@ MStatus Ik2bSolver::initialize() {
 
 	// Add attributes
 	addAttributes(
-		attrInFkStart, attrInFkMid,	attrInFkEnd, attrInIkHandle, attrInPv,
+		attrInFkStart, attrInFkMid,	attrInFkEnd,
+		attrInIkStart, attrInIkMid,	attrInIkEnd,
+		attrInIkHandle, attrInPv,
 		attrInFkIk, attrInTwist, attrInSoftness,
-		attrInJntStart, attrInJntMid, attrInJntEnd,
+		attrInOutStart, attrInOutMid, attrInOutEnd,
 		attrOutStart, attrOutMid, attrOutEnd,
 		attrOutFkVisibility, attrOutIkVisibility,
 		attrOutUpdate
@@ -150,25 +155,34 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 		bIkVisibility = true;
 	}
 
-	// // Ask for time value to force refresh on the node
+	// Ask for time value to force refresh on the node
 	// timeCurrent = dataBlock.inputValue(attrInTime, &status).asTime();
 	// Asking for the actuall matrix input helps refreshing the rig if there are no anim curves
 	matInFkStart = dataBlock.inputValue(attrInFkStart).asMatrix();
 	matInFkMid = dataBlock.inputValue(attrInFkMid).asMatrix();
 	matInFkEnd = dataBlock.inputValue(attrInFkEnd).asMatrix();
+
+	matInIkStart = dataBlock.inputValue(attrInIkStart).asMatrix();
+	matInIkMid = dataBlock.inputValue(attrInIkMid).asMatrix();
+	matInIkEnd = dataBlock.inputValue(attrInIkEnd).asMatrix();
+
 	matInIkHandle = dataBlock.inputValue(attrInIkHandle).asMatrix();
 	posInPv = MVector(dataBlock.inputValue(attrInPvX).asDouble(), dataBlock.inputValue(attrInPvY).asDouble(),	dataBlock.inputValue(attrInPvZ).asDouble());
 
-	// In controllers
+	// In controllers Fk / Ik
 	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnFkStart, attrInFkStart));
 	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnFkMid, attrInFkMid));
 	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnFkEnd, attrInFkEnd));
+
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnIkStart, attrInIkStart));
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnIkMid, attrInIkMid));
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnIkEnd, attrInIkEnd));
 	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnIkHandle, attrInIkHandle));
 
-	// Out joints
-	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutStart, attrInJntStart));
-	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutMid, attrInJntMid));
-	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutEnd, attrInJntEnd));
+	// Out controllers
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutStart, attrInOutStart));
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutMid, attrInOutMid));
+	CHECK_MSTATUS_AND_RETURN_IT(LMPlugin::parseTransformInput(dataBlock, objSelf, fnOutEnd, attrInOutEnd));
 
 	// Pole vector
 	MDagPath pathPv;
@@ -199,44 +213,27 @@ MStatus Ik2bSolver::parseDataBlock(MDataBlock& dataBlock) {
 
 
 void Ik2bSolver::getFkTransforms() {
-
+	/* Used in fk/ik and ik - needs world space
+	*/
 	fnFkStart.getRotation(quatFkStart, MSpace::kWorld);
 	fnFkMid.getRotation(quatFkMid, MSpace::kWorld);
 	fnFkEnd.getRotation(quatFkEnd, MSpace::kWorld);
-
-	// fnFkStart.getRotation(quatFkStart, MSpace::kTransform);
-	// fnFkMid.getRotation(quatFkMid, MSpace::kTransform);
-	// fnFkEnd.getRotation(quatFkEnd, MSpace::kTransform);
-
 }
 
 
 void Ik2bSolver::getIkTransforms() {
+	/* Used in fk / ik and ik - needs world space
+	*/
+	posIkStart = fnIkStart.rotatePivot(MSpace::kWorld);
+	fnIkStart.getRotation(quatIkStart, MSpace::kWorld);
 
-	posIkStart = fnFkStart.rotatePivot(MSpace::kWorld);
-	fnFkStart.getRotation(quatIkStart, MSpace::kWorld);
+	posIkMid = fnIkMid.rotatePivot(MSpace::kWorld);
+	fnIkMid.getRotation(quatIkMid, MSpace::kWorld);
 
-	posIkMid = fnFkMid.rotatePivot(MSpace::kWorld);
-	fnFkMid.getRotation(quatIkMid, MSpace::kWorld);
-
-	posIkEnd = fnFkEnd.rotatePivot(MSpace::kWorld);
-	fnFkEnd.getRotation(quatIkEnd, MSpace::kWorld);
+	posIkEnd = fnIkEnd.rotatePivot(MSpace::kWorld);
 
 	posIkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
-	fnIkHandle.getRotation(quatIkHandle, MSpace::kWorld);
-
-	// TEST
-	// posIkStart = fnOutStart.rotatePivot(MSpace::kWorld);
-	// fnOutStart.getRotation(quatIkStart, MSpace::kWorld);
-
-	// posIkMid = fnOutMid.rotatePivot(MSpace::kWorld);
-	// fnOutMid.getRotation(quatIkMid, MSpace::kWorld);
-
-	// posIkEnd = fnOutEnd.rotatePivot(MSpace::kWorld);
-	// fnOutEnd.getRotation(quatIkEnd, MSpace::kWorld);
-
-	// posIkHandle = fnIkHandle.rotatePivot(MSpace::kWorld);
-	// fnIkHandle.getRotation(quatIkHandle, MSpace::kWorld);
+	fnIkHandle.getRotation(quatIkEnd, MSpace::kWorld);
 
 	if (bIsPvConnected) {posIkPv = fnPv.rotatePivot(MSpace::kWorld);}
 	else {
@@ -273,28 +270,10 @@ bool Ik2bSolver::solveFk() {
 	a constant distance (limb length) calculated from the mid transform. 
 
 	*/
-	// getFkTransforms();
-
-	// fnOutStart.setRotation(quatFkStart, MSpace::kWorld);
-	// fnOutMid.setRotation(quatFkMid, MSpace::kWorld);
-	// fnOutEnd.setRotation(quatFkEnd, MSpace::kWorld);
-
-	// fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
-	// fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
-	// fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
-
 	// Get fk rotations directly in local space since we don't blend here.
 	fnFkStart.getRotation(quatOutStart, MSpace::kTransform);
 	fnFkMid.getRotation(quatOutMid, MSpace::kTransform);
 	fnFkEnd.getRotation(quatOutEnd, MSpace::kTransform);
-
-	// quatOutStart = quatFkStart;
-	// quatOutMid = quatFkMid;
-	// quatOutEnd = quatFkEnd;
-
-	// fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
-	// fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
-	// fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
 
 	return true;
 }
@@ -306,16 +285,20 @@ bool Ik2bSolver::solveIk() {
 	getIkTransforms();
 
 	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
-
-	// Lame as f@ck but maybe i will fix it one-day :)
-	// Apply the rotations to the output joints world -> local
+	
+	// Sync the ik chain
 	fnOutStart.setRotation(quatIkStart, MSpace::kWorld);
 	fnOutMid.setRotation(quatIkMid, MSpace::kWorld);
-	fnOutEnd.setRotation(quatIkHandle, MSpace::kWorld);
-	// Get the output rotations in local space because joint chain
+	fnOutEnd.setRotation(quatIkEnd, MSpace::kWorld);
+	// Get the out quats in local space
 	fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
 	fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
 	fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
+
+	// Sync the ik chain
+	fnIkStart.setRotation(quatIkStart, MSpace::kWorld);
+	fnIkMid.setRotation(quatIkMid, MSpace::kWorld);
+	fnIkEnd.setRotation(quatIkEnd, MSpace::kWorld);
 
 	return true;
 }
@@ -327,9 +310,7 @@ void Ik2bSolver::blendFkIk() {
 
 	quatOutStart = slerp(quatFkStart, quatIkStart, scaledWeight);
 	quatOutMid = slerp(quatFkMid, quatIkMid, scaledWeight);
-	quatOutEnd = slerp(quatFkEnd, quatIkHandle, scaledWeight);
-	// quatOutHandle = slerp(quatFkEnd, quatIkHandle, scaledWeight);
-
+	quatOutEnd = slerp(quatFkEnd, quatIkEnd, scaledWeight);
 }
 
 
@@ -341,29 +322,26 @@ void Ik2bSolver::solveFkIk() {
 
 	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
 
-	fnOutEnd.setRotation(quatIkHandle, MSpace::kWorld);
-	fnOutEnd.getRotation(quatIkHandle, MSpace::kWorld);
-	// // TEST - convert ik world to local
-	// fnOutStart.setRotation(quatIkStart, MSpace::kWorld);
-	// fnOutMid.setRotation(quatIkMid, MSpace::kWorld);
-	// fnOutEnd.setRotation(quatIkHandle, MSpace::kWorld);
-	// // Get the output rotations in local space because joint chain
-	// fnOutStart.getRotation(quatIkStart, MSpace::kTransform);
-	// fnOutMid.getRotation(quatIkMid, MSpace::kTransform);
-	// fnOutEnd.getRotation(quatIkHandle, MSpace::kTransform);
-	// // Blend in local mode
+	// Get the ik handle rotation applied to end ik ctrl (converted from different spaces in rig hierarchy)
+	fnOutEnd.setRotation(quatIkEnd, MSpace::kWorld);
+	fnOutEnd.getRotation(quatIkEnd, MSpace::kWorld);
 
+	// Need to blend in world space
 	blendFkIk();
 
-	// TEST
-	// Set rotations
+	// Apply the blended rotations to out ctrls
 	fnOutStart.setRotation(quatOutStart, MSpace::kWorld);
 	fnOutMid.setRotation(quatOutMid, MSpace::kWorld);
 	fnOutEnd.setRotation(quatOutEnd, MSpace::kWorld);
-
+	// Get rot in local space to apply them to the output converted to eulers
 	fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
 	fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
 	fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
+
+	// Sync the ik chain
+	fnIkStart.setRotation(quatIkStart, MSpace::kWorld);
+	fnIkMid.setRotation(quatIkMid, MSpace::kWorld);
+	fnIkEnd.setRotation(quatIkEnd, MSpace::kWorld);
 }
 
 
@@ -473,6 +451,9 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		|| plugBeingDirtied == attrInFkStart
 		|| plugBeingDirtied == attrInFkMid
 		|| plugBeingDirtied == attrInFkEnd
+		|| plugBeingDirtied == attrInIkStart
+		|| plugBeingDirtied == attrInIkMid
+		|| plugBeingDirtied == attrInIkEnd
 		|| plugBeingDirtied == attrInIkHandle
 		|| plugBeingDirtied == attrInPv
 		|| plugBeingDirtied == attrInTwist

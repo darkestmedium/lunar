@@ -864,7 +864,7 @@ class LMHumanIk():
 			if cmds.attributeQuery("blendParent1", node=self.root, exists=True):
 				cmds.deleteAttr(self.root, attribute="blendParent1")
 
-	
+
 	def connectSourceAndSaveAnimNew(self, pTransform:str, pSrcT:str="", pSrcR:str="", forcePairBlendCreation:bool=True):
 		"""Python override of the global proc connectSourceAndSaveAnimNew()
 
@@ -1200,181 +1200,6 @@ class LMMannequinUe4(LMMetaHuman):
 
 
 
-# DEPRACTED
-class LMMannequinAsRig(LMMetaHuman):
-	"""Class for setting up the UE5 manneuqin rigged with Advanced Skeleton in Maya.
-
-	TODO hookUp rootMotion reconnect method
-	TODO methodForHidingGeometries for retargeting and baking
-	TODO hookup ik joints
-
-	"""
-	minimalDefinition = lmrrue.templateASC["minimalDefinition"]
-	definition = lmrrue.templateASC["definition"]
-	tPose = lmrrue.templateASC["tPose"]
-	aPose = lmrrue.templateASC["aPose"]
-
-	rootMotion = "RootMotion"
-
-	def setTPose(self) -> None:
-		"""Sets the character / creature in T-Pose."""
-		self.setPose(self.tPose)
-
-
-	def setupCharacter(self) -> bool:
-		"""Sequence of methods for setting up the character definition.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the
-				operation.	
-
-		"""
-		self.setTPose()
-		self.createCharacterDefinition()
-		self.characterize()
-		self.lockCharacter()
-
-		solverNode = self.getSolverNode()
-		if solverNode: cmds.rename(solverNode, f'{self.character}Solver')
-
-		state2kSKNode = self.getState2SkNode()
-		if state2kSKNode: cmds.rename(state2kSKNode, f'{self.character}State2SK')
-
-		return True
-
-
-	def importSetup(self):
-		"""Wrapper method for setup from scratch with import."""
-
-		self.accessoryJoints()
-
-		self.setupCharacter()
-
-		self.setAPose()
-
-
-	def getExportNodes(self) -> bool:
-		"""Gets the export nodes.
-
-		The exports nodes may be different than the character nodes there more a seprate
-		method is nesseccary for quering them between different rigs.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the
-				operation.
-
-		"""
-		if self.isValid():
-			# TODO TEMP SinndersDev Workaround
-			nodes = self.getCharacterNodes()
-
-			if len(nodes) >= 1: return nodes
-
-		return False
-
-
-	def bakeAnimation(self, startFrame=None, endFrame=None, oversamplingRate=1) -> bool:
-		"""Bakes the animation of characterized nodes.
-
-		Args:
-			startFrame (int): First frame, if none it will query the timesliders start frame.
-			endFrame (int): Last frame, if none it will query the timesliders end frame.
-			oversamplingRate (int): Number of frames in between full frames, use for upresing the animation
-				from 30 to 60 fps.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		if self.isValid():
-			nodes = self.getCharacterNodes()
-			nodes.append(self.rootMotion)
-
-			if len(nodes) >= len(self.minimalDefinition):
-
-				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
-				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
-
-				cmds.bakeResults(
-					nodes,
-					simulation=False,
-					time=(startFrame, endFrame),
-					sampleBy=1,
-					oversamplingRate=oversamplingRate,
-					disableImplicitControl=True,
-					preserveOutsideKeys=False,
-					sparseAnimCurveBake=False,
-					removeBakedAttributeFromLayer=False,
-					removeBakedAnimFromLayer=False,
-					bakeOnOverrideLayer=False,
-					minimizeRotation=True,
-					controlPoints=False,
-				 	shape=False,
-					attribute=['tx','ty','tz','rx','ry','rz']
-				)
-				# self.filterRotations(nodes)
-
-				# Clean up pairBlend nodes and constraints after bake
-				# TODO this could be probably better
-				state2SKNode = self.getState2SkNode()
-				pairBlendNodes = cmds.listConnections(state2SKNode, type='pairBlend')
-				if pairBlendNodes: cmds.delete(pairBlendNodes)
-				if self.rootCnst: cmds.delete(self.rootCnst)
-
-				self.setSource("None")
-
-				self.log.info(f"'Successfully baked from '{startFrame}' to '{endFrame}'")
-				return True
-
-		return False
-
-
-
-# DEPRACTED
-class LMMannequinAsSkeleton(LMMetaHuman):
-	"""Class for setting up the UE5 manneuqin export skeleton in Maya.
-
-	TODO hookUp rootMotion reconnect method
-	TODO methodForHidingGeometries for retargeting and baking
-	TODO hookup ik joints
-
-	"""
-	tPose = lmrrue.templateASS["tPose"]
-	aPose = lmrrue.templateASS["aPose"]
-
-	def exportAnimation(self, filePath, startFrame=None, endFrame=None, bake=False) -> bool:
-		"""Exports the animation to the specified path.
-
-		Currently only FBX export is supported. If start and end frames are not specified it will grab
-		the current time slider range.
-
-		Args:
-			filePath (str): Path to the exported file.
-			startFrame (int): Start frame of the animation.
-			endFrame (int): End frame of the animation.
-			bake (bool): Whether or not to perform the bake operation on fbx export.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
-		if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
-
-		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
-
-		# Unhide the joints for export
-		exportNode = self.returnNodeWithNameSpace("Export")
-		cmds.setAttr(f"{exportNode}.visibility", True)
-
-		cmds.select(self.rootMotion)
-		lm.LMFbx.exportAnimation(filePath, startFrame, endFrame, bake)
-
-		# Unhide the joints after export
-		cmds.setAttr(f"{exportNode}.visibility", False)
-
-
-
 
 #--------------------------------------------------------------------------------------------------
 # Lunar Rig
@@ -1421,7 +1246,7 @@ class LMLunarCtrl(LMHumanIk):
 
 		self.initSetup()
 
-		# why do we need it here?? 
+		# Why do we need it here?? 
 		self.nodeProperties = self.getPropertiesNode()
 		self.nodeState2Sk = self.getState2SkNode()
 	
@@ -1560,43 +1385,43 @@ class LMLunarCtrl(LMHumanIk):
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 
 						# Twist ctrls override
-							# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
-							# "LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
-							# "LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
-							# "LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
-							# "LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
-							# "LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
-							# "LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
-							# "LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
+						# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
+						# "LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
+						# "LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
+						# "LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
+						# "LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
+						# "LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
+						# "LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
+						# "LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
 
-							# "LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
-							# "LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
-							# "LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
-							# "LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
-							# "LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
-							# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
-							# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
-							# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
+						# "LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
+						# "LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
+						# "LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
+						# "LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
+						# "LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
+						# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
+						# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
+						# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
 		
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll2R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll2R")
 
 
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll2R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll2R")
 
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll2R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll1R")
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll2R")
 
 						self.updateHikUi(updateSource=True)
 
@@ -1767,7 +1592,6 @@ class LMLunarCtrl(LMHumanIk):
 					self.cnstRightWeapon = None
 					if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("weapon_r_ctrl"), exists=True):
 						cmds.deleteAttr(self.returnNodeWithNameSpace("weapon_r_ctrl"), attribute="blendParent1")
-
 
 				self.setSource("None")
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
@@ -2610,25 +2434,25 @@ if __name__ == "__main__":
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal",
-			"/Users/luky/My Drive/Mocap/Player/stress",
+			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Thug_ArtSource_Input/Animations",
+			"/Users/luky/Downloads/AS_MTN_Fighting_Idle_FL.fbx",
 		],
 		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/Stress",
+		outputDirectory="/Users/luky/Desktop/",
 		# sourceNameSpace="Anton",
-		sourceTemplate="SinnersDev2",
-		# sourceTemplate="MannequinUe5",
+		# sourceTemplate="SinnersDev2",
+		sourceTemplate="MannequinUe5",
 		targetNameSpace="Player",
 		targetTemplate="LunarExport",
 	)
 
 	retargeter.retarget(
 		preserveFolderHierarchy=True,
-		trimStart=1,  # if baking from sinnersDev set
+		# trimStart=1,  # if baking from sinnersDev set
+		# rootRotationOffset=-90, # if baking from sinnersDev set
 		matchSource=True,
-		# reachActorChest=1.0,
 		oversamplingRate=1,
 		rootMotion=True,
-		rootRotationOffset=-90, # if baking from sinnersDev set
 	)
 	# retargeter.retarget(
 	# 	preserveFolderHierarchy=True,

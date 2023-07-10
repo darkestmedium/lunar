@@ -100,6 +100,7 @@ class MainCtrl(Ctrl):
 		localScale=(100.0, 100.0, 100.0),
 		shape="circle",
 		fillShape=False,
+		drawFkIkState=False,
 		fillTransparency=0.0,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
@@ -115,6 +116,7 @@ class MainCtrl(Ctrl):
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -157,6 +159,7 @@ class RootMotionCtrl(Ctrl):
 		localScale=(15.0, 1.0, 15.0),
 		shape="square",
 		fillShape=False,
+		drawFkIkState=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
@@ -172,6 +175,7 @@ class RootMotionCtrl(Ctrl):
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -196,6 +200,7 @@ class PelvisCtrl(Ctrl):
 		localScale=(40.0, 40.0, 40.0),
 		shape="square",
 		fillShape=False,
+		drawFkIkState=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
@@ -211,6 +216,7 @@ class PelvisCtrl(Ctrl):
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -240,7 +246,7 @@ class OutCtrl(Ctrl):
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
-		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
+		lockShapeAttributes=True,
 		lockChannels=["scale", "visibility"]
 	):
 		self.transform, self.shape = cmds.ctrl(
@@ -278,11 +284,12 @@ class TwistCtrl(Ctrl):
 		localScale=(4.0, 4.0, 4.0),
 		shape="square",
 		fillShape=False,
+		drawFkIkState=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
-		lockChannels=["scale"]
+		lockChannels=["scale", "visibility"]
 	):
 		self.transform, self.shape = cmds.ctrl(
 			name=name,
@@ -293,6 +300,7 @@ class TwistCtrl(Ctrl):
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -317,6 +325,7 @@ class FingerCtrl():
 		localScale=(3.0, 3.0, 3.0),
 		shape="circle",
 		fillShape=False,
+		drawFkIkState=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultFingerLineWidth,
 		color="yellow",
@@ -332,6 +341,7 @@ class FingerCtrl():
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -404,7 +414,7 @@ class FkIkSwitchCtrl():
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="yellow",
-		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
+		lockShapeAttributes=True,
 		lockChannels=["translate", "rotate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "visibility"]
 	):
 		self.transform, self.shape = cmds.ctrl(
@@ -443,6 +453,7 @@ class PoleVectorCtrl():
 		localScale=(8.0, 8.0, 8.0),
 		shape="locator",
 		fillShape=False,
+		drawFkIkState=False,
 		drawLine=True,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
@@ -459,6 +470,7 @@ class PoleVectorCtrl():
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			drawLine=drawLine,
 			fillTransparency=fillTransparency,
@@ -484,6 +496,7 @@ class CorrectiveCtrl():
 		localScale=(3.0, 3.0, 3.0),
 		shape="locator",
 		fillShape=True,
+		drawFkIkState=False,
 		fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
@@ -500,6 +513,7 @@ class CorrectiveCtrl():
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
+			drawFkIkState=drawFkIkState,
 			fillShape=fillShape,
 			fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
@@ -858,6 +872,9 @@ class FkHandComponent():
 			# self.ctrlWeapon,
 		)
 	
+	def getWeaponCtrls(self):
+		return (self.ctrlWeapon)
+	
 	def getMainCtrls(self):
 		return (
 			self.ctrlThumb1, self.ctrlThumb2, self.ctrlThumb3,
@@ -918,7 +935,8 @@ class Out2bLimbComponent():
 	"""
 
 	def __init__(self, 
-	  	parent:str, start:str, mid:str, end:str, root:str=None,
+	  	parent:str, compRig,
+			start:str, mid:str, end:str, root:str=None,
 			upperTwist1:str=None, upperTwist2:str=None, lowerTwist1:str=None, lowerTwist2:str=None, 
 			drawFkIkState:bool=True, fkIkStatePosition:tuple=(0.0, 0.0, 0.0), createTwistSolver:bool=True,
 			side:str="center"
@@ -949,6 +967,7 @@ class Out2bLimbComponent():
 				translateTo=f"{root}{sideSuffix}", rotateTo=f"{root}{sideSuffix}",
 				color=color,
 			)
+			lm.LMAttribute.copyTransformsToOPM(self.ctrlRoot.transform)
 			parent = self.ctrlRoot.transform
 
 		self.ctrlStart = OutCtrl(
@@ -956,21 +975,36 @@ class Out2bLimbComponent():
 			translateTo=f"{start}{sideSuffix}",	rotateTo=f"{start}{sideSuffix}",
 			color=color,
 		)
+		lm.LMAttribute.copyTransformsToOPM(self.ctrlStart.transform)
+	
 		# Upper - twist bones
 		if upperTwist1:
 			self.ctrlTwistUpper1 = TwistCtrl(
-				name=f"{upperTwist1}{sideSuffix}_ctrl",	parent=self.ctrlStart.transform,
+				name=f"{upperTwist1}{sideSuffix}_ctrl",	parent=parent,
 				translateTo=f"{upperTwist1}{sideSuffix}",	rotateTo=f"{upperTwist1}{sideSuffix}",
 				color=color,
 			)
 			lm.LMAttribute.copyTransformsToOPM(self.ctrlTwistUpper1.transform)
+			self.twistUpper1cnstMat = LMRigUtils.createMatrixConstraint(
+				parent=self.ctrlStart.transform, 
+				child=self.ctrlTwistUpper1.transform,
+				offset=compRig.ctrlMain.transform, 
+				sourceNode=f"{upperTwist1}{sideSuffix}",
+			)
+		# cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.out.ctrlStart.transform}.offsetParentMatrix")
 		if upperTwist2:
 			self.ctrlTwistUpper2 = TwistCtrl(
-				name=f"{upperTwist2}{sideSuffix}_ctrl",	parent=self.ctrlStart.transform,
+				name=f"{upperTwist2}{sideSuffix}_ctrl",	parent=parent,
 				translateTo=f"{upperTwist2}{sideSuffix}",	rotateTo=f"{upperTwist2}{sideSuffix}",
 				color=color,
 			)
 			lm.LMAttribute.copyTransformsToOPM(self.ctrlTwistUpper2.transform)
+			self.twistUpper2cnstMat = LMRigUtils.createMatrixConstraint(
+				parent=self.ctrlStart.transform, 
+				child=self.ctrlTwistUpper2.transform,
+				offset=compRig.ctrlMain.transform, 
+				sourceNode=f"{upperTwist2}{sideSuffix}",
+			)
 
 		self.ctrlMid = OutCtrl(
 			name=f"{mid}{sideSuffix}_out", parent=self.ctrlStart.transform,
@@ -980,18 +1014,30 @@ class Out2bLimbComponent():
 		# Lower - twist bones
 		if lowerTwist1:
 			self.ctrlTwistLower1 = TwistCtrl(
-				name=f"{lowerTwist1}{sideSuffix}_ctrl",	parent=self.ctrlMid.transform,
+				name=f"{lowerTwist1}{sideSuffix}_ctrl",	parent=parent,
 				translateTo=f"{lowerTwist1}{sideSuffix}",	rotateTo=f"{lowerTwist1}{sideSuffix}",
 				color=color,
 			)
 			lm.LMAttribute.copyTransformsToOPM(self.ctrlTwistLower1.transform)
+			self.twistLower1cnstMat = LMRigUtils.createMatrixConstraint(
+				parent=self.ctrlMid.transform, 
+				child=self.ctrlTwistLower1.transform,
+				offset=compRig.ctrlMain.transform, 
+				sourceNode=f"{lowerTwist1}{sideSuffix}",
+			)
 		if lowerTwist2:
 			self.ctrlTwistLower2 = TwistCtrl(
-				name=f"{lowerTwist2}{sideSuffix}_ctrl",	parent=self.ctrlMid.transform,
+				name=f"{lowerTwist2}{sideSuffix}_ctrl",	parent=parent,
 				translateTo=f"{lowerTwist2}{sideSuffix}",	rotateTo=f"{lowerTwist2}{sideSuffix}",
 				color=color,
 			)
 			lm.LMAttribute.copyTransformsToOPM(self.ctrlTwistLower2.transform)
+			self.twistLower2cnstMat = LMRigUtils.createMatrixConstraint(
+				parent=self.ctrlMid.transform, 
+				child=self.ctrlTwistLower2.transform,
+				offset=compRig.ctrlMain.transform, 
+				sourceNode=f"{lowerTwist2}{sideSuffix}",
+			)
 
 		self.ctrlEnd = OutCtrl(
 			name=f"{end}{sideSuffix}_out", parent=self.ctrlMid.transform,
@@ -1001,6 +1047,8 @@ class Out2bLimbComponent():
 		)
 
 		[lm.LMAttribute.copyTransformsToOPM(ctrl.transform) for ctrl in self.getCtrls()]
+
+		cmds.setAttr(f"{self.ctrlStart.transform}.hiddenInOutliner", True)
 
 		# Create solver setup
 		if createTwistSolver:
@@ -1049,6 +1097,7 @@ class Ik2bLimbComponent():
 	def __init__(self,
 	  name:str, parent:str, rotateTo:str, 
 		fkStart:str, fkMid:str, fkEnd:str,
+		ikStart:str, ikMid:str, ikEnd:str,
 		outStart:str, outMid:str, outEnd:str,
 		poleVector:str="",
 		side:str="left", mode:str="ik",
@@ -1069,6 +1118,24 @@ class Ik2bLimbComponent():
 		if side == "right":
 			sideSuffix = "_r"
 			color = "blue"
+
+		self.ctrlStart = OutCtrl(
+			name=f"{ikStart}{sideSuffix}_ik",	parent=parent,
+			translateTo=f"{ikStart}{sideSuffix}",	rotateTo=f"{ikStart}{sideSuffix}",
+			color=color,
+		)
+
+		self.ctrlMid = OutCtrl(
+			name=f"{ikMid}{sideSuffix}_ik", parent=self.ctrlStart.transform,
+			translateTo=f"{ikMid}{sideSuffix}", rotateTo=f"{ikMid}{sideSuffix}",
+			color=color,
+		)
+	
+		self.ctrlEnd = OutCtrl(
+			name=f"{ikEnd}{sideSuffix}_ik", parent=self.ctrlMid.transform,
+			translateTo=f"{ikEnd}{sideSuffix}",	rotateTo=f"{ikEnd}{sideSuffix}",
+			color=color,
+		)
 
 		self.ctrlIk = IkCtrl(
 			name=f"{name}_ik{sideSuffix}_ctrl",
@@ -1095,6 +1162,9 @@ class Ik2bLimbComponent():
 			fkStart=fkStart,
 			fkMid=fkMid,
 			fkEnd=fkEnd,
+			ikStart=self.ctrlStart.transform,
+			ikMid=self.ctrlMid.transform,
+			ikEnd=self.ctrlEnd.transform,
 			ikHandle=self.ctrlIk.transform,
 			poleVector=poleVector,
 			outStart=outStart,
@@ -1117,6 +1187,9 @@ class Ik2bLimbComponent():
 			cmds.connectAttr(f"{outMid}.worldMatrix[0]", f"{self.ctrlPoleVector.shape}.drawLineTo")
 			lm.LMAttribute.copyTransformsToOPM(self.ctrlPoleVector.transform)
 
+		lm.LMAttribute.copyTransformsToOPM(self.ctrlStart.transform)
+		lm.LMAttribute.copyTransformsToOPM(self.ctrlMid.transform)
+		lm.LMAttribute.copyTransformsToOPM(self.ctrlEnd.transform)
 		lm.LMAttribute.copyTransformsToOPM(self.ctrlIk.transform)
 
 
@@ -1392,6 +1465,7 @@ class HeadComponent():
 		)
 	
 		self.out = Out2bLimbComponent(
+			compRig=compRig,
 			parent=self.grpComp,
 			start=listJoints["Head"]["Neck1"],
 			mid=listJoints["Head"]["Neck2"],
@@ -1408,6 +1482,9 @@ class HeadComponent():
 			fkStart=self.fk.ctrlStart.transform,
 			fkMid=self.fk.ctrlMid.transform,
 			fkEnd=self.fk.ctrlEnd.transform,
+			ikStart=listJoints["Head"]["Neck1"],
+			ikMid=listJoints["Head"]["Neck2"],
+			ikEnd=listJoints["Head"]["Head"],
 			outStart=self.out.ctrlStart.transform,
 			outMid=self.out.ctrlMid.transform,
 			outEnd=self.out.ctrlEnd.transform,
@@ -1415,6 +1492,7 @@ class HeadComponent():
 			side="center",
 		)
 
+		# Chains with no root can re-use the same constraint
 		self.cnstMat = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlStart.transform,
@@ -1422,6 +1500,22 @@ class HeadComponent():
 			sourceNode=listJoints["Head"]["Neck1"]
 		)
 		cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.out.ctrlStart.transform}.offsetParentMatrix")
+		cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.ik.ctrlStart.transform}.offsetParentMatrix")
+
+		# Lock additional transforms
+		lm.LMAttribute.lockTransforms(self.out.ctrlStart.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlMid.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlEnd.transform)
+
+		lm.LMAttribute.lockTransforms(self.ik.ctrlStart.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlMid.transform, ["translate", "rotateX", "rotateY", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlEnd.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+
+		[cmds.setAttr(f"{self.ik.ctrlStart.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlMid.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlEnd.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+
+		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
 
 
 	def getCtrls(self):
@@ -1454,6 +1548,17 @@ class Leg2bComponent():
 
 		self.grpComp = cmds.group(name=f"leg{sideSuffix}_grp", parent=compRig.ctrlMain.transform, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
+		# lm.LMAttribute.lockTransforms(self.grpComp)
+
+		# self.grpFkComp = cmds.group(name="fk_grp", parent=self.grpComp, empty=True)
+		# cmds.matchTransform(self.grpFkComp, self.grpComp, position=True, rotation=True)
+		# lm.LMAttribute.copyTransformsToOPM(self.grpFkComp)
+		# lm.LMAttribute.lockTransforms(self.grpFkComp)
+
+		# self.grpOutComp = cmds.group(name="out_grp", parent=self.grpComp, empty=True)
+		# cmds.matchTransform(self.grpOutComp, self.grpComp, position=True, rotation=True)
+		# lm.LMAttribute.copyTransformsToOPM(self.grpOutComp)
+		# lm.LMAttribute.lockTransforms(self.grpOutComp)
 
 		self.fk = Fk2bLimbComponent(
 			parent=self.grpComp,
@@ -1464,6 +1569,8 @@ class Leg2bComponent():
 		)
 
 		self.out = Out2bLimbComponent(
+			# parent=self.grpOutComp,
+			compRig=compRig,
 			parent=self.grpComp,
 			start=listJoints["Leg"]["UpLeg"],
 			mid=listJoints["Leg"]["Leg"],
@@ -1479,11 +1586,15 @@ class Leg2bComponent():
 
 		self.ik = Ik2bLimbComponent(
 			name="leg",
+			# parent=self.grpIkComp,
 			parent=self.grpComp,
 			rotateTo=self.fk.ctrlEnd.transform,
 			fkStart=self.fk.ctrlStart.transform,
 			fkMid=self.fk.ctrlMid.transform,
 			fkEnd=self.fk.ctrlEnd.transform,
+			ikStart=listJoints["Leg"]["UpLeg"],
+			ikMid=listJoints["Leg"]["Leg"],
+			ikEnd=listJoints["Leg"]["Foot"]["Root"],
 			poleVector=f"leg_pv{sideSuffix}",
 			outStart=self.out.ctrlStart.transform,
 			outMid=self.out.ctrlMid.transform,
@@ -1491,13 +1602,46 @@ class Leg2bComponent():
 			side=side,
 		)
 
-		self.cnstMat = LMRigUtils.createMatrixConstraint(
-			parent=attachTo, 
+		# Chains with no root can re-use the same constraint
+		self.cnstMatFk = LMRigUtils.createMatrixConstraint(
+			parent=attachTo,
+			# child=self.grpFkComp,
 			child=self.fk.ctrlStart.transform,
 			offset=compRig.ctrlMain.transform, 
 			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
 		)
-		cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.out.ctrlStart.transform}.offsetParentMatrix")
+		self.cnstMatIk = LMRigUtils.createMatrixConstraint(
+			parent=attachTo,
+			child=self.ik.ctrlStart.transform,
+			offset=compRig.ctrlMain.transform, 
+			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
+		)
+		self.cnstMatOut = LMRigUtils.createMatrixConstraint(
+			parent=attachTo,
+			child=self.out.ctrlStart.transform,
+			offset=compRig.ctrlMain.transform, 
+			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
+		)
+
+		# Lock additional transforms
+		lm.LMAttribute.lockTransforms(self.out.ctrlStart.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlMid.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlEnd.transform)
+
+		lm.LMAttribute.lockTransforms(self.ik.ctrlStart.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlMid.transform, ["translate", "rotateX", "rotateY", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlEnd.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+
+		[cmds.setAttr(f"{self.ik.ctrlStart.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlMid.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlEnd.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+
+		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
+
+		# lm.LMAttribute.lockTransforms(self.grpComp)
+		# lm.LMAttribute.lockTransforms(self.grpFkComp)
+		# cmds.connectAttr(f"{self.cnstMatFk}.matrixSum", f"{self.out.ctrlStart.transform}.offsetParentMatrix")
+		# cmds.connectAttr(f"{self.cnstMatFk}.matrixSum", f"{self.ik.ctrlStart.transform}.offsetParentMatrix")
 
 
 	def getCtrls(self):
@@ -1581,6 +1725,7 @@ class Arm2bComponent():
 		)
 
 		self.out = Out2bLimbComponent(
+			compRig=compRig,
 			parent=self.grpComp,
 			start=listJoints["Arm"]["Arm"],
 			mid=listJoints["Arm"]["ForeArm"],
@@ -1601,11 +1746,15 @@ class Arm2bComponent():
 			fkStart=self.fk.ctrlStart.transform,
 			fkMid=self.fk.ctrlMid.transform,
 			fkEnd=self.fk.ctrlEnd.transform,
+			ikStart=listJoints["Arm"]["Arm"],
+			ikMid=listJoints["Arm"]["ForeArm"],
+			ikEnd=listJoints["Arm"]["Hand"]["Root"],
 			poleVector=f"arm_pv{sideSuffix}",
 			outStart=self.out.ctrlStart.transform, outMid=self.out.ctrlMid.transform,	outEnd=self.out.ctrlEnd.transform,
 			side=side,
 		)
 
+		# We need seprate constraints for each chain since the arm has a root (clavilce joint)
 		self.cnstMatFk = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlRoot.transform,
@@ -1618,6 +1767,28 @@ class Arm2bComponent():
 			offset=compRig.ctrlMain.transform, 
 			sourceNode="{}{}".format((listJoints["Arm"]["Arm"]), sideSuffix)
 		)
+		self.cnstMatIk = LMRigUtils.createMatrixConstraint(
+			parent=self.fk.ctrlRoot.transform, 
+			child=self.ik.ctrlStart.transform,
+			offset=compRig.ctrlMain.transform, 
+			sourceNode="{}{}".format((listJoints["Arm"]["Arm"]), sideSuffix)
+		)
+
+
+		# Lock additional transforms
+		lm.LMAttribute.lockTransforms(self.out.ctrlStart.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlMid.transform)
+		lm.LMAttribute.lockTransforms(self.out.ctrlEnd.transform)
+
+		lm.LMAttribute.lockTransforms(self.ik.ctrlStart.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlMid.transform, ["translate", "rotateX", "rotateY", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+		lm.LMAttribute.lockTransforms(self.ik.ctrlEnd.transform, ["translate", "scale", "shear", "rotateOrder", "rotateAxis", "inheritsTransform", "offsetParentMatrix", "visibility"])
+
+		[cmds.setAttr(f"{self.ik.ctrlStart.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlMid.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rz"]]
+		[cmds.setAttr(f"{self.ik.ctrlEnd.transform}.{attr}", channelBox=False, keyable=False) for attr in ["rx", "ry", "rz"]]
+
+		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
 
 
 	def getCtrls(self):
@@ -1694,6 +1865,7 @@ class HandComponent():
 		"""
 		listCtrls = []
 		listCtrls.extend(self.fk.getCtrls())
+		listCtrls.append(self.fk.getWeaponCtrls())
 		# listCtrls.extend(self.out.getCtrls())
 		# listCtrls.extend(self.ik.getCtrls())
 
@@ -1734,7 +1906,9 @@ class FkIkSwitchComponent():
 		lm.LMAttribute.addFloatFkIk(self.ctrlFkIkSwitch.transform, "headSoftness", 0, 10)
 		lm.LMAttribute.addFloat(self.ctrlFkIkSwitch.transform, "headTwist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.headFkIk", f"{compHead.ik.nodeIk2bSolver}.fkIk")
+		cmds.setAttr(f"{compHead.out.ctrlEnd.shape}.fkIk", lock=False)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.headFkIk", f"{compHead.out.ctrlEnd.shape}.fkIk")
+		cmds.setAttr(f"{compHead.out.ctrlEnd.shape}.fkIk", lock=True)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.headSoftness", f"{compHead.ik.nodeIk2bSolver}.softness")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.headTwist", f"{compHead.ik.nodeIk2bSolver}.twist")
 
@@ -1745,7 +1919,9 @@ class FkIkSwitchComponent():
 		lm.LMAttribute.addFloatFkIk(self.ctrlFkIkSwitch.transform, "leftArmSoftness", 0, 10)
 		lm.LMAttribute.addFloat(self.ctrlFkIkSwitch.transform, "leftArmTwist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftArmFkIk", f"{compLeftArm.ik.nodeIk2bSolver}.fkIk")
+		cmds.setAttr(f"{compLeftArm.out.ctrlEnd.shape}.fkIk", lock=False)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftArmFkIk", f"{compLeftArm.out.ctrlEnd.shape}.fkIk")
+		cmds.setAttr(f"{compLeftArm.out.ctrlEnd.shape}.fkIk", lock=True)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftArmTwist", f"{compLeftArm.ik.nodeIk2bSolver}.twist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftArmSoftness", f"{compLeftArm.ik.nodeIk2bSolver}.softness")
 		attrTwistCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlFkIkSwitch.transform, "leftArmTwistCtrlsVisibility")
@@ -1763,7 +1939,9 @@ class FkIkSwitchComponent():
 		lm.LMAttribute.addFloatFkIk(self.ctrlFkIkSwitch.transform, "rightArmSoftness", 0, 10)
 		lm.LMAttribute.addFloat(self.ctrlFkIkSwitch.transform, "rightArmTwist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightArmFkIk", f"{compRightArm.ik.nodeIk2bSolver}.fkIk")
+		cmds.setAttr(f"{compRightArm.out.ctrlEnd.shape}.fkIk", lock=False)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightArmFkIk", f"{compRightArm.out.ctrlEnd.shape}.fkIk")
+		cmds.setAttr(f"{compRightArm.out.ctrlEnd.shape}.fkIk", lock=True)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightArmTwist", f"{compRightArm.ik.nodeIk2bSolver}.twist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightArmSoftness", f"{compRightArm.ik.nodeIk2bSolver}.softness")
 		attrTwistCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlFkIkSwitch.transform, "rightArmTwistCtrlsVisibility")
@@ -1781,7 +1959,9 @@ class FkIkSwitchComponent():
 		lm.LMAttribute.addFloatFkIk(self.ctrlFkIkSwitch.transform, "leftLegSoftness", 0, 10)
 		lm.LMAttribute.addFloat(self.ctrlFkIkSwitch.transform, "leftLegTwist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftLegFkIk", f"{compLeftLeg.ik.nodeIk2bSolver}.fkIk")
+		cmds.setAttr(f"{compLeftLeg.out.ctrlEnd.shape}.fkIk", lock=False)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftLegFkIk", f"{compLeftLeg.out.ctrlEnd.shape}.fkIk")
+		cmds.setAttr(f"{compLeftLeg.out.ctrlEnd.shape}.fkIk", lock=True)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftLegSoftness", f"{compLeftLeg.ik.nodeIk2bSolver}.softness")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.leftLegTwist", f"{compLeftLeg.ik.nodeIk2bSolver}.twist")
 		attrTwistCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlFkIkSwitch.transform, "leftLegTwistCtrlsVisibility")
@@ -1799,7 +1979,9 @@ class FkIkSwitchComponent():
 		lm.LMAttribute.addFloatFkIk(self.ctrlFkIkSwitch.transform, "rightLegSoftness", 0, 10)
 		lm.LMAttribute.addFloat(self.ctrlFkIkSwitch.transform, "rightLegTwist")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightLegFkIk", f"{compRightLeg.ik.nodeIk2bSolver}.fkIk")
+		cmds.setAttr(f"{compRightLeg.out.ctrlEnd.shape}.fkIk", lock=False)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightLegFkIk", f"{compRightLeg.out.ctrlEnd.shape}.fkIk")
+		cmds.setAttr(f"{compRightLeg.out.ctrlEnd.shape}.fkIk", lock=True)
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightLegSoftness", f"{compRightLeg.ik.nodeIk2bSolver}.softness")
 		cmds.connectAttr(f"{self.ctrlFkIkSwitch.transform}.rightLegTwist", f"{compRightLeg.ik.nodeIk2bSolver}.twist")
 		attrTwistCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlFkIkSwitch.transform, "rightLegTwistCtrlsVisibility")

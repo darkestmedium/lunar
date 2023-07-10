@@ -403,6 +403,7 @@ MStatus CtrlCommand::redoIt() {
 			plugShape.setShort(indxShape);
 
 			// Sets local position values
+			MPlug plugLocalPosition = shapeFn.findPlug("localPosition", false);
 			MPlug plugLocalPositionX = shapeFn.findPlug("localPositionX", false);
 			plugLocalPositionX.setValue(localPosition.x);
 			MPlug plugLocalPositionY = shapeFn.findPlug("localPositionY", false);
@@ -411,6 +412,7 @@ MStatus CtrlCommand::redoIt() {
 			plugLocalPositionZ.setValue(localPosition.z);
 
 			// Sets local rotate values
+			MPlug plugLocalRotate = shapeFn.findPlug("localRotate", false);
 			MPlug plugLocalRotateX = shapeFn.findPlug("localRotateX", false);
 			plugLocalRotateX.setValue(radians(localRotate.x));
 			MPlug plugLocalRotateY = shapeFn.findPlug("localRotateY", false);
@@ -419,6 +421,7 @@ MStatus CtrlCommand::redoIt() {
 			plugLocalRotateZ.setValue(radians(localRotate.z));
 
 			// Sets local scale values
+			MPlug plugLocalScale = shapeFn.findPlug("localScale", false);
 			MPlug plugLocalScaleX = shapeFn.findPlug("localScaleX", false);
 			plugLocalScaleX.setValue(localScale.x);
 			MPlug plugLocalScaleY = shapeFn.findPlug("localScaleY", false);
@@ -437,7 +440,6 @@ MStatus CtrlCommand::redoIt() {
 			MPlug plugDrawFkIkState = shapeFn.findPlug("drawFkIkState", false);
 			plugDrawFkIkState.setValue(bDrawFkIkState);
 			MPlug plugFkIkStatePosition = shapeFn.findPlug("fkIkStatePosition", false);
-
 			MPlug plugFkIkStatePositionX = shapeFn.findPlug("fkIkStatePositionX", false);
 			plugFkIkStatePositionX.setValue(fkIkStatePosition.x);
 			MPlug plugFkIkStatePositionY = shapeFn.findPlug("fkIkStatePositionY", false);
@@ -465,14 +467,17 @@ MStatus CtrlCommand::redoIt() {
 			if (bLockShapeAttributes == true) {
 				// optimize with a for loop and MPlugArray
 				// Local position
+				LMAttribute::lockAndHideAttr(plugLocalPosition);
 				LMAttribute::lockAndHideAttr(plugLocalPositionX);
 				LMAttribute::lockAndHideAttr(plugLocalPositionY);
 				LMAttribute::lockAndHideAttr(plugLocalPositionZ);
 				// Local rotate
+				LMAttribute::lockAndHideAttr(plugLocalRotate);
 				LMAttribute::lockAndHideAttr(plugLocalRotateX);
 				LMAttribute::lockAndHideAttr(plugLocalRotateY);
 				LMAttribute::lockAndHideAttr(plugLocalRotateZ);
 				// Local scale
+				LMAttribute::lockAndHideAttr(plugLocalScale);
 				LMAttribute::lockAndHideAttr(plugLocalScaleX);
 				LMAttribute::lockAndHideAttr(plugLocalScaleY);
 				LMAttribute::lockAndHideAttr(plugLocalScaleZ);
@@ -482,9 +487,11 @@ MStatus CtrlCommand::redoIt() {
 				LMAttribute::lockAndHideAttr(plugDrawLine);
 
 				LMAttribute::lockAndHideAttr(plugDrawFkIkState);
+
 				LMAttribute::lockAndHideAttr(plugFkIkStatePosition);
-				// LMAttribute::lockAndHideAttr(plugFkIkStatePositionY);
-				// LMAttribute::lockAndHideAttr(plugFkIkStatePositionZ);
+				LMAttribute::lockAndHideAttr(plugFkIkStatePositionX);
+				LMAttribute::lockAndHideAttr(plugFkIkStatePositionY);
+				LMAttribute::lockAndHideAttr(plugFkIkStatePositionZ);
 
 				LMAttribute::lockAndHideAttr(plugFillTransparency);
 				LMAttribute::lockAndHideAttr(plugLineWidth);

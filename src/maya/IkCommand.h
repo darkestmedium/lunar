@@ -46,18 +46,25 @@ public:
 	static const char* nameFlagShort;
 	static const char* nameFlagLong;
 
-	// Ik Flags
+	// Fk Flags
 	static const char* fkStartFlagShort;
 	static const char* fkStartFlagLong;
 	static const char* fkMidFlagShort;
 	static const char* fkMidFlagLong;
 	static const char* fkEndFlagShort;
 	static const char* fkEndFlagLong;
+	// Ik Flags
+	static const char* ikStartFlagShort;
+	static const char* ikStartFlagLong;
+	static const char* ikMidFlagShort;
+	static const char* ikMidFlagLong;
+	static const char* ikEndFlagShort;
+	static const char* ikEndFlagLong;
 	static const char* ikHandleFlagShort;
 	static const char* ikHandleFlagLong;
 	static const char* poleVectorFlagShort;
 	static const char* poleVectorFlagLong;
-	// Joint Flags
+	// Out Flags
 	static const char* outStartFlagShort;
 	static const char* outStartFlagLong;
 	static const char* outMidFlagShort;
@@ -78,11 +85,11 @@ public:
 	MObject objIk2bSolver;
 	MDagPath dpPoleVector;
 
-	MFnTransform fnFkStart;
-	MFnTransform fnFkMid;
-	MFnTransform fnFkEnd;
+	MFnTransform fnFkStart, fnFkMid, fnFkEnd;
+	MFnTransform fnIkStart, fnIkMid, fnIkEnd;
 	MFnTransform fnIkHandle;
 	MFnTransform fnPoleVector;
+
 	MFnTransform fnJntStart;
 	MFnTransform fnJntMid;
 	MFnTransform fnJntEnd;
