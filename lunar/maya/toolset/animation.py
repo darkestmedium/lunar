@@ -132,44 +132,37 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 		stateAutoKey = oma.MAnimControl.autoKeyMode()
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
 
-		listSceneNamespaces = lm.LMScene.getNamespaces()
-
+		# Anim load / mocap reference
+		namespaceMocap = "Mocap"
 		fiAnimFbx = qtc.QFileInfo(strFilePath[0])
+		om.MFileIO.reference(fiAnimFbx.filePath(), False, False, namespaceMocap)
+		referenceNodes = []
+		om.MFileIO.getReferenceNodes(fiAnimFbx.filePath(), referenceNodes)
+		listJoints = []
+		[listJoints.append(node) for node in referenceNodes if cmds.nodeType(node) == "joint"]
+		namespaceMocap = om.MNamespace.getNamespaceFromName(listJoints[0])
 
-		lm.LMFbx.loadAnimation(fiAnimFbx.filePath())
-		# Get the namespace from fbx
-		# If there are no new namspaces this means that mocap matches the rig so we can import onto
-		namespaceMocap = list(set(lm.LMScene.getNamespaces()).difference(listSceneNamespaces))
-
-		# om.MGlobal.displayWarning(f"MOCAP NAMESPACE: {namespaceMocap}")
+		# Metadata node
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 		sceneMetaData.setText(fiAnimFbx.baseName())
 		# Temp override for array attributes
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[0].displayInViewport", True)
 	
-
 		if hikTemplate == "HumanIk":
-			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap[0]}:Mocap")
+			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap}:Skeleton")
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
-		elif hikTemplate == 'MannequinUe5':
-			# if imported namesapce is the same as the ctrl rig bake from the skeleton since fbx will match replace the animation
-			if not namespaceMocap:
-				ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
-				if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
-				return True
-		
-			# om.MGlobal.displayWarning(f"mocap has no namespace: {namespaceMocap}")
-			mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap[0]}:Mocap")
+		elif hikTemplate == "MannequinUe5":
+			mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap}:Skeleton")
 			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
 
 		# Clean up 
-		om.MNamespace.removeNamespace(namespaceMocap[0], True)
 		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
 		mocapSkeleton.deleteCharacterDefinition()
 		mocapSkeleton = None
 		namespaceMocap = None
+		om.MFileIO.removeReference(fiAnimFbx.filePath())
 
 		return True
 	

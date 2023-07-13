@@ -592,7 +592,7 @@ class LMHumanIk():
 								self.rootCnst = cmds.parentConstraint(source.root, self.root, mo=False)[0]
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
 							else:
-								self.log.warning(f"Root node not found for source input '{source}', skipping root setup.")
+								self.log.warning(f"Root node not found for source input '{source}', root will be reset.")
 
 						self.updateHikUi(updateSource=True)
 						self.log.debug(f"'{source}' was set as source input for '{self.character}'")
@@ -1383,6 +1383,16 @@ class LMLunarCtrl(LMHumanIk):
 							if source.root is not None:
 								self.rootCnst = cmds.parentConstraint(source.root, self.root, mo=False)[0]
 								cmds.setAttr(f"{self.rootCnst}.target[0].targetOffsetRotateX", rootRotationOffset)
+						else:
+							# Reset root if set to False
+							# get all animation curve nodes
+							animCurves = cmds.listConnections(self.root, type='animCurve')
+							if animCurves:
+								# check if it is from a referenced source
+								for animCurve in animCurves:
+									if not cmds.referenceQuery(animCurve, isNodeReferenced=True):
+										cmds.delete(animCurve)
+							[cmds.setAttr(f"{self.root}.{attr}", 0) for attr in ["tx", "ty", "tz", "rx", "ry", "rz"]]
 
 						# Twist ctrls override
 						# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
@@ -1406,22 +1416,7 @@ class LMLunarCtrl(LMHumanIk):
 						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
 						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
 						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
-		
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightArmRoll2R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightForeArmRoll2R")
 
-
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftUpLegRoll2R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftLegRoll2R")
-
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("thigh_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightUpLegRoll2R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_02_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("calf_twist_01_r_ctrl"), f"{self.nodeState2Sk}.LeafRightLegRoll2R")
 
 						self.updateHikUi(updateSource=True)
 
@@ -2280,7 +2275,7 @@ class LMRetargeter():
 
 	def setupSource(self) -> bool:
 
-		lm.LMFile.load(self.sources[0].filePath())
+		lm.LMFile.load(self.sources[0].filePath(), reference=False)
 
 		# Temp Sinners override
 		if self.sourceTemplate == 'SinnersDev2':
@@ -2435,21 +2430,22 @@ if __name__ == "__main__":
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal",
 			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Thug_ArtSource_Input/Animations",
-			"/Users/luky/Downloads/AS_MTN_Fighting_Idle_FL.fbx",
+			"/Users/luky/My Drive/Mocap/Player/aimMovement",
 		],
-		targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/Desktop/",
+		# targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
+		targets=["/Users/luky/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
+		outputDirectory="/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/Animations/AimMovement",
 		# sourceNameSpace="Anton",
-		# sourceTemplate="SinnersDev2",
-		sourceTemplate="MannequinUe5",
+		sourceTemplate="SinnersDev2",
+		# sourceTemplate="MannequinUe4",
 		targetNameSpace="Player",
 		targetTemplate="LunarExport",
 	)
 
 	retargeter.retarget(
 		preserveFolderHierarchy=True,
-		# trimStart=1,  # if baking from sinnersDev set
-		# rootRotationOffset=-90, # if baking from sinnersDev set
+		trimStart=1,  # if baking from sinnersDev set
+		rootRotationOffset=-90, # if baking from sinnersDev set
 		matchSource=True,
 		oversamplingRate=1,
 		rootMotion=True,

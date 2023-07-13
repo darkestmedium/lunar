@@ -94,7 +94,7 @@ class LMFbx(AbstractFbx):
 	def loadAnimation(cls, filePath:str, mode:str="exmerge"):
 		"""Wrapper method for importing fbx animation.
 		"""
-		LMFile.load(filePath)
+		LMFile.load(filePath, reference=False)
 		# Import fbx animation (gather takes)
 		takes = LMFbx.gatherTakes(filePath)
 		take = list(takes.keys())[0]
@@ -439,12 +439,12 @@ class LMFile():
 					return False
 		
 		# if force:	
-		cmds.file(new=True, force=True)
+		om.MFileIO.newFile(True)
 		return True
 
 
 	@classmethod
-	def load(cls, filePath:str, nameSpace:str=None):
+	def load(cls, filePath:str, nameSpace:str=None, reference:bool=True):
 		"""Import file wrapper method for fbx and maya native file formats.
 		
 		If we are importing an fbx file we don't want a namespace in order to import / update
@@ -453,11 +453,17 @@ class LMFile():
 		For the maya files on the other hands we need a namespace rig as the target.
 
 		"""
+		if reference:
+			om.MFileIO.reference(filePath, False, False, nameSpace)
+			return True
+
 		if filePath.endswith('.fbx'):
-			cmds.file(filePath, i=True)
+			# cmds.file(filePath, i=True)
+			om.MFileIO.importFile(filePath)
 
 		if filePath.endswith('.ma') or filePath.endswith('.mb'):
-			cmds.file(filePath, namespace=nameSpace, reference=True)
+			# cmds.file(filePath, namespace=nameSpace, reference=True)
+			om.MFileIO.reference(filePath, False, False, nameSpace)
 
 
 	@classmethod
