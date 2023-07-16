@@ -35,8 +35,13 @@ global proc shelf_Bambaa_Animation () {
         -marginHeight 1
         -command "from lunar.maya.toolset import animation\n\nanimation.buildNewAnimationScene()" 
         -sourceType "python" 
+        -doubleClickCommand "from lunar.maya.toolset import animation\n\nanimation.loadCharacter()" 
         -commandRepeatable 1
         -flat 1
+        -mi "Build new Animation Scene" ( "from lunar.maya.toolset import animation\n\nanimation.buildNewAnimationScene()" )
+        -mip 0
+        -mi "Load Manny Character" ( "from lunar.maya.toolset import animation\n\nanimation.loadCharacter()" )
+        -mip 1
     ;
     separator
         -enable 1
@@ -61,7 +66,7 @@ global proc shelf_Bambaa_Animation () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Imports animation onto the control rig from a fbx file." 
+        -annotation "Imports animation onto the control rig from a file." 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
@@ -86,8 +91,14 @@ global proc shelf_Bambaa_Animation () {
         -flat 1
         -mi "Import MannequinUe5" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap()" )
         -mip 0
-        -mi "Import HumanIk" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"HumanIk\")" )
+        -mi "Import MannequinUe4" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"MannequinUe4\")" )
         -mip 1
+        -mi "Import HumanIk" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"HumanIk\")" )
+        -mip 2
+        -mi "Import SinnersDev2" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"SinnersDev2\")" )
+        -mip 3
+        -mi "Import SinnersDev1" ( "from lunar.maya.toolset import animation\n\nanimation.loadMocap(hikTemplate=\"SinnersDev1\")" )
+        -mip 4
     ;
     shelfButton
         -enableCommandRepeat 1
@@ -428,6 +439,76 @@ global proc shelf_Bambaa_Animation () {
         -marginHeight 1
         -command "import lunar.maya.LunarMaya as lm\nfrom lunar.maya.toolset import animation\n\n\nlm.LMFinder.openInFileManager(animation.fiAnimations.filePath())" 
         -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Namespace Editor" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Namespace Editor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "NE" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "menuIconWindow.png" 
+        -image1 "menuIconWindow.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "NamespaceEditor" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Edit the references for the current scene" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Reference Editor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "RE" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "menuIconFile.png" 
+        -image1 "menuIconFile.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "ReferenceEditor" 
+        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;

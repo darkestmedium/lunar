@@ -55,92 +55,131 @@ fiPlayerAnimationKit = qtc.QFileInfo(f"{fiPlayer.filePath()}/AnimationKit")
 fiPlayerRigs = qtc.QFileInfo(f"{fiPlayerAnimationKit.filePath()}/Rigs")
 fiAnimations = qtc.QFileInfo(f"{fiPlayer.filePath()}/Animations")
 
-fiPlayerRig = qtc.QFileInfo(f"{fiPlayerRigs.filePath()}/RIG_Player.ma")
+fiMannyRig = qtc.QFileInfo(f"{fiPlayerRigs.filePath()}/RIG_Player.ma")
 
 
-namespaceRig = None
-
-ctrlRig = None
-exportSkeleton = None
 sceneMetaData = None
 
-fiAnimFbx = None
 
 
 
-# 1 Build New scene,
-# 2 Import mocap
-# 3 Export mocap
-
-# 1 Open existing scene -> wrap files in scene, add a callback on new scene / open?
-# 2 Import and or export
-
-# init namespaces
-
-# def ValidateNamespaces():
-# 	global NamespaceRig
-
-# 	if not NamespaceRig: NamespaceRig = scene.GetNamespaces()[0]
-
-
-def wrapRetargeters():
+def wrapRetargeters(namespace) -> tuple[lmrtg.LMLunarCtrl, lmrtg.LMRetargeter]:
 	"""Wraps the scene objects into HiK python objects.
 	"""
-	global namespaceRig
-	global ctrlRig
-	global exportSkeleton
 	global sceneMetaData
 
-	if namespaceRig is None:
-		namespaceRig = lm.LMScene.getNamespaces()[0]
-		if not namespaceRig: namespaceRig=""
+	rtgLunarCtrl = lmrtg.LMLunarCtrl(f"{namespace}:Ctrl")
+	rtgLunarExport = lmrtg.LMLunarExport(f"{namespace}:Export")
 
-	if ctrlRig is None:	ctrlRig = lmrtg.LMLunarCtrl(f"{namespaceRig}:Ctrl")
-	if exportSkeleton is None: exportSkeleton = lmrtg.LMLunarExport(f"{namespaceRig}:Export")
 	if sceneMetaData is None: sceneMetaData = lm.LMMetaData()
+
+	return rtgLunarCtrl, rtgLunarExport
+
 
 	
 def buildNewAnimationScene() -> bool:
 	"""Builds a new animation scene with a clean player rig for working with mocap.
-
 	"""
-	global namespaceRig
 	global sceneMetaData
 
 	if lm.LMFile.new():
 		lm.LMScene.setFramerate()
-		namespaceRig = "Player"
-		lm.LMFile.load(fiPlayerRig.filePath(), namespaceRig)
-		# sceneMetaData = lm.MMetaData(text="untitled")
-		wrapRetargeters()
-		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
-		return True
+		namespace = "Player"
+		lm.LMFile.load(fiMannyRig.filePath(), namespace)
 
+		sceneMetaData = lm.LMMetaData()
+
+		cmds.select(f"{namespace}:main_ctrl")
+
+		return True
 	return False
 
 
-def loadMocap(hikTemplate="MannequinUe5") -> bool:
+
+def loadCharacter(characterTemplate="Manny"):
+	"""Loads a character rig into the scene with the specified template and namespace.
+	"""
+	namespace = lm.LMFile.characterDialog()
+	if not namespace: return None
+
+	if characterTemplate == "Manny":
+		lm.LMFile.reference(fiMannyRig.filePath(), namespace)
+		cmds.select(f"{namespace}:main_ctrl")
+
+
+
+def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 	"""Import mocap to the control rig from an fbx file.
 	"""
 	global fiAnimFbx
 	global sceneMetaData
-	lm.LMScene.setFramerate()
+
+	# Check if selection is valid
+	namespaceRig = lm.LMNamespace.getNamespaceFromSelection()
+	if not namespaceRig: return None
+
 	strFilePath = lm.LMFile.importDialog()
-
 	if strFilePath != None:
-		wrapRetargeters()
-		stateAutoKey = oma.MAnimControl.autoKeyMode()
-		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
-
-		# Anim load / mocap reference
+		listTimeRanges = []
 		namespaceMocap = "Mocap"
 		fiAnimFbx = qtc.QFileInfo(strFilePath[0])
-		om.MFileIO.reference(fiAnimFbx.filePath(), False, False, namespaceMocap)
-		referenceNodes = []
-		om.MFileIO.getReferenceNodes(fiAnimFbx.filePath(), referenceNodes)
-		listJoints = []
-		[listJoints.append(node) for node in referenceNodes if cmds.nodeType(node) == "joint"]
-		namespaceMocap = om.MNamespace.getNamespaceFromName(listJoints[0])
+		lm.LMScene.setFramerate()
+
+		stateAutoKeyMode = lma.LMAnimControl.autoKeyMode()
+		if stateAutoKeyMode: lma.LMAnimControl.setAutoKeyMode(False)
+
+		rtgLunarCtrl, rtgLunarExport = wrapRetargeters(namespaceRig)
+
+		# Anim load / mocap reference
+		# Get the current working time range - check if a time range is selected first
+		offsetAnim = False
+		timeAnimationRange = lma.LMAnimControl.animationStartEndTime()
+		timeCurrentRange = lma.LMAnimControl.selectedStartEndTime()
+		if timeCurrentRange:
+			useRangeFromSelection = True
+			timeCurrent = timeCurrentRange[0]
+			offsetAnim = True
+		else:
+			useRangeFromSelection = False
+			timeCurrentRange = lma.LMAnimControl.minMaxStartEndTime()
+			timeCurrent = lma.LMAnimControl.currentTime()
+			# This is incorrect
+			if timeCurrent != timeCurrentRange[0]: 
+				offsetAnim = True
+
+		referenceNode = lm.LMFile.reference(fiAnimFbx.filePath(), namespaceMocap)
+		isAnimReferenced = True
+		listReferenceJoints = lm.LMFile.getReferenceNodesByType(fiAnimFbx.filePath(), "joint")
+		listReferenceAnimCurves = lm.LMFile.getReferenceNodesByType(fiAnimFbx.filePath(), "animCurveTA")
+		namespaceMocap = om.MNamespace.getNamespaceFromName(listReferenceJoints[0]) # Get the mocap namespace from ref + file
+
+		# Get time of mocap after import - replace with a more reliable function later
+		timeMocapRange = lma.LMAnimControl.startEndTimeFromAnimCurves(listReferenceAnimCurves)
+		timeStartEndBakeRange = tuple([time for time in timeMocapRange])
+		if timeCurrent != timeMocapRange[0]: offsetAnim = True
+		if offsetAnim:
+			lm.LMFile.importReference(fiAnimFbx.filePath()) # import the file in order to be able to modify keyframes
+			isAnimReferenced = False
+			timeOffset = timeCurrent - timeMocapRange[0]
+			if useRangeFromSelection:
+				timeStartEndBakeRange = tuple([time for time in timeCurrentRange]) # should match selection end
+			else:
+				listTimeStartEndBake = [timeMocapRange[0] + timeOffset, timeMocapRange[1] + timeOffset + 1]
+				timeStartEndBakeRange = tuple([time for time in listTimeStartEndBake])
+
+			lma.LMAnimControl.offsetKeyframes(listReferenceJoints, timeStartEndBakeRange[0].value())
+			
+		# Check if mocap end frame is bigger than the initial end frame - always grab the bigger
+		# check if mocap start frame is smaller than the inital start frame - always grab the smaller
+		listTimeRanges.extend(timeAnimationRange)
+		listTimeRanges.extend(timeCurrentRange)
+		listTimeRanges.extend(timeMocapRange)
+		listTimeRanges.extend(timeStartEndBakeRange)
+		timeFullRange = lma.LMAnimControl.widestRange(listTimeRanges)
+
+		# om.MGlobal.displayWarning("bake time range: {}, {}".format(timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value()))
+		# om.MGlobal.displayWarning("combined time range: {}, {}".format(timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value()))
+		lma.LMAnimControl.setStartEndTime(timeFullRange[0], timeFullRange[1])
 
 		# Metadata node
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
@@ -148,56 +187,63 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool:
 		# Temp override for array attributes
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
 		cmds.setAttr(f"{sceneMetaData.shape}.metaData[0].displayInViewport", True)
-	
-		if hikTemplate == "HumanIk":
-			mocapSkeleton = lmrtg.LMHumanIk(f"{namespaceMocap}:Skeleton")
-			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=False)
 
-		elif hikTemplate == "MannequinUe5":
-			mocapSkeleton = lmrtg.LMMannequinUe5(f"{namespaceMocap}:Skeleton")
-			ctrlRig.setSourceAndBake(mocapSkeleton, rootMotion=True)
+		rtgMocap = lmrtg.LMRetargeter.getFromHikTemplate(f"{namespaceMocap}:Skeleton", hikTemplate)
 
-		# Clean up 
-		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
-		mocapSkeleton.deleteCharacterDefinition()
-		mocapSkeleton = None
+		rtgLunarCtrl.setSourceAndBake(rtgMocap, timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value())
+
+		# Clean-up
+		if stateAutoKeyMode: lma.LMAnimControl.setAutoKeyMode(True)
+		rtgMocap.deleteCharacterDefinition()
+		if isAnimReferenced:
+			lm.LMFile.removeReference(fiAnimFbx.filePath())
+		else: 
+			om.MNamespace.removeNamespace(namespaceMocap, True)
+		# double check for "Mocap" namespace if not all files in referenced file are under a namsepace
+		# TODO add referenced file under a group from the file cmds
+		if om.MNamespace.namespaceExists("Mocap"):
+			om.MNamespace.removeNamespace("Mocap", True)
+
+		rtgMocap = None
 		namespaceMocap = None
-		om.MFileIO.removeReference(fiAnimFbx.filePath())
-
+		referenceNode = None
 		return True
-	
+
 	cmds.warning("Operation was cancelled.")
 	return False
+
 
 
 def exportAnimation(exportAs=True, bake=True):
 	"""Export animaiton to the engine.
 	"""
 	global fiAnimFbx
-	global namespaceRig
-	global ctrlRig
-	global exportSkeleton
 	global sceneMetaData
 
-	# namespaceRig = lm.LMScene.getNamespaces()[0]
-	wrapRetargeters()
+	# Check if selection is valid
+	namespaceRig = lm.LMNamespace.getNamespaceFromSelection()
+	if not namespaceRig: return None
 
 	if exportAs:
 		strFilePath = lm.LMFile.exportDialog(f"{fiAnimations.filePath()}/{sceneMetaData.getText()}")
 		if strFilePath != None:
 			fiAnimFbx = qtc.QFileInfo(strFilePath[0])
 
+			rtgLunarCtrl, rtgLunarExport = wrapRetargeters(namespaceRig)
+
 			# Source and bake to export skeleton
 			if bake:
-				exportSkeleton.setCtrlRigAsSourceAndBake(ctrlRig)
+				rtgLunarExport.setCtrlRigAsSourceAndBake(rtgLunarCtrl)
 
-			exportSkeleton.exportAnimation(fiAnimFbx.filePath())
+			rtgLunarExport.exportAnimation(fiAnimFbx.filePath())
 			return True
 
-		cmds.warning("Operation was cancelled.")
+		om.MGlobal.displayWarning("Export operation was cancelled.")
 		return False
 
+	namespaceRig = None
 	return True
+
 
 
 def createTimeEditorClip():
@@ -219,6 +265,7 @@ def createTimeEditorClip():
 
 def importMhFaceCtrlAnimatino():
 	"""Imports the metahuman face animation onto the ctrls from a json file."""
+	return
 	global namespaceRig
 
 	wrapRetargeters()
@@ -236,49 +283,19 @@ def importMhFaceCtrlAnimatino():
 def bakeToAnother(ctrlsToSkeleton=True, skeletonToCtrls=False):
 	"""Animation shelf wrapper for baking animation between the control rig and skeleton.
 	"""
-	global namespaceRig
-	global ctrlRig
-	global exportSkeleton
-
 	if ctrlsToSkeleton and skeletonToCtrls:
-		cmds.warning("Only one flag can be set to true at the same time - can't bake both at the same time.")
+		om.MGlobal.displayWarning("Only one flag can be set to true at the same time - can't bake both at the same time.")
 		return False
-	
-	wrapRetargeters()
+
+	namespaceRig = lm.LMNamespace.getNamespaceFromSelection()
+	if not namespaceRig: return None
+	rtgLunarCtrl, rtgLunarExport = wrapRetargeters(namespaceRig)
 
 	if ctrlsToSkeleton:
-		exportSkeleton.setCtrlRigAsSourceAndBake(ctrlRig)
+		rtgLunarExport.setCtrlRigAsSourceAndBake(rtgLunarCtrl)
 	
 	if skeletonToCtrls:
-		ctrlRig.setSourceAndBake(exportSkeleton, rootMotion=True)
+		rtgLunarCtrl.setSourceAndBake(rtgLunarExport, rootMotion=True)
 	
-
-
-
-# if __name__ == "__main__":
-# 	"""For Development Only.
-
-# 	Test code to accelerate reloading and testing the plugin.
-
-# 	"""
-# 	import importlib
-# 	from maya import cmds
-
-# 	import lunar.maya.LunarMaya as lm
-# 	import lunar.maya.LunarMayaAnim as lma
-# 	import lunar.maya.LunarMayaRig as lmr
-# 	import lunar.maya.LunarMayaRetarget as lmrtg
-
-# 	from lunar.maya.toolset import animation
-
-# 	[importlib.reload(module) for module in [lm, lma, lmr, lmrtg]]
-
-# 	animation.buildNewAnimationScene()
-
-# 	animation.ImportMocap()
-
-#		animation.ExportAnimation()
-# 	animation.ExportAnimation(True)
-
-# 	cmds.viewFit(all=True)
-# 	cmds.modelEditor("modelPanel4", edit=True, jointXray=True)
+	namespaceRig = None
+	

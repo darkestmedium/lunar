@@ -83,6 +83,7 @@ class LMHumanIk():
 	"""
 	minimalDefinition = lmrrhi.templateHik["minimalDefinition"]
 	definition = lmrrhi.templateHik["definition"]
+	hikTemplate = "HumanIk"
 
 
 	def __init__(self, name:str="HiK") -> None:
@@ -91,7 +92,9 @@ class LMHumanIk():
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
 		# Get and set internal character name variables
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
+		# self.namespace = self.extractNameSpace(name)
+		# self.character = lm.LMNamespace.stripNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -175,7 +178,7 @@ class LMHumanIk():
 		"""
 		missingNodes = []
 		for indx in self.minimalDefinition:
-			node = self.returnNodeWithNameSpace(self.minimalDefinition[indx]["node"])
+			node = self.nameWithNamespace(self.minimalDefinition[indx]["node"])
 			if not cmds.objExists(node):
 				missingNodes.append(node)
 
@@ -187,6 +190,12 @@ class LMHumanIk():
 
 		self.log.info(f"Successfully validated definition.")
 		return True
+
+
+	def afterImportSetup(self):
+		"""Methods for additional setup steps after file import / reference.
+		"""
+		pass
 
 
 	def isSourceValid(self, source) -> bool:
@@ -236,37 +245,7 @@ class LMHumanIk():
 		mel.eval('hikUpdateContextualUI()')
 
 
-	def extractNameSpace(self, name) -> str:
-		"""Extracts namespaces from given name.
-
-		Args:
-			name (str): Name of the character which might contain namespace e.g. 'input:Hik'.
-
-		Returns:
-			bool: True if the operation was successful, False if an	error occured during the operation.
-
-		"""
-		splitName = name.split(':')
-
-		# One namespace
-		if len(splitName) == 2:
-			self.log.debug(f"Successfully extracted namespace: '{splitName[0]}'.")
-			return splitName[0]
-
-		# Two and more namespaces
-		elif len(splitName) > 2:
-			splitName.pop()
-			nameSpace = ":".join(splitName)
-			self.log.debug(f"Successfully extracted namespace: '{nameSpace}'.")
-			return nameSpace
-
-		# No namespace
-		else:  
-			self.log.debug(f"'{name}' does not contain a namespace.")
-			return False
-
-
-	def returnNodeWithNameSpace(self, node) -> str:
+	def nameWithNamespace(self, node) -> str:
 		"""Checks if the class has a namespace and if it does it returns it.
 
 		Args:
@@ -276,9 +255,7 @@ class LMHumanIk():
 			str: Name of the node with namespace if one was set while initiating the class.
 
 		"""
-		if self.nameSpace: node = f'{self.nameSpace}:{node}'
-
-		return node
+		return lm.LMNamespace.getNameWithNamespace(node, self.namespace)
 
 
 	def getAttributesFromChannelBox(self, node) -> list:
@@ -319,7 +296,7 @@ class LMHumanIk():
 
 		"""
 		for node in pose:
-			ctrl = self.returnNodeWithNameSpace(node)
+			ctrl = self.nameWithNamespace(node)
 			if not cmds.objExists(ctrl): continue
 			for attr in pose[node]:
 				attrNs = f'{ctrl}.{attr}'
@@ -338,7 +315,7 @@ class LMHumanIk():
 
 		"""
 		for i in self.definition:
-			node = self.returnNodeWithNameSpace(self.definition[i]["node"])
+			node = self.nameWithNamespace(self.definition[i]["node"])
 			if not cmds.objExists(node): continue
 			for attr in ["rotateX", "rotateY", "rotateZ"]:
 				try: cmds.setAttr(f'{node}.{attr}', 0)
@@ -346,9 +323,9 @@ class LMHumanIk():
 
 		if moveToOrigin:
 			# get hip joint position in world
-			hipNode = self.returnNodeWithNameSpace(self.definition["Hips"]["node"])
+			hipNode = self.nameWithNamespace(self.definition["Hips"]["node"])
 			# get toe joint position in world
-			toeNode = self.returnNodeWithNameSpace(self.definition["LeftToeBase"]["node"])
+			toeNode = self.nameWithNamespace(self.definition["LeftToeBase"]["node"])
 			if not cmds.objExists(hipNode) or not cmds.objExists(toeNode): 
 				return False
 
@@ -384,10 +361,10 @@ class LMHumanIk():
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		contactNode = self.returnNodeWithNameSpace(self.definition["LeftToeBase"]["node"])
+		contactNode = self.nameWithNamespace(self.definition["LeftToeBase"]["node"])
 		if not cmds.objExists(contactNode): return False
 
-		hipNode = self.returnNodeWithNameSpace(self.definition["Hips"]["node"])
+		hipNode = self.nameWithNamespace(self.definition["Hips"]["node"])
 		if not cmds.objExists(hipNode): return False
 
 		contactNodeYPosition = cmds.xform(contactNode, query=True, translation=True, worldSpace=True)[1]
@@ -404,30 +381,17 @@ class LMHumanIk():
 	def getRoot(self) -> str or None:
 		"""Gets the root joint from the character definition dictionary.
 
-		If the Reference slot is empty it will attempt to get get the HipsTranslation node and if that
-		also does not exist it will lastly get the Hips node.
-
 		Returns:
 			str or bool: If the root joint does not exist False will be returned, if it does exist the
 				node name will be returned as a string.
 
 		"""
 		# Firstly attempt to get the Reference node
-		node = self.returnNodeWithNameSpace(self.definition['Reference']['node'])
+		node = self.nameWithNamespace(self.definition['Reference']['node'])
 		if cmds.objExists(node):
 			return node
-		else:
-			# Secondly attempt to get the HipsTranslation node
-			node = self.returnNodeWithNameSpace(self.definition['HipsTranslation']['node'])
-			if cmds.objExists(node):
-				return node
-			else:
-				# Thirdly attempt to get the Hips node
-				node = self.returnNodeWithNameSpace(self.definition['Hips']['node'])
-				if cmds.objExists(node):
-					return node
 
-		logging.critical(f"Root node could not be retrieved - it doesn't exist.")
+		self.log.warning(f"'{node}' root node could not be retrieved - it doesn't exist.")
 		return None
 
 
@@ -476,7 +440,7 @@ class LMHumanIk():
 
 		"""
 		for i in self.definition:
-			node = self.returnNodeWithNameSpace(self.definition[i]["node"])
+			node = self.nameWithNamespace(self.definition[i]["node"])
 			if not cmds.objExists(node) or self.definition[i]["id"] == 999: continue
 			mel.eval(f'setCharacterObject("{node}", "{self.character}", {self.definition[i]["id"]}, 0);')
 
@@ -1049,6 +1013,7 @@ class LMMetaHuman(LMHumanIk):
 	"""
 	minimalDefinition = lmrrue.templateMH["minimalDefinition"]
 	definition = lmrrue.templateMH["definition"]
+	hikTemplate = "MetaHuman"
 	tPose = lmrrue.templateMH["tPose"]
 	aPose = lmrrue.templateMH["aPose"]
 
@@ -1059,7 +1024,7 @@ class LMMetaHuman(LMHumanIk):
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
 		# Get and set internal character name variables
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1071,7 +1036,7 @@ class LMMetaHuman(LMHumanIk):
 	def accessoryJoints(self, value:bool=False):
 		"""Hides additional joints on the metahuman rig."""
 
-		referenceNode = self.returnNodeWithNameSpace(self.definition['Reference']['node'])
+		referenceNode = self.nameWithNamespace(self.definition['Reference']['node'])
 		if not cmds.objExists(referenceNode): return False
 
 		nodes = cmds.listRelatives(referenceNode, allDescendents=True, type="joint")
@@ -1140,6 +1105,7 @@ class LMMannequinUe5(LMMetaHuman):
 	TODO hookup ik joints
 
 	"""
+	hikTemplate = "MannequinUe5"
 	tPose = lmrrue.templateUe5["tPose"]
 	aPose = lmrrue.templateUe5["aPose"]
 
@@ -1150,7 +1116,7 @@ class LMMannequinUe5(LMMetaHuman):
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
 		# Get and set internal character name variables
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1180,6 +1146,7 @@ class LMMannequinUe4(LMMetaHuman):
 	TODO hookup ik joints
 
 	"""
+	hikTemplate = "MannequinUe4"
 	tPose = lmrrue.templateUe4["tPose"]
 	aPose = lmrrue.templateUe4["aPose"]
 
@@ -1190,7 +1157,7 @@ class LMMannequinUe4(LMMetaHuman):
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
 		# Get and set internal character name variables
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1219,8 +1186,15 @@ class LMLunarCtrl(LMHumanIk):
 	"""
 	minimalDefinition = lmrrlc.templateLC["minimalDefinition"]
 	definition = lmrrlc.templateLC["definition"]
+	hikTemplate = "LunarCtrl"
 	tPose = lmrrlc.templateLC["tPose"]
 	aPose = lmrrlc.templateLC["aPose"]
+
+	sourceAndBakeTemplate = {
+		"HumanIk": 			[False, 0],
+		"SinnersDev2": 	[True, -90],
+		"SinnersDev1": 	[True, -90],
+	}
 
 	ctrlMain = "main_ctrl"
 
@@ -1241,7 +1215,7 @@ class LMLunarCtrl(LMHumanIk):
 		# Get and set internal character name variables
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 		
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1258,7 +1232,7 @@ class LMLunarCtrl(LMHumanIk):
 	def getCtrlMain(self) -> str or None:
 		"""Gets the main controll from the lunar rig.
 		"""
-		node = self.returnNodeWithNameSpace(self.ctrlMain)
+		node = self.nameWithNamespace(self.ctrlMain)
 		if cmds.objExists(node):
 			return node
 		
@@ -1322,61 +1296,61 @@ class LMLunarCtrl(LMHumanIk):
 						self.setCtrlsIkToFk()
 
 						# Start override of hik setSource method
-						self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("pelvis_rot_ctrl"), f"{self.nodeState2Sk}.HipsR")
+						self.connectSourceAndSaveAnimNew(self.nameWithNamespace("pelvis_rot_ctrl"), f"{self.nodeState2Sk}.HipsR")
 
 						# Head
-						self.cnstHeadIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("head_ctrl"), self.returnNodeWithNameSpace("head_ik_ctrl"))
+						self.cnstHeadIkHandle = cmds.parentConstraint(self.nameWithNamespace("head_ctrl"), self.nameWithNamespace("head_ik_ctrl"))
 
 						# Left Arm
-						self.cnstLeftArmIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("hand_l_ctrl"), self.returnNodeWithNameSpace("arm_ik_l_ctrl"))
+						self.cnstLeftArmIkHandle = cmds.parentConstraint(self.nameWithNamespace("hand_l_ctrl"), self.nameWithNamespace("arm_ik_l_ctrl"))
 						posLeftArmPv = lmr.LMRigUtils.getPoleVectorPosition(
-							self.returnNodeWithNameSpace("upperarm_l_ctrl"), self.returnNodeWithNameSpace("lowerarm_l_ctrl"), self.returnNodeWithNameSpace("hand_l_ctrl")
+							self.nameWithNamespace("upperarm_l_ctrl"), self.nameWithNamespace("lowerarm_l_ctrl"), self.nameWithNamespace("hand_l_ctrl")
 						)
 						self.locLeftArmPv = cmds.spaceLocator(name="tmpLeftArmLoc")[0]
 						cmds.xform(self.locLeftArmPv, translation=(posLeftArmPv.x, posLeftArmPv.y, posLeftArmPv.z), ws=True)
-						cmds.parentConstraint(self.returnNodeWithNameSpace("lowerarm_l_ctrl"), self.locLeftArmPv, maintainOffset=True)
-						cmds.parentConstraint(self.locLeftArmPv, self.returnNodeWithNameSpace("arm_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+						cmds.parentConstraint(self.nameWithNamespace("lowerarm_l_ctrl"), self.locLeftArmPv, maintainOffset=True)
+						cmds.parentConstraint(self.locLeftArmPv, self.nameWithNamespace("arm_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
 						# Right Arm
-						self.cnstRightArmIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("hand_r_ctrl"), self.returnNodeWithNameSpace("arm_ik_r_ctrl"))
+						self.cnstRightArmIkHandle = cmds.parentConstraint(self.nameWithNamespace("hand_r_ctrl"), self.nameWithNamespace("arm_ik_r_ctrl"))
 						posRightArmPv = lmr.LMRigUtils.getPoleVectorPosition(
-							self.returnNodeWithNameSpace("upperarm_r_ctrl"), self.returnNodeWithNameSpace("lowerarm_r_ctrl"), self.returnNodeWithNameSpace("hand_r_ctrl")
+							self.nameWithNamespace("upperarm_r_ctrl"), self.nameWithNamespace("lowerarm_r_ctrl"), self.nameWithNamespace("hand_r_ctrl")
 						)
 						self.locRightArmPv = cmds.spaceLocator(name="tmpRightArmLoc")[0]
 						cmds.xform(self.locRightArmPv, translation=(posRightArmPv.x, posRightArmPv.y, posRightArmPv.z), ws=True)
-						cmds.parentConstraint(self.returnNodeWithNameSpace("lowerarm_r_ctrl"), self.locRightArmPv, maintainOffset=True)
-						cmds.parentConstraint(self.locRightArmPv, self.returnNodeWithNameSpace("arm_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+						cmds.parentConstraint(self.nameWithNamespace("lowerarm_r_ctrl"), self.locRightArmPv, maintainOffset=True)
+						cmds.parentConstraint(self.locRightArmPv, self.nameWithNamespace("arm_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
 						# Left Leg
-						self.cnstLeftLegIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("foot_l_ctrl"), self.returnNodeWithNameSpace("leg_ik_l_ctrl"))
+						self.cnstLeftLegIkHandle = cmds.parentConstraint(self.nameWithNamespace("foot_l_ctrl"), self.nameWithNamespace("leg_ik_l_ctrl"))
 						posLeftLegPv = lmr.LMRigUtils.getPoleVectorPosition(
-							self.returnNodeWithNameSpace("thigh_l_ctrl"), self.returnNodeWithNameSpace("calf_l_ctrl"), self.returnNodeWithNameSpace("foot_l_ctrl")
+							self.nameWithNamespace("thigh_l_ctrl"), self.nameWithNamespace("calf_l_ctrl"), self.nameWithNamespace("foot_l_ctrl")
 						)
 						self.locLeftLegPv = cmds.spaceLocator(name="tmpLeftLegLoc")[0]
 						cmds.xform(self.locLeftLegPv, translation=(posLeftLegPv.x, posLeftLegPv.y, posLeftLegPv.z), ws=True)
-						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_l_ctrl"), self.locLeftLegPv, maintainOffset=True)
-						cmds.parentConstraint(self.locLeftLegPv, self.returnNodeWithNameSpace("leg_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+						cmds.parentConstraint(self.nameWithNamespace("calf_l_ctrl"), self.locLeftLegPv, maintainOffset=True)
+						cmds.parentConstraint(self.locLeftLegPv, self.nameWithNamespace("leg_pv_l_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
 						# Right Leg
-						self.cnstRightLegIkHandle = cmds.parentConstraint(self.returnNodeWithNameSpace("foot_r_ctrl"), self.returnNodeWithNameSpace("leg_ik_r_ctrl"))
+						self.cnstRightLegIkHandle = cmds.parentConstraint(self.nameWithNamespace("foot_r_ctrl"), self.nameWithNamespace("leg_ik_r_ctrl"))
 						posRightLegPv = lmr.LMRigUtils.getPoleVectorPosition(
-							self.returnNodeWithNameSpace("thigh_r_ctrl"), self.returnNodeWithNameSpace("calf_r_ctrl"), self.returnNodeWithNameSpace("foot_r_ctrl")
+							self.nameWithNamespace("thigh_r_ctrl"), self.nameWithNamespace("calf_r_ctrl"), self.nameWithNamespace("foot_r_ctrl")
 						)
 						self.locRightLegPv = cmds.spaceLocator(name="tmpRightLegLoc")[0]
 						cmds.xform(self.locRightLegPv, translation=(posRightLegPv.x, posRightLegPv.y, posRightLegPv.z), ws=True)
-						cmds.parentConstraint(self.returnNodeWithNameSpace("calf_r_ctrl"), self.locRightLegPv, maintainOffset=True)
-						cmds.parentConstraint(self.locRightLegPv, self.returnNodeWithNameSpace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
+						cmds.parentConstraint(self.nameWithNamespace("calf_r_ctrl"), self.locRightLegPv, maintainOffset=True)
+						cmds.parentConstraint(self.locRightLegPv, self.nameWithNamespace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
 						# Left Weapon
-						sourceLeftWeapon = f"{source.nameSpace}:weapon_l"
+						sourceLeftWeapon = f"{source.namespace}:weapon_l"
 						if cmds.objExists(sourceLeftWeapon):
 							# om.MGlobal.displayWarning(sourceLeftWeapon)
-							self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.returnNodeWithNameSpace("weapon_l_ctrl"), maintainOffset=False)
+							self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.nameWithNamespace("weapon_l_ctrl"), maintainOffset=False)
 						# Right Weapon
-						sourceRightWeapon = f"{source.nameSpace}:weapon_r"
+						sourceRightWeapon = f"{source.namespace}:weapon_r"
 						if cmds.objExists(sourceLeftWeapon):
 							# om.MGlobal.displayWarning(sourceRightWeapon)
-							self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.returnNodeWithNameSpace("weapon_r_ctrl"), maintainOffset=False)
+							self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.nameWithNamespace("weapon_r_ctrl"), maintainOffset=False)
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
@@ -1412,10 +1386,10 @@ class LMLunarCtrl(LMHumanIk):
 						# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
 						# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
 						# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.returnNodeWithNameSpace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
+						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
+						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
 
 
 						self.updateHikUi(updateSource=True)
@@ -1429,6 +1403,17 @@ class LMLunarCtrl(LMHumanIk):
 				self.log.critical(f"'{source}' could not be validated as source input for '{self.character}'")
 
 		return None
+
+
+	def setSourceAndBake(self, source, startFrame=None, endFrame=None, rootMotion=True, rootRotationOffset=0, oversamplingRate=1):
+		"""Wrapper method for setting the source and baking in one go.
+		"""
+		if source.hikTemplate in self.sourceAndBakeTemplate:
+			rootMotion = self.sourceAndBakeTemplate[source.hikTemplate][0]
+			rootRotationOffset = self.sourceAndBakeTemplate[source.hikTemplate][1]
+
+		self.setSource(source, rootMotion, rootRotationOffset)
+		self.bakeAnimation(startFrame, endFrame)
 
 
 	def getExportNodes(self) -> list or None:
@@ -1461,7 +1446,7 @@ class LMLunarCtrl(LMHumanIk):
 		"""
 		if self.isValid():
 			ikCtrlsWithNameSpace = []
-			[ikCtrlsWithNameSpace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.ctrlsIk]
+			[ikCtrlsWithNameSpace.append(self.nameWithNamespace(Ctrl)) for Ctrl in self.ctrlsIk]
 			return ikCtrlsWithNameSpace
 
 		return None
@@ -1471,7 +1456,7 @@ class LMLunarCtrl(LMHumanIk):
 
 		ListCtrlsNamespace = []
 		if self.isValid():
-			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlSwitches]
+			[ListCtrlsNamespace.append(self.nameWithNamespace(Ctrl)) for Ctrl in self.CtrlSwitches]
 
 		return ListCtrlsNamespace
 
@@ -1480,7 +1465,7 @@ class LMLunarCtrl(LMHumanIk):
 
 		ListCtrlsNamespace = []
 		if self.isValid():
-			[ListCtrlsNamespace.append(self.returnNodeWithNameSpace(Ctrl)) for Ctrl in self.CtrlHandSwitches]
+			[ListCtrlsNamespace.append(self.nameWithNamespace(Ctrl)) for Ctrl in self.CtrlHandSwitches]
 
 		return ListCtrlsNamespace
 	
@@ -1489,7 +1474,7 @@ class LMLunarCtrl(LMHumanIk):
 		"""Resets fk / ik controls for retargeting mocap.
 		"""
 
-		ctrlSwitch = self.returnNodeWithNameSpace("fkik_ctrl")
+		ctrlSwitch = self.nameWithNamespace("fkik_ctrl")
 		cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
 		cmds.setAttr(f"{ctrlSwitch}.headTwist", 0)
 
@@ -1536,57 +1521,57 @@ class LMLunarCtrl(LMHumanIk):
 				if self.cnstHeadIkHandle:
 					cmds.delete(self.cnstHeadIkHandle)
 					self.cnstHeadIkHandle = None
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("head_ik_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("head_ik_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("head_ik_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("head_ik_ctrl"), attribute="blendParent1")
 
 				if self.cnstLeftArmIkHandle:
 					cmds.delete(self.cnstLeftArmIkHandle)
 					self.cnstLeftArmIkHandle = None
 				if cmds.objExists(self.locLeftArmPv): cmds.delete(self.locLeftArmPv)
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_l_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_l_ctrl"), attribute="blendParent1")
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_l_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("arm_ik_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("arm_ik_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("arm_pv_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("arm_pv_l_ctrl"), attribute="blendParent1")
 
 				if self.cnstRightArmIkHandle:
 					cmds.delete(self.cnstRightArmIkHandle)
 					self.cnstRightArmIkHandle = None
 				if cmds.objExists(self.locRightArmPv): cmds.delete(self.locRightArmPv)
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_ik_r_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_ik_r_ctrl"), attribute="blendParent1")
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("arm_pv_r_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("arm_pv_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("arm_ik_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("arm_ik_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("arm_pv_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("arm_pv_r_ctrl"), attribute="blendParent1")
 
 				if self.cnstLeftLegIkHandle:
 					cmds.delete(self.cnstLeftLegIkHandle)
 					self.cnstLeftLegIkHandle = None
 				if cmds.objExists(self.locLeftLegPv): cmds.delete(self.locLeftLegPv)
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_l_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_l_ctrl"), attribute="blendParent1")
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_l_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("leg_ik_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("leg_ik_l_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("leg_pv_l_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("leg_pv_l_ctrl"), attribute="blendParent1")
 
 				if self.cnstRightLegIkHandle:
 					cmds.delete(self.cnstRightLegIkHandle)
 					self.cnstRightLegIkHandle = None
 				if cmds.objExists(self.locRightLegPv): cmds.delete(self.locRightLegPv)
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_ik_r_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_ik_r_ctrl"), attribute="blendParent1")
-				if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("leg_pv_r_ctrl"), exists=True):
-					cmds.deleteAttr(self.returnNodeWithNameSpace("leg_pv_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("leg_ik_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("leg_ik_r_ctrl"), attribute="blendParent1")
+				if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("leg_pv_r_ctrl"), exists=True):
+					cmds.deleteAttr(self.nameWithNamespace("leg_pv_r_ctrl"), attribute="blendParent1")
 
 				# Weapon cleanup
 				if self.cnstLeftWeapon:
 					cmds.delete(self.cnstLeftWeapon)
 					self.cnstLeftWeapon = None
-					if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("weapon_l_ctrl"), exists=True):
-						cmds.deleteAttr(self.returnNodeWithNameSpace("weapon_l_ctrl"), attribute="blendParent1")
+					if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("weapon_l_ctrl"), exists=True):
+						cmds.deleteAttr(self.nameWithNamespace("weapon_l_ctrl"), attribute="blendParent1")
 
 				if self.cnstRightWeapon:
 					cmds.delete(self.cnstRightWeapon)
 					self.cnstRightWeapon = None
-					if cmds.attributeQuery("blendParent1", node=self.returnNodeWithNameSpace("weapon_r_ctrl"), exists=True):
-						cmds.deleteAttr(self.returnNodeWithNameSpace("weapon_r_ctrl"), attribute="blendParent1")
+					if cmds.attributeQuery("blendParent1", node=self.nameWithNamespace("weapon_r_ctrl"), exists=True):
+						cmds.deleteAttr(self.nameWithNamespace("weapon_r_ctrl"), attribute="blendParent1")
 
 				self.setSource("None")
 				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
@@ -1618,7 +1603,7 @@ class LMLunarCtrl(LMHumanIk):
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
-		self.mainCtrl = self.returnNodeWithNameSpace(self.mainCtrl)
+		self.mainCtrl = self.nameWithNamespace(self.mainCtrl)
 
 		# Check if visibility is off, if it is turn it off
 		if not cmds.getAttr(f"{self.mainCtrl}.controlsVisibility"):
@@ -1637,6 +1622,7 @@ class LMLunarExport(LMMannequinUe5):
 	Must share same namespace with the MLunarCtrl. Used for exporting animation to the game engine.
 
 	"""
+	hikTemplate = "LunarExport"
 	# mainCtrl = "main_ctrl"
 	
 	# ModDg = om.MDGModifier()
@@ -1647,7 +1633,7 @@ class LMLunarExport(LMMannequinUe5):
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 
 		# Get and set internal character name variables
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1663,8 +1649,8 @@ class LMLunarExport(LMMannequinUe5):
 
 		"""
 		# Get namespaces
-		tarns = f"{source.nameSpace}:"
-		srcns = f"{self.nameSpace}:"
+		tarns = f"{source.namespace}:"
+		srcns = f"{self.namespace}:"
 		# Construct list for constraints
 		self.listConstraints = []
 
@@ -1844,7 +1830,7 @@ class LMLunarExport(LMMannequinUe5):
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
 		# Get the main ctrl with namespace
-		ctrlMain = self.returnNodeWithNameSpace(LMLunarCtrl.ctrlMain)
+		ctrlMain = self.nameWithNamespace(LMLunarCtrl.ctrlMain)
 
 		# Check if visibility is off, if it is turn it off check if referenced file
 		IsVisible = cmds.getAttr(f"{ctrlMain}.exportSkeletonVisibility")
@@ -1883,6 +1869,7 @@ class LMSinnersDev2(LMHumanIk):
 	"""
 	minimalDefinition = lmrrsd.templateSD2["minimalDefinition"]
 	definition = lmrrsd.templateSD2["definition"]
+	hikTemplate = "SinnersDev2"
 	tPose = lmrrsd.templateSD2["tPose"]
 	aPose = lmrrsd.templateSD2["aPose"]
 
@@ -1895,7 +1882,7 @@ class LMSinnersDev2(LMHumanIk):
 		# Get and set internal character name variables
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 		
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -1915,7 +1902,7 @@ class LMSinnersDev2(LMHumanIk):
 		if self.root and cmds.objExists(self.root):
 			jointSuffixes = ["_helper", "_prop", "_grp", "headb"]
 			for node in self.getExportNodes():
-				node = self.returnNodeWithNameSpace(node)
+				node = self.nameWithNamespace(node)
 				for suffix in jointSuffixes:
 					if suffix in node:
 						cmds.setAttr(f"{node}.visibility", value)
@@ -1956,6 +1943,15 @@ class LMSinnersDev2(LMHumanIk):
 		if state2kSKNode: cmds.rename(state2kSKNode, f'{self.character}State2SK')
 
 		return True
+
+
+	def afterImportSetup(self):
+		"""Method for additional setup steps after file import / reference.
+		"""
+		locator = cmds.spaceLocator(name=self.nameWithNamespace("scale_grp"))
+		cmds.parent(self.root, locator)
+		cmds.scale(100, 100, 100, locator)
+		[cmds.setAttr(f'{node}.radius', 0.01) for node in self.getExportNodes()]
 
 
 	def setTPose(self):
@@ -1970,12 +1966,8 @@ class LMSinnersDev2(LMHumanIk):
 
 	def importSetup(self):
 		"""Wrapper method for setup from scratch with import."""
-
 		self.importCleanUp()
 		self.accessoryJoints()
-		
-
-		# self.setupCharacter()
 
 
 
@@ -1989,6 +1981,7 @@ class LMSinnersDev1(LMHumanIk):
 	"""
 	minimalDefinition = lmrrsd.templateSD1["minimalDefinition"]
 	definition = lmrrsd.templateSD1["definition"]
+	hikTemplate = "SinnersDev1"
 	tPose = lmrrsd.templateSD1["tPose"]
 	aPose = lmrrsd.templateSD1["aPose"]
 
@@ -2000,7 +1993,7 @@ class LMSinnersDev1(LMHumanIk):
 		# Get and set internal character name variables
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
 		
-		self.nameSpace = self.extractNameSpace(name)
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
 		self.character = name
 
 		self.initSetup()
@@ -2020,7 +2013,7 @@ class LMSinnersDev1(LMHumanIk):
 		if self.root and cmds.objExists(self.root):
 			jointSuffixes = ["_helper", "_prop", "_grp", "headb"]
 			for node in self.getExportNodes():
-				node = self.returnNodeWithNameSpace(node)
+				node = self.nameWithNamespace(node)
 				for suffix in jointSuffixes:
 					if suffix in node:
 						cmds.setAttr(f"{node}.visibility", value)
@@ -2061,6 +2054,15 @@ class LMSinnersDev1(LMHumanIk):
 		if state2kSKNode: cmds.rename(state2kSKNode, f'{self.character}State2SK')
 
 		return True
+
+
+	def afterImportSetup(self):
+		"""Method for additional setup steps after file import / reference.
+		"""
+		locator = cmds.spaceLocator(name=self.nameWithNamespace("scale_grp"))
+		cmds.parent(self.root, locator)
+		cmds.scale(100, 100, 100, locator)
+		[cmds.setAttr(f'{node}.radius', 0.01) for node in self.getExportNodes()]
 
 
 	def setTPose(self):
@@ -2109,6 +2111,17 @@ class LMRetargeter():
 		Add override existing clips in output folder
 
 	"""
+	hikTemplates = {
+		"HumanIk": 			LMHumanIk,
+		"MetaHuman": 		LMMetaHuman,
+		"MannequinUe5": LMMannequinUe5,
+		"MannequinUe4": LMMannequinUe4,
+		"SinnersDev2": 	LMSinnersDev2,
+		"SinnersDev1": 	LMSinnersDev1,
+		"LunarCtrl":		LMLunarCtrl,
+		"LunarExport":	LMLunarExport,
+	}
+
 	totalClipCount = 0
 	currentClip = 0
 
@@ -2143,7 +2156,7 @@ class LMRetargeter():
 
 	@classmethod
 	def __str__(cls) -> str:
-		return f"MayaRetargeter - HumanIk retargeter for Maya."
+		return "MayaRetargeter - HumanIk retargeter for Maya."
 
 
 	def validateInput(self, entry, nameFilters) -> list[qtc.QFileInfo] or bool:
@@ -2215,18 +2228,32 @@ class LMRetargeter():
 		pass
 
 
-	def initRig(self, slotTemplate, name="HiK", nameSpace=None) -> bool:
+	@classmethod
+	def getFromHikTemplate(cls, name:str, hikTemplate:str):
+		"""Returns the retargeter class for the specified hik template.
+
+		"""
+		if hikTemplate in cls.hikTemplates:
+			retargeter = cls.hikTemplates[hikTemplate](name)
+			if retargeter.hikTemplate in ["SinnersDev2", "SinnersDev1"]: retargeter.afterImportSetup()
+			return retargeter
+
+		cls.log.critical(f"'{hikTemplate}' retargeter template not supported!")
+		return None
+
+
+	def initRig(self, slotTemplate, name="HiK", namespace=None) -> bool:
 		"""Initiates the rig with the coresponding class for the specified slot.
 
 		Args:
 			slotTemplate (str): Template for initiation	['HumanIk', 'Mannequin', 'MetaHuman', 'SinnersDev']
-			nameSpace (str): Name space to use for the rig
+			namespace (str): Name space to use for the rig
  
 		Returns:
 			slot (Class): Initialized class ['MayaHumanIk', 'MayaMannequin', 'LMMetaHuman', 'MayaSinnersDev'] 
 
 		"""
-		if nameSpace:	name = f'{nameSpace}:{name}'
+		if namespace:	name = f'{namespace}:{name}'
 
 		if slotTemplate == 'HumanIk':
 			slot = LMHumanIk(name)

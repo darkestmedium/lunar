@@ -25,7 +25,7 @@ templateSD2 = {
 		"Head":										{"id": 15, 	"node": "headb"},
 	},
 	"definition": {
-		"Reference": 							{"id": 0, 	"node": "trajectory"},
+		"Reference": 							{"id": 999, "node": "trajectory"},
 		# Base (required)
 		"Hips": 									{"id": 1,		"node": "pelvis"},
 		"LeftUpLeg": 							{"id": 2,		"node": "l_upper_leg"},
@@ -932,7 +932,7 @@ templateSD1 = {
 		"Head":										{"id": 15, 	"node": "headb"},
 	},
 	"definition": {
-		"Reference": 							{"id": 0, 	"node": "NUXRoot"},
+		"Reference": 							{"id": 999, "node": "NUXRoot"},
 		# Base (required)
 		"Hips": 									{"id": 1,		"node": "pelvis"},
 		"LeftUpLeg": 							{"id": 2,		"node": "l_upper_leg"},

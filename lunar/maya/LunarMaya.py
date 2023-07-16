@@ -26,7 +26,7 @@ class LMFbx(AbstractFbx):
 
 	"""
 
-	log = logging.getLogger("MFbx")
+	log = logging.getLogger("LMFbx")
 
 
 	@classmethod
@@ -89,6 +89,7 @@ class LMFbx(AbstractFbx):
 
 		# Restore settings saved by the push command
 		mel.eval("FBXPopSettings")
+
 
 	@classmethod
 	def loadAnimation(cls, filePath:str, mode:str="exmerge"):
@@ -410,21 +411,21 @@ class LMFinder(qtc.QObject):
 
 
 
-class LMFile():
-	""""Class wrapper for file operations.
+class LMFile(om.MFileIO):
+	""""Class wrapper for file operations - inherited from MFileIO.
 	"""
 
-	log = logging.getLogger("MFile")
+	log = logging.getLogger("LMFile")
+
 
 	@classmethod
 	def new(cls, force:bool=False) -> bool:
 		"""Open a new file.
 		"""
 		if not force:
-			# IsFileModified = cmds.file(query=True, modified=True)
 			if cmds.file(query=True, modified=True):
 				inputDialog = cls.dialog(
-					message=f"Save changes to {cmds.file(query=True, expandName=True)} ?",
+					message=f"Save changes to '{om.MFileIO.currentFile()}' ?",
 					title="Save Changes",
 					icon="question",
 					buttons=["Save", "Don't Save", "Cancel"],
@@ -434,11 +435,11 @@ class LMFile():
 					if not cmds.file(query=True, sceneName=True, shortName=False):
 						mel.eval("SaveSceneAs;")
 						return True
-					cmds.file(save=True)
+					om.MFileIO.save()
 				if inputDialog == "Cancel":
 					return False
-		
-		# if force:	
+
+		# if force and file is not modified:	
 		om.MFileIO.newFile(True)
 		return True
 
@@ -457,13 +458,73 @@ class LMFile():
 			om.MFileIO.reference(filePath, False, False, nameSpace)
 			return True
 
+		# Legacy batch retarget support
 		if filePath.endswith('.fbx'):
-			# cmds.file(filePath, i=True)
 			om.MFileIO.importFile(filePath)
-
 		if filePath.endswith('.ma') or filePath.endswith('.mb'):
-			# cmds.file(filePath, namespace=nameSpace, reference=True)
-			om.MFileIO.reference(filePath, False, False, nameSpace)
+			cls.reference(filePath, nameSpace)
+
+
+	@classmethod
+	def importFile(cls, filePath:str, nameSpace:str, importTimeRange:str="combine", importFrameRate:bool=False):
+		"""Imports the specified file into the current scene.
+		"""
+		cmds.file(
+			filePath,
+			namespace=nameSpace,
+			i=True,
+			importTimeRange=importTimeRange,
+			importFrameRate=importFrameRate,
+		)
+
+
+	@classmethod
+	def reference(cls, filePath:str, nameSpace:str, lockReference:bool=False, deferReference:bool=False) -> str:
+	# def reference(cls, filePath:str, nameSpace:str) -> str:
+		"""Adds the speciefied file as a reference to the current scene.
+
+		Args:
+			filePath (string): name of the file to add as a reference.
+			nameSpace (string):	name space to add the contents of the referenced file to. If no namespace is provided, name-clashes will be resolved by prefixing with the filename.
+			lockReference (bool):	If true, all nodes and attributes from the referenced file will be locked.
+			deferReference (bool): boolean to indicate whether loading has to be deferred.
+
+		"""
+		om.MFileIO.reference(filePath, deferReference, lockReference, nameSpace)
+
+		return cmds.file(filePath, query=True, referenceNode=True)
+
+
+	@classmethod
+	def importReference(cls, filePath:str):
+		"""Ïmports the specified reference.
+		"""
+		cmds.file(filePath, importReference=True)
+
+
+	@classmethod
+	def removeReference(cls, filePath:str, deleteNamespaceContent:bool=True):
+		"""Removes the specified reference from the scene.
+		"""
+		if deleteNamespaceContent:
+			om.MFileIO.removeReference(filePath, om.MFileIO.kForceDeleteNamespaceContent)
+			return
+
+		om.MFileIO.removeReference(filePath)
+
+
+	@classmethod
+	def getReferenceNodesByType(cls, filePath:str, nodeType:str="joint") -> list:
+		"""Returns the nodes of a specified type from the given reference node.
+
+		"""
+		listReferenceNodes = []
+		om.MFileIO.getReferenceNodes(filePath, listReferenceNodes)
+		# Filter out node type
+		listNodesByTpe = []
+		[listNodesByTpe.append(node) for node in listReferenceNodes if cmds.nodeType(node) == nodeType]
+
+		return listNodesByTpe
 
 
 	@classmethod
@@ -503,6 +564,23 @@ class LMFile():
 
 
 	@classmethod
+	def characterDialog(cls) -> str or None:
+		result = cmds.promptDialog(
+			title='Character Namespace',
+			message='Enter Namespace:',
+			button=['OK', 'Cancel'],
+			defaultButton='OK',
+			cancelButton='Cancel',
+			dismissString='Cancel',
+		)
+		if result == 'OK':
+			return cmds.promptDialog(query=True, text=True)
+		
+		om.MGlobal.displayWarning("Import operation was canceled")
+		return None
+
+
+	@classmethod
 	def dialog(cls,
 			message="Default Message",
 			title="Default Title",
@@ -528,11 +606,11 @@ class LMFile():
 
 
 
-class LMObject():
+class LMObject(om.MObject):
 	"""Wrapper class with MObjects utils.
 	"""
 
-	log = logging.getLogger("MObjectUtils")
+	log = logging.getLogger("LMObject")
 
 
 	@classmethod
@@ -701,15 +779,15 @@ class LMMetaData():
 
 
 
-class LMNamespace():
-	"""Wrapper class with MObjects utils.
+class LMNamespace(om.MNamespace):
+	"""Wrapper class for MNamespace.
 	"""
 
 	log = logging.getLogger("LMNamespace")
 
 
 	@classmethod
-	def getObjWithNamespace(cls, object:str, namespace:str) -> om.MObject:
+	def addNamespaceToObject(cls, object:str, namespace:str) -> str:
 		"""Returns the given object with the specified namesapce
 		Args:
 			object (str): Name of the node/object.
@@ -719,7 +797,44 @@ class LMNamespace():
 			str: Name of the node with namespace if one was set while initiating the class.
 
 		"""
-		return f'{namespace}:{object}'
+		return f"{namespace}:{object}"
+
+
+	@classmethod
+	def getNameWithNamespace(cls, name:str, namespace:str) -> str:
+		"""Returns the given object with the specified namesapce
+		Args:
+			name (str): Name of the node/object.
+			namespace (str): Name of the node/object.
+
+		Returns:
+			str: If the namespace is not an empty string, name with namespace will be returned. Otherwise
+				just the name.
+
+		"""
+		if namespace != "":
+			return f"{namespace}:{name}"
+
+		return name
+	
+
+	@classmethod
+	def getNamespaceFromSelection(cls) -> str or None:
+		"""Returns the namespace from current selection.
+		"""
+		nodes = cmds.ls(selection=True)
+		if nodes:
+			namespace = om.MNamespace.getNamespaceFromName(nodes[0])
+			if namespace: return namespace
+
+			om.MGlobal.displayWarning("Selection has to have a namespace")
+			return None
+
+		om.MGlobal.displayWarning("Nothing is currently selected.")
+		return None
+
+
+
 
 
 

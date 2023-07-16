@@ -116,7 +116,7 @@ templateHik = {
 		"LeafRightLegRoll4": 			{"id": 199, "node": "LeafRightLegRoll4"},
 		"LeafRightLegRoll5": 			{"id": 207, "node": "LeafRightLegRoll5"},
 		# Special
-		"HipsTranslation": 				{"id": 49, 	"node": "HipsTranslation"},
+		# "HipsTranslation": 				{"id": 49, 	"node": "HipsTranslation"},
 		# Left Hand
 		"LeftHandThumb1": 				{"id": 50, 	"node": "LeftHandThumb1"},
 		"LeftHandThumb2": 				{"id": 51, 	"node": "LeftHandThumb2"},
