@@ -9,6 +9,7 @@ What's new:
 	Adds support for Maya 2024 on Windows.
 	It is now possible to have multipile characters in the scene.
 	Importing animations is now handeled via openMaya instead of FBX wrapper commands.
+	Improved animation import via reference / namespace workflow.
 
 	Animation Shelf:
 	
@@ -101,7 +102,9 @@ Bug Fixes:
 
 What need's to be done:
 
+	When nothing is currently selected try to get the Player / First character in the scene.
 	Figure out while preserveOutsideKeys is not working when envoked from retargeting classes.
+	Clean up import animation time madness in the animation toolset method.
 	Export selected time range from the timeslider.
 	Bake Ctrl to Export Skeleton for selected time range on the timeslider.
 	Bake Export Skeleton to Ctrls for selected time range on the timeslider.

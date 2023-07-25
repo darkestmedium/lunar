@@ -68,6 +68,17 @@ if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): loadDependencies()
 class LMHumanIk():
 	"""Retargeting with HumanIk in Maya, inherited from AbstractRetarget.
 
+	Hik Character has the following nodes:
+		HIKCharacterNode
+		HIKProperty2State
+		HIKSolerNode
+		HIKState2SK
+		HIKRetargeterNode
+	
+	HIKProperty2State.message -> propertyState.HIKCharacterNode.OutputCharacterDefinition -> InputCharacterDefinition.HIKSolerNode
+																																												-> InputCharacterDefinition.HIKState2SK
+																																												-> InputCharacterDefinitionDst.HIKRetargeterNode
+
 	Validation order:
 		__init__():
 			initSetup():
@@ -627,12 +638,9 @@ class LMHumanIk():
 			source (bool): 
 		
 		"""
-		connections = cmds.ls(
-			cmds.listConnections(f'{node}.{attribute}', source=source, destination=destination),
-			type=type
-		)
-		if len(connections) >= 1:
-			self.nodeProperties = connections[0]
+		listConnections = cmds.listConnections(f'{node}.{attribute}', source=source, destination=destination, type=type)
+		if listConnections.__len__() >= 1:
+			self.nodeProperties = listConnections[0]
 			return self.nodeProperties
 		
 		return False
@@ -793,15 +801,12 @@ class LMHumanIk():
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if len(nodes) >= 1:
+		if nodes:
 			animCurves = []
 			for node in nodes:
-				for attr in ['rx', 'ry', 'rz']:
-					connections = cmds.ls(
-						cmds.listConnections(f'{node}.{attr}', source=True, destination=False),
-						type='animCurve'
-					)
-					if len(connections) >= 1: animCurves.append(connections[0])
+				for attr in lm.listAttrRXYZ:
+					listConnections = cmds.listConnections(f'{node}.{attr}', source=True, destination=False, type="animCurve")
+					if listConnections: animCurves.append(listConnections[0])
 
 			cmds.filterCurve(animCurves)
 			return True
@@ -814,7 +819,10 @@ class LMHumanIk():
 		# TODO this could be probably better
 		state2SKNode = self.getState2SkNode()
 		pairBlendNodes = cmds.listConnections(state2SKNode, type='pairBlend')
-		if pairBlendNodes: cmds.delete(pairBlendNodes)
+
+		# we need to get the bake attrs and disconnect them before bake otherwise new animcurves will be created
+		if pairBlendNodes: 
+			cmds.delete(pairBlendNodes)
 
 
 	def cleanUpBakeNodes(self):
@@ -827,48 +835,6 @@ class LMHumanIk():
 			self.rootCnst = None
 			if cmds.attributeQuery("blendParent1", node=self.root, exists=True):
 				cmds.deleteAttr(self.root, attribute="blendParent1")
-
-
-	def connectSourceAndSaveAnimNew(self, pTransform:str, pSrcT:str="", pSrcR:str="", forcePairBlendCreation:bool=True):
-		"""Python override of the global proc connectSourceAndSaveAnimNew()
-
-		If nodes already has sources, create a pairblend to preserve the animation.
-
-		Note: 
-			pairBlends are just supporting T and R, not S, anim on S will be lost if $pSrcS is set.
-
-		Args:
-			pTransform (string): The transform for which the pairBlend node will be created.
-			pSrcT (string):	State2SK nodes output translation attribute.
-			pSrcR (string): State2SK nodes output rotation attribute.
-			forcePairBlendCreation (int): Whether or not we want to force creation of the pairBlend node.
-
-		"""
-		nbSrc = 0
-
-		if forcePairBlendCreation:
-			for attr in ["translate", "translateX", "translateY", "translateZ", "rotate",	"rotateX", "rotateY", "rotateZ"]:
-				connections = cmds.listConnections(f"{pTransform}.{attr}", destination=False, source=True)
-				if connections:	nbSrc += len(connections)
-
-		if forcePairBlendCreation or nbSrc:
-			animatableAttributes = [attr.split('.')[-1] for attr in cmds.listAnimatable(pTransform)]
-			pairBlend = cmds.pairBlend(node=pTransform, attribute=animatableAttributes)
-			if pSrcT != "":	cmds.connectAttr(pSrcT, f"{pairBlend}.inTranslate2")
-			if pSrcR != "": cmds.connectAttr(pSrcR, f"{pairBlend}.inRotate2")
-			cmds.setAttr(f"{pairBlend}.weight", True)
-			cmds.setAttr(f"{pairBlend}.currentDriver", True)
-
-		else:
-			if pSrcT != "":
-				if cmds.getAttr(f"{pTransform}.translateX", lock=True) == 0: cmds.connectAttr(f"{pSrcT}x", f"{pTransform}.translateX")
-				if cmds.getAttr(f"{pTransform}.translateY", lock=True) == 0: cmds.connectAttr(f"{pSrcT}y", f"{pTransform}.translateY")
-				if cmds.getAttr(f"{pTransform}.translateZ", lock=True) == 0: cmds.connectAttr(f"{pSrcT}z", f"{pTransform}.translateZ")
-
-			if pSrcR != "":
-				if cmds.getAttr(f"{pTransform}.translateX", lock=True) == 0: cmds.connectAttr(f"{pSrcR}x", f"{pTransform}.rotateX")
-				if cmds.getAttr(f"{pTransform}.translateY", lock=True) == 0: cmds.connectAttr(f"{pSrcR}y", f"{pTransform}.rotateY")
-				if cmds.getAttr(f"{pTransform}.translateZ", lock=True) == 0: cmds.connectAttr(f"{pSrcR}z", f"{pTransform}.rotateZ")
 
 
 	def setSourceAndBake(self, source, startFrame=None, endFrame=None, rootMotion=True, rootRotationOffset=0, oversamplingRate=1):
@@ -894,10 +860,11 @@ class LMHumanIk():
 			nodes = self.getExportNodes()
 			if nodes.__len__() >= self.minimalDefinition.__len__():
 
-				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+				if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+				if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
+
 				self.filterRotations(nodes)
 
 				self.cleanUpBakeNodes()
@@ -926,8 +893,8 @@ class LMHumanIk():
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+		if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+		if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
@@ -950,7 +917,7 @@ class LMHumanIk():
 		nodes = self.getCharacterNodes()
 		if nodes:
 			# get all animation curve nodes
-			animCurves = cmds.listConnections(nodes, type='animCurve')
+			animCurves = cmds.listConnections(nodes, type="animCurve")
 			if animCurves:
 				# check if it is from a referenced source
 				for animCurve in animCurves:
@@ -963,7 +930,7 @@ class LMHumanIk():
 
 	def deleteCharacterDefinition(self) -> bool:
 		"""Deletes the character definition for the current object.
-		
+
 		Returns:
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
@@ -1201,12 +1168,108 @@ class LMLunarCtrl(LMHumanIk):
 	cnstLeftWeapon = None
 	cnstRightWeapon = None
 
-
 	ctrlsIk = [
 		"arm_ik_l_ctrl", "arm_ik_r_ctrl", "arm_pv_l_ctrl", "arm_pv_r_ctrl",
 		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
 		"head_ik_ctrl",
 	]
+
+	ctrlsAttrs = {
+		"arm_ik_l_ctrl": lm.listAttrTR,
+		"arm_ik_r_ctrl": lm.listAttrTR,
+		"arm_pv_l_ctrl": lm.listAttrT,
+		"arm_pv_r_ctrl": lm.listAttrT,
+		"ball_l_ctrl": lm.listAttrR,
+		"ball_r_ctrl": lm.listAttrR,
+		"calf_l_ctrl": ["rotateZ"],
+		"calf_r_ctrl": ["rotateZ"],
+		"calf_twist_01_l_ctrl": ["rotateX"],
+		"calf_twist_01_r_ctrl": ["rotateX"],
+		"calf_twist_02_l_ctrl": ["rotateX"],
+		"calf_twist_02_r_ctrl": ["rotateX"],
+		"clavicle_l_ctrl": lm.listAttrR,
+		"clavicle_r_ctrl": lm.listAttrR,
+		"fkik_ctrl": lm.listAttrFkIk,
+		"foot_l_ctrl": lm.listAttrR,
+		"foot_r_ctrl": lm.listAttrR,
+		"hand_l_ctrl": lm.listAttrR,
+		"hand_r_ctrl": lm.listAttrR,
+		"head_ctrl": lm.listAttrR,
+		"head_ik_ctrl": lm.listAttrTR,
+		"index_01_l_ctrl": lm.listAttrR,
+		"index_01_r_ctrl": lm.listAttrR,
+		"index_02_l_ctrl": lm.listAttrR,
+		"index_02_r_ctrl": lm.listAttrR,
+		"index_03_l_ctrl": lm.listAttrR,
+		"index_03_r_ctrl": lm.listAttrR,
+		"index_metacarpal_l_ctrl": lm.listAttrR,
+		"index_metacarpal_r_ctrl": lm.listAttrR,
+		"leg_ik_l_ctrl": lm.listAttrTR,
+		"leg_ik_r_ctrl": lm.listAttrTR,
+		"leg_pv_l_ctrl": lm.listAttrT,
+		"leg_pv_r_ctrl": lm.listAttrT,
+		"lowerarm_l_ctrl": ["rotateZ"],
+		"lowerarm_r_ctrl": ["rotateZ"],
+		"lowerarm_twist_01_l_ctrl": ["rotateX"],
+		"lowerarm_twist_01_r_ctrl": ["rotateX"],
+		"lowerarm_twist_02_l_ctrl": ["rotateX"],
+		"lowerarm_twist_02_r_ctrl": ["rotateX"],
+		"main_ctrl": lm.listAttrTR,
+		"middle_01_l_ctrl": lm.listAttrR,
+		"middle_01_r_ctrl": lm.listAttrR,
+		"middle_02_l_ctrl": lm.listAttrR,
+		"middle_02_r_ctrl": lm.listAttrR,
+		"middle_03_l_ctrl": lm.listAttrR,
+		"middle_03_r_ctrl": lm.listAttrR,
+		"middle_metacarpal_l_ctrl": lm.listAttrR,
+		"middle_metacarpal_r_ctrl": lm.listAttrR,
+		"neck_01_ctrl": lm.listAttrR,
+		"neck_02_ctrl": lm.listAttrR,
+		"pelvis_ctrl": lm.listAttrTR,
+		"pelvis_rot_ctrl": lm.listAttrR,
+		"pinky_01_l_ctrl": lm.listAttrR,
+		"pinky_01_r_ctrl": lm.listAttrR,
+		"pinky_02_l_ctrl": lm.listAttrR,
+		"pinky_02_r_ctrl": lm.listAttrR,
+		"pinky_03_l_ctrl": lm.listAttrR,
+		"pinky_03_r_ctrl": lm.listAttrR,
+		"pinky_metacarpal_l_ctrl": lm.listAttrR,
+		"pinky_metacarpal_r_ctrl": lm.listAttrR,
+		"ring_01_l_ctrl": lm.listAttrR,
+		"ring_01_r_ctrl": lm.listAttrR,
+		"ring_02_l_ctrl": lm.listAttrR,
+		"ring_02_r_ctrl": lm.listAttrR,
+		"ring_03_l_ctrl": lm.listAttrR,
+		"ring_03_r_ctrl": lm.listAttrR,
+		"ring_metacarpal_l_ctrl": lm.listAttrR,
+		"ring_metacarpal_r_ctrl": lm.listAttrR,
+		"root_ctrl": lm.listAttrTR,
+		"spine_01_ctrl": lm.listAttrR,
+		"spine_02_ctrl": lm.listAttrR,
+		"spine_03_ctrl": lm.listAttrR,
+		"spine_04_ctrl": lm.listAttrR,
+		"spine_05_ctrl": lm.listAttrR,
+		"thigh_l_ctrl": lm.listAttrR,
+		"thigh_r_ctrl": lm.listAttrR,
+		"thigh_twist_01_l_ctrl": ["rotateX"],
+		"thigh_twist_01_r_ctrl": ["rotateX"],
+		"thigh_twist_02_l_ctrl": ["rotateX"],
+		"thigh_twist_02_r_ctrl": ["rotateX"],
+		"thumb_01_l_ctrl": lm.listAttrR,
+		"thumb_01_r_ctrl": lm.listAttrR,
+		"thumb_02_l_ctrl": lm.listAttrR,
+		"thumb_02_r_ctrl": lm.listAttrR,
+		"thumb_03_l_ctrl": lm.listAttrR,
+		"thumb_03_r_ctrl": lm.listAttrR,
+		"upperarm_l_ctrl": lm.listAttrR,
+		"upperarm_r_ctrl": lm.listAttrR,
+		"upperarm_twist_01_l_ctrl": ["rotateX"],
+		"upperarm_twist_01_r_ctrl": ["rotateX"],
+		"upperarm_twist_02_l_ctrl": ["rotateX"],
+		"upperarm_twist_02_r_ctrl": ["rotateX"],
+		"weapon_l_ctrl": lm.listAttrTR,
+		"weapon_r_ctrl": lm.listAttrTR,
+	}
 
 
 	def __init__(self, name="HiK") -> None:
@@ -1275,12 +1338,29 @@ class LMLunarCtrl(LMHumanIk):
 		if state2kSKNode: cmds.rename(state2kSKNode, f'{self.character}State2SK')
 
 		return True
-	
+
+
+	def getCtrls(self) -> list:
+		"""Returns all ctrls on the rig.
+		"""
+		return [self.nameWithNamespace(ctrl) for ctrl in self.ctrlsAttrs]
+
+
+	def getAttrs(self) -> list:
+		"""Returns all attributes to bake with namespace.
+		"""
+		listAttrs = []
+		for ctrl in self.ctrlsAttrs:
+			for attr in self.ctrlsAttrs[ctrl]:
+				listAttrs.append(self.nameWithNamespace(f"{ctrl}.{attr}"))
+
+		return listAttrs
+
 
 	def setSource(self, source, rootMotion=True, rootRotationOffset=0) -> bool:
 		"""Set source for the specified character.
 
-		TODO Try to make it work without the ui
+		TODO Try to make it work without the ui.
 
 		"""
 		if source == "None":
@@ -1296,7 +1376,7 @@ class LMLunarCtrl(LMHumanIk):
 						self.setCtrlsIkToFk()
 
 						# Start override of hik setSource method
-						self.connectSourceAndSaveAnimNew(self.nameWithNamespace("pelvis_rot_ctrl"), f"{self.nodeState2Sk}.HipsR")
+						LMHik.connectSourceAndSaveAnim(self.nameWithNamespace("pelvis_rot_ctrl"), f"{self.nodeState2Sk}.HipsR")
 
 						# Head
 						self.cnstHeadIkHandle = cmds.parentConstraint(self.nameWithNamespace("head_ctrl"), self.nameWithNamespace("head_ik_ctrl"))
@@ -1367,30 +1447,6 @@ class LMLunarCtrl(LMHumanIk):
 									if not cmds.referenceQuery(animCurve, isNodeReferenced=True):
 										cmds.delete(animCurve)
 							[cmds.setAttr(f"{self.root}.{attr}", 0) for attr in ["tx", "ty", "tz", "rx", "ry", "rz"]]
-
-						# Twist ctrls override
-						# "LeafLeftArmRoll1": 			{"id": 176, "node": "upperarm_twist_01_l_ctrl"},
-						# "LeafLeftArmRoll2": 			{"id": 184, "node": "upperarm_twist_02_l_ctrl"},
-						# "LeafLeftForeArmRoll1": 	{"id": 177, "node": "lowerarm_twist_02_l_ctrl"},
-						# "LeafLeftForeArmRoll2": 	{"id": 185, "node": "lowerarm_twist_01_l_ctrl"},
-						# "LeafRightArmRoll1":			{"id": 178, "node": "upperarm_twist_01_r_ctrl"},
-						# "LeafRightArmRoll2":			{"id": 186, "node": "upperarm_twist_02_r_ctrl"},
-						# "LeafRightForeArmRoll1": 	{"id": 179, "node": "lowerarm_twist_02_r_ctrl"},
-						# "LeafRightForeArmRoll2": 	{"id": 187, "node": "lowerarm_twist_01_r_ctrl"},
-
-						# "LeafLeftUpLegRoll1": 		{"id": 172, "node": "thigh_twist_01_l_ctrl"},
-						# "LeafLeftUpLegRoll2": 		{"id": 180, "node": "thigh_twist_02_l_ctrl"},
-						# "LeafLeftLegRoll1": 			{"id": 173, "node": "calf_twist_02_l_ctrl"},
-						# "LeafLeftLegRoll2": 			{"id": 181, "node": "calf_twist_01_l_ctrl"},
-						# "LeafRightUpLegRoll1": 		{"id": 174, "node": "thigh_twist_01_r_ctrl"},
-						# "LeafRightUpLegRoll2": 		{"id": 182, "node": "thigh_twist_02_r_ctrl"},
-						# "LeafRightLegRoll1": 			{"id": 175, "node": "calf_twist_02_r_ctrl"},
-						# "LeafRightLegRoll2": 			{"id": 183, "node": "calf_twist_01_r_ctrl"},
-						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("upperarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("upperarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftArmRoll2R")
-						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("lowerarm_twist_02_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll1R")
-						# self.connectSourceAndSaveAnimNew(self.nameWithNamespace("lowerarm_twist_01_l_ctrl"), f"{self.nodeState2Sk}.LeafLeftForeArmRoll2R")
-
 
 						self.updateHikUi(updateSource=True)
 
@@ -1506,13 +1562,13 @@ class LMLunarCtrl(LMHumanIk):
 		"""
 		if self.isValid():
 			nodes = self.getExportNodes()
-
 			if nodes.__len__() >= self.minimalDefinition.__len__():
+				if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+				if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
-				if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-				if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+				LMHik.bakeCharacter(nodes, (startFrame, endFrame))  # -> preserveOutsideKeys does not work 4-6s
+				# LMHik.bakeCharacter(nodes=self.getAttrs(), startEnd=(startFrame, endFrame))
 
-				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame), False)
 				self.filterRotations(nodes)
 
 				# Clean up -> include the rest in a overriden cleanUpBakeNodes method
@@ -1574,7 +1630,6 @@ class LMLunarCtrl(LMHumanIk):
 						cmds.deleteAttr(self.nameWithNamespace("weapon_r_ctrl"), attribute="blendParent1")
 
 				self.setSource("None")
-				oma.MAnimControl.setCurrentTime(om.MTime(startFrame, om.MTime.uiUnit()))
 
 				self.log.info(f"Successfully baked animation from '{startFrame}' to '{endFrame}'")
 				return True
@@ -1598,8 +1653,8 @@ class LMLunarCtrl(LMHumanIk):
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+		if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+		if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
@@ -1655,8 +1710,8 @@ class LMLunarExport(LMMannequinUe5):
 		self.listConstraints = []
 
 		# turn off autokey if it is enabled to - prevent setting keys while setting apose
-		stateAutoKey = oma.MAnimControl.autoKeyMode()
-		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(False)
+		stateAutoKey = lma.LMAnimControl.autoKeyMode()
+		if stateAutoKey: lma.LMAnimControl.setAutoKeyMode(False)
 
 		# just to make sure we don't have any inputs from hik
 		self.setSource("None")
@@ -1756,7 +1811,7 @@ class LMLunarExport(LMMannequinUe5):
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}foot_r_out", f"{srcns}foot_r", maintainOffset=False, skipTranslate=["x", "y", "z"]))
 		self.listConstraints.append(cmds.parentConstraint(f"{tarns}ball_r_ctrl", f"{srcns}ball_r", maintainOffset=False, skipTranslate=["x", "y", "z"]))
 
-		if stateAutoKey: oma.MAnimControl.setAutoKeyMode(True)
+		if stateAutoKey: lma.LMAnimControl.setAutoKeyMode(True)
 
 
 	def bakeAnimationFromCtrlRig(self, startFrame=None, endFrame=None) -> bool:
@@ -1778,8 +1833,8 @@ class LMLunarExport(LMMannequinUe5):
 
 			if nodes.__len__() >= self.minimalDefinition.__len__():
 
-				if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
-				if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
+				if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+				if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
 				lma.LMAnimBake.bakeTransform(nodes, (startFrame, endFrame))
 				self.filterRotations(nodes)
@@ -1801,8 +1856,8 @@ class LMLunarExport(LMMannequinUe5):
 	def setCtrlRigAsSourceAndBake(self, source, startFrame=None, endFrame=None):
 		"""Wrapper method for setting the source and baking in one go.
 		"""
-		if not startFrame: startFrame = cmds.playbackOptions(minTime=True, query=True)
-		if not endFrame: endFrame = cmds.playbackOptions(maxTime=True, query=True)
+		if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+		if not endFrame: endFrame =lma.LMAnimControl.animationEndTime().value()
 
 		self.setCtrlRigAsSource(source)
 		self.bakeAnimationFromCtrlRig(startFrame, endFrame)
@@ -1824,8 +1879,8 @@ class LMLunarExport(LMMannequinUe5):
 			bool: True if the operation was successful, False if an	error occured during the operation.
 
 		"""
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+		if not startFrame: startFrame = lma.LMAnimControl.animationStartTime().value()
+		if not endFrame: endFrame = lma.LMAnimControl.animationEndTime().value()
 
 		cmds.playbackOptions(minTime=startFrame, maxTime=endFrame, edit=True)
 
@@ -2427,6 +2482,233 @@ class LMRetargeter():
 		self.__doRetargeting(preserveFolderHierarchy, trimStart, trimEnd, oversamplingRate, rootMotion, rootRotationOffset)
 
 		return True
+
+
+
+
+#--------------------------------------------------------------------------------------------------
+# Utilities
+#--------------------------------------------------------------------------------------------------
+
+
+
+
+class LMHik():
+	"""Python overrides for hik utilities procedures.
+	"""
+
+	log = logging.getLogger("LMHik")
+
+
+	# Global Methods hikGlobalUtils.mel
+	@classmethod
+	def getStateToGlobalSk(cls, pCharacter:str, pCreate:bool=False) -> str:
+		"""Python override for hikGetStateToGlobalSk from others/hikCharacterControlsUtils.mel
+		"""
+		return mel.eval(f'hikGetStateToGlobalSk("{pCharacter}", {int(pCreate)});')
+		# listConnections = cmds.listConnections(f"{pCharacter}.OutputCharacterDefinition", type="HIKState2GlobalSK")
+		# if listConnections.__len__() > 0:
+		# 	return listConnections[0]
+		# elif pCreate:
+
+
+	@classmethod
+	def getCurrentCharacter(cls) -> str:
+		"""Python wrapper for hikGetCurrentCharacter from others/hikBakeOperation.mel
+		"""
+		return mel.eval("hikGetCurrentCharacter();")
+
+
+	@classmethod
+	def setCurrentCharacter(cls, character:str):
+		"""Python wrapper for hikSetCurrentCharacter from others/hikBakeOperation.mel
+		"""
+		return mel.eval(f'hikSetCurrentCharacter("{character}");')
+
+
+	@classmethod
+	def isKeyableXYZ(cls, node:str, attribute:str) -> bool:
+		"""Python wrapper for getHikNodeAttributesToBake from others/hikBakeOperation.mel
+		"""
+		attrParent = f"{node}.{attribute}"
+		return cmds.getAttr(f"{attrParent}X", keyable=True) and cmds.getAttr(f"{attrParent}Y", keyable=True) and cmds.getAttr(f"{attrParent}X", keyable=True)
+
+
+	@classmethod
+	def connectSkFromCharacterState(cls, pCharacter:str, pState:str, bakeMode:int):
+		"""Python override for hikConnectSkFromCharacterState from others/hikSkeletonUtils.mel
+
+		Args:
+			pCharacter (str): Name of the character.
+			pState (str): Name of the characters HIKState2SK node.
+			bakeMode (int): Bake mode.
+
+		"""
+		# TODO add check if node is LunarCtrl connect the ik setup here?
+		# Check if character is a lunar ctrl rig:
+		if cmds.attributeQuery("mainCtrl", node=pCharacter, exists=True, message=True):
+			om.MGlobal.displayWarning(f"{pCharacter} is sourced from a lunar rig - get custom node set.")
+			# Get nodes from definition
+		# else: cmds.hikGetNodeCount()
+
+		numNodes = cmds.hikGetNodeCount()
+		for indx in range(numNodes):
+			hiknodename = cmds.GetHIKNodeName(indx)
+			listNodeSkConnections = cmds.listConnections(f"{pCharacter}.{hiknodename}", source=True, destination=False)
+			# Should never write in reference
+			if hiknodename != "Reference":
+				if listNodeSkConnections:
+					node = listNodeSkConnections[0]
+					attrNodeState2SK = f"{pState}.{hiknodename}"
+
+					# Feed the SkState node with any information that may be required from the Sk side      
+					if not cmds.isConnected(f"{node}.parentMatrix", f"{attrNodeState2SK}PGX"):
+						cmds.connectAttr(f"{node}.parentMatrix", f"{attrNodeState2SK}PGX", force=True)
+						# If we are retargeting to non-joint transforms, they may not have the jointOrient attribute
+						# This is ok, since the state2Bone node will just use a pre-rotation of 0 if there is 
+						# no connection to that attribute.
+						if cmds.objectType(node, isAType="joint"):
+							cmds.connectAttr(f"{node}.jointOrient", f"{attrNodeState2SK}PreR", force=True)
+							cmds.connectAttr(f"{node}.segmentScaleCompensate", f"{attrNodeState2SK}SC", force=True)
+							cmds.connectAttr(f"{node}.inverseScale", f"{attrNodeState2SK}IS", force=True)
+
+						cmds.connectAttr(f"{node}.rotateOrder", f"{attrNodeState2SK}ROrder", force=True)
+						cmds.connectAttr(f"{node}.rotateAxis", f"{attrNodeState2SK}PostR", force=True)
+
+					# Activate the bone by feeding it with the state
+					srcT = ""
+					srcR = f"{attrNodeState2SK}R"
+					srcS = ""
+
+					if bakeMode != 0 or mel.eval(f"hikIsRotateOnlyFK({indx});") != 0: srcT = f"{attrNodeState2SK}T"
+					if bakeMode != 0:	srcS = f"{attrNodeState2SK}S"
+
+					cls.connectSourceAndSaveAnim(node, srcT, srcR, srcS, bakeMode)
+
+
+	@classmethod
+	def connectSourceAndSaveAnim(cls, pTransform:str, pSrcT:str, pSrcR:str="", pSrcS:str="", forcePairBlend:bool=False) -> str:
+		"""Python override of the global proc connectSourceAndSaveAnim()
+		
+		If node already has sources, create a pairblend to preserve the animation.
+
+		Note: 
+			pairBlends are just supporting T and R, not S, anim on S will be lost if $pSrcS is set.
+			pTransform = "Player:head_ctrl"
+			pSrcT = "Player:CtrlState2SK.HeadT"
+			pSrcR = "Player:CtrlState2SK.HeadR"
+
+		Args:
+			pTransform (string): The transform for which the pairBlend node will be created.
+			pSrcT (string):	State2SK nodes output translation attribute.
+			pSrcR (string): State2SK nodes output rotation attribute.
+			forcePairBlendCreation (int): Whether or not we want to force creation of the pairBlend node.
+
+		"""
+		nbSrc = 0
+		objPairBlend = None
+
+		# Translation and Rotation setup
+		if not forcePairBlend:
+			for attr in lm.listAttrTRXYZ:
+				listConnections = cmds.listConnections(f"{pTransform}.{attr}", destination=False, source=True)
+				if listConnections: nbSrc += listConnections.__len__()
+			if nbSrc > 0: forcePairBlend = True
+
+		if forcePairBlend:
+			listAttrs = [attr.split('.')[-1] for attr in cmds.listAnimatable(pTransform)]
+			if listAttrs:
+				objPairBlend = cmds.pairBlend(node=pTransform, attribute=listAttrs)
+				if pSrcT != "": cmds.connectAttr(pSrcT, f"{objPairBlend}.inTranslate2")
+				if pSrcR != "":	cmds.connectAttr(pSrcR, f"{objPairBlend}.inRotate2")
+				cmds.setAttr(f"{objPairBlend}.weight", True)
+				cmds.setAttr(f"{objPairBlend}.currentDriver", True)
+		else:
+			if pSrcT:
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.tx"): cmds.connectAttr(f"{pSrcT}x", f"{pTransform}.tx")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.ty"): cmds.connectAttr(f"{pSrcT}y", f"{pTransform}.ty")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.tz"): cmds.connectAttr(f"{pSrcT}z", f"{pTransform}.tz")
+			if pSrcR:
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.rx"): cmds.connectAttr(f"{pSrcR}x", f"{pTransform}.rx")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.ry"): cmds.connectAttr(f"{pSrcR}y", f"{pTransform}.ry")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.rz"): cmds.connectAttr(f"{pSrcR}z", f"{pTransform}.rz")
+
+		# Scale setup
+		if pSrcS:
+			nbScaleSrc = 0
+			for attr in lm.listAttrSC:
+				listConnections = cmds.listConnections(f"{pTransform}.{attr}", destination=False, source=True)
+				if listConnections:
+					nbScaleSrc += listConnections.__len__()
+			if nbScaleSrc == 0:
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.sx"): cmds.connectAttr(f"{pSrcS}x", f"{pTransform}.sx")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.sy"): cmds.connectAttr(f"{pSrcS}y", f"{pTransform}.sy")
+				if not lm.LMAttribute.isLocekd(f"{pTransform}.sz"): cmds.connectAttr(f"{pSrcS}z", f"{pTransform}.sz")
+
+		if objPairBlend: return objPairBlend
+
+
+	@classmethod
+	def getHikNodeAttributesToBake(cls, character:LMHumanIk):
+		"""
+		"""
+		return character.getAtts()
+
+
+	@classmethod
+	def bakeCharacterPre(cls, character:LMHumanIk):
+		"""Python ovrride of the hikBakeCharacter from others/hikBakeOperation.mel
+
+		Bake the attributes instead of nodes
+
+		hikBakeCharacterPre:
+			getHikNodeAttributesToBake
+			select attrs to bake
+		hikBakeCharacterPost
+
+		"""
+		# get stateSK node
+
+		pass
+		# listAttrs = cls.getHikNodeAttributesToBake(character)
+		# cmds.select(cl=True)
+		# cmds.select(listAttrs)
+
+
+	@classmethod
+	def bakeCharacter(cls, nodes:list, startEnd:tuple, attributes:list=lm.listAttrTR, preserveOutsideKeys:bool=False):
+		"""Python ovrride of the hikBakeCharacter from others/hikBakeOperation.mel
+
+		Bakes the attributes instead of nodes.
+
+		bakeResults -t "1:30" -sampleBy 1 -oversamplingRate 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false -shape false {"Player:pelvis_ctrl.rotate", "Player:pelvis_ctrl.translate", "Player:thigh_l_ctrl.rotate", "Player:foot_l_ctrl.rotate", "Player:thigh_r_ctrl.rotate", "Player:foot_r_ctrl.rotate", "Player:spine_01_ctrl.rotate", "Player:upperarm_l_ctrl.rotate", "Player:hand_l_ctrl.rotate", "Player:upperarm_r_ctrl.rotate", "Player:hand_r_ctrl.rotate", "Player:head_ctrl.rotate", "Player:ball_l_ctrl.rotate", "Player:ball_r_ctrl.rotate", "Player:clavicle_l_ctrl.rotate", "Player:clavicle_r_ctrl.rotate", "Player:neck_01_ctrl.rotate", "Player:spine_02_ctrl.rotate", "Player:spine_03_ctrl.rotate", "Player:spine_04_ctrl.rotate", "Player:spine_05_ctrl.rotate", "Player:neck_02_ctrl.rotate", "Player:thumb_01_l_ctrl.rotate", "Player:thumb_02_l_ctrl.rotate", "Player:thumb_03_l_ctrl.rotate", "Player:index_01_l_ctrl.rotate", "Player:index_02_l_ctrl.rotate", "Player:index_03_l_ctrl.rotate", "Player:middle_01_l_ctrl.rotate", "Player:middle_02_l_ctrl.rotate", "Player:middle_03_l_ctrl.rotate", "Player:ring_01_l_ctrl.rotate", "Player:ring_02_l_ctrl.rotate", "Player:ring_03_l_ctrl.rotate", "Player:pinky_01_l_ctrl.rotate", "Player:pinky_02_l_ctrl.rotate", "Player:pinky_03_l_ctrl.rotate", "Player:thumb_01_r_ctrl.rotate", "Player:thumb_02_r_ctrl.rotate", "Player:thumb_03_r_ctrl.rotate", "Player:index_01_r_ctrl.rotate", "Player:index_02_r_ctrl.rotate", "Player:index_03_r_ctrl.rotate", "Player:middle_01_r_ctrl.rotate", "Player:middle_02_r_ctrl.rotate", "Player:middle_03_r_ctrl.rotate", "Player:ring_01_r_ctrl.rotate", "Player:ring_02_r_ctrl.rotate", "Player:ring_03_r_ctrl.rotate", "Player:pinky_01_r_ctrl.rotate", "Player:pinky_02_r_ctrl.rotate", "Player:pinky_03_r_ctrl.rotate", "Player:index_metacarpal_l_ctrl.rotate", "Player:middle_metacarpal_l_ctrl.rotate", "Player:ring_metacarpal_l_ctrl.rotate", "Player:pinky_metacarpal_l_ctrl.rotate", "Player:index_metacarpal_r_ctrl.rotate", "Player:middle_metacarpal_r_ctrl.rotate", "Player:ring_metacarpal_r_ctrl.rotate", "Player:pinky_metacarpal_r_ctrl.rotate"};
+
+		"""
+		# if type(startEnd[0] == "maya.OpenMaya.MTime") and type(startEnd[1] == "maya.OpenMaya.MTime"):
+		# 	startEnd = (startEnd[0].value(), startEnd[1].value())
+
+		# mel.eval("hikBakeCharacter(0);")
+
+		cmds.bakeResults(
+			nodes,
+			# animation="objects",
+			attribute=attributes,
+			time=startEnd,
+			preserveOutsideKeys=preserveOutsideKeys,
+			simulation=False,
+			hierarchy="none",
+			sampleBy=1,
+			oversamplingRate=1,
+			disableImplicitControl=True,
+			sparseAnimCurveBake=False,
+			removeBakedAttributeFromLayer=False,
+			removeBakedAnimFromLayer=False,
+			# destinationLayer="BaseAnimation",
+			bakeOnOverrideLayer=False,
+			minimizeRotation=True,
+			controlPoints=False,
+			shape=False,
+		)
 
 
 

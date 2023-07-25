@@ -96,6 +96,42 @@ def buildNewAnimationScene() -> bool:
 
 
 
+def selectCharacter():
+	nodes = cmds.ls(selection=True)
+	if nodes:
+		# print("something is selected")
+
+		# Check if selection has a namespace
+		namespace = lm.LMNamespace.getNamespaceFromName(nodes[0])
+		if namespace:
+			# Yes -> check for root_node
+			if lm.LMSceneObject.sceneObjectType(f"{namespace}:rig"):
+				# print("is rig")
+				return
+			# No -> return
+	else:
+		# print("nothing is selected")
+		# check for reference nodes
+		# listReferenceNodes = cmds.ls(type="reference")
+		listReferencs = []
+		lm.LMFile.getReferences(listReferencs)
+		if listReferencs:
+			# get nodes from ref
+			for reference in listReferencs:
+				listReferenceNodes = []
+				lm.LMFile.getReferenceNodes(reference, listReferenceNodes)
+				namespace = lm.LMNamespace.getNamespaceFromName(listReferenceNodes[0])
+				if namespace:
+					if lm.LMSceneObject.sceneObjectType(f"{namespace}:rig"):
+						cmds.select(f"{namespace}:main_ctrl")
+						return
+					continue
+			
+			lm.LMGlobal.displayWarning("No referenced characters found in the scene, nothing to select.")
+			return
+
+
+
 def loadCharacter(characterTemplate="Manny"):
 	"""Loads a character rig into the scene with the specified template and namespace.
 	"""
@@ -113,6 +149,8 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 	"""
 	global fiAnimFbx
 	global sceneMetaData
+
+	selectCharacter()
 
 	# Check if selection is valid
 	namespaceRig = lm.LMNamespace.getNamespaceFromSelection()
@@ -133,18 +171,18 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 		# Anim load / mocap reference
 		# Get the current working time range - check if a time range is selected first
 		offsetAnim = False
-		timeAnimationRange = lma.LMAnimControl.animationStartEndTime()
-		timeCurrentRange = lma.LMAnimControl.selectedStartEndTime()
-		if timeCurrentRange:
-			useRangeFromSelection = True
-			timeCurrent = timeCurrentRange[0]
+		# timeAnimationStartEnd = lma.LMAnimControl.animationStartEndTime()
+		timeSelectedStartEnd = lma.LMAnimControl.selectedStartEndTime()
+		if timeSelectedStartEnd:
+			useTimeSelected = True
 			offsetAnim = True
+			timeCurrent = timeSelectedStartEnd[0]
 		else:
-			useRangeFromSelection = False
-			timeCurrentRange = lma.LMAnimControl.minMaxStartEndTime()
+			useTimeSelected = False
+			timeSelectedStartEnd = lma.LMAnimControl.minMaxStartEndTime()
 			timeCurrent = lma.LMAnimControl.currentTime()
 			# This is incorrect
-			if timeCurrent != timeCurrentRange[0]: 
+			if timeCurrent != timeSelectedStartEnd[0]: 
 				offsetAnim = True
 
 		referenceNode = lm.LMFile.reference(fiAnimFbx.filePath(), namespaceMocap)
@@ -154,32 +192,24 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 		namespaceMocap = om.MNamespace.getNamespaceFromName(listReferenceJoints[0]) # Get the mocap namespace from ref + file
 
 		# Get time of mocap after import - replace with a more reliable function later
-		timeMocapRange = lma.LMAnimControl.startEndTimeFromAnimCurves(listReferenceAnimCurves)
-		timeStartEndBakeRange = tuple([time for time in timeMocapRange])
-		if timeCurrent != timeMocapRange[0]: offsetAnim = True
+		# timeMocapStartEnd = lma.LMAnimControl.startEndTimeFromAnimCurves(listReferenceAnimCurves)
+		timeMocapStartEnd = lma.LMAnimControl.minMaxStartEndTime()
+		# Time for baking with eventual offset
+		timeBakeStartEnd = tuple([time for time in timeMocapStartEnd])
+		if timeCurrent != timeMocapStartEnd[0]: offsetAnim = True
 		if offsetAnim:
 			lm.LMFile.importReference(fiAnimFbx.filePath()) # import the file in order to be able to modify keyframes
 			isAnimReferenced = False
-			timeOffset = timeCurrent - timeMocapRange[0]
-			if useRangeFromSelection:
-				timeStartEndBakeRange = tuple([time for time in timeCurrentRange]) # should match selection end
+			timeOffset = timeCurrent - timeMocapStartEnd[0]
+			if useTimeSelected:
+				timeBakeStartEnd = tuple([time for time in timeSelectedStartEnd]) # should match selection end
 			else:
-				listTimeStartEndBake = [timeMocapRange[0] + timeOffset, timeMocapRange[1] + timeOffset + 1]
-				timeStartEndBakeRange = tuple([time for time in listTimeStartEndBake])
+				listTimeBakeStartEnd = [timeMocapStartEnd[0] + timeOffset, timeMocapStartEnd[1] + timeOffset + 1]
+				timeBakeStartEnd = tuple([time for time in listTimeBakeStartEnd])
 
-			lma.LMAnimControl.offsetKeyframes(listReferenceJoints, timeStartEndBakeRange[0].value())
-			
-		# Check if mocap end frame is bigger than the initial end frame - always grab the bigger
-		# check if mocap start frame is smaller than the inital start frame - always grab the smaller
-		listTimeRanges.extend(timeAnimationRange)
-		listTimeRanges.extend(timeCurrentRange)
-		listTimeRanges.extend(timeMocapRange)
-		listTimeRanges.extend(timeStartEndBakeRange)
-		timeFullRange = lma.LMAnimControl.widestRange(listTimeRanges)
+			lma.LMAnimControl.offsetKeyframes(listReferenceJoints, timeBakeStartEnd[0].value())
 
-		# om.MGlobal.displayWarning("bake time range: {}, {}".format(timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value()))
-		# om.MGlobal.displayWarning("combined time range: {}, {}".format(timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value()))
-		lma.LMAnimControl.setStartEndTime(timeFullRange[0], timeFullRange[1])
+		# lma.LMAnimControl.setStartEndTime(timeMocapStartEnd[0], timeMocapStartEnd[1])
 
 		# Metadata node
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
@@ -190,7 +220,7 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 
 		rtgMocap = lmrtg.LMRetargeter.getFromHikTemplate(f"{namespaceMocap}:Skeleton", hikTemplate)
 
-		rtgLunarCtrl.setSourceAndBake(rtgMocap, timeStartEndBakeRange[0].value(), timeStartEndBakeRange[1].value())
+		rtgLunarCtrl.setSourceAndBake(rtgMocap, timeBakeStartEnd[0].value(), timeBakeStartEnd[1].value())
 
 		# Clean-up
 		if stateAutoKeyMode: lma.LMAnimControl.setAutoKeyMode(True)
@@ -201,8 +231,7 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 			om.MNamespace.removeNamespace(namespaceMocap, True)
 		# double check for "Mocap" namespace if not all files in referenced file are under a namsepace
 		# TODO add referenced file under a group from the file cmds
-		if om.MNamespace.namespaceExists("Mocap"):
-			om.MNamespace.removeNamespace("Mocap", True)
+		if om.MNamespace.namespaceExists("Mocap"): om.MNamespace.removeNamespace("Mocap", True)
 
 		rtgMocap = None
 		namespaceMocap = None
@@ -219,6 +248,8 @@ def exportAnimation(exportAs=True, bake=True):
 	"""
 	global fiAnimFbx
 	global sceneMetaData
+
+	selectCharacter()
 
 	# Check if selection is valid
 	namespaceRig = lm.LMNamespace.getNamespaceFromSelection()

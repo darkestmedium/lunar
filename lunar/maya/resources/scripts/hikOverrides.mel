@@ -1,71 +1,38 @@
 
+
 global proc hikConnectSkFromCharacterState(string $pState, string $pCharacter, int $bakeMode) {
-	// Note: ensure SK is not connected prior to call this proc
+	/* Mel override for python wrap for hikConnectSkFromCharacterState from others/hikSkeletonUtils.mel
 
-	int $LastNodeId = hikGetNodeCount();
-	for($i = 0; $i < $LastNodeId; $i++)	{
-		$hiknodename = GetHIKNodeName($i);
-		$AttrName = $pCharacter + "." + $hiknodename;
-		string $SkNode[] = `listConnections -s 1 -d 0 $AttrName`;
+	Note: 
+		Ensure SK is not connected prior to call this proc
 
-		// Should never write in reference
-		if($hiknodename != "Reference")	{		
-			if(size($SkNode) > 0)	{
-				string $node = $SkNode[0];
-
-				// Feed the SkState node with any information that may be required from the Sk side		
-				if( !`isConnected ($node+".parentMatrix") ($pState+"."+$hiknodename + "PGX")` )	{				
-					connectAttr -f ($node+".parentMatrix") ($pState+"."+$hiknodename + "PGX");
-
-					// If we are retargeting to non-joint transforms, they may not have the jointOrient attribute
-					// This is ok, since the state2Bone node will just use a pre-rotation of 0 if there is 
-					// no connection to that attribute.
-					int $isJoint = `objectType -isAType "joint" $node`;
-
-					if( $isJoint ) {
-						// jointOrient
-						connectAttr -f ($node+".jointOrient") ($pState+"."+$hiknodename + "PreR");
-
-						// segmentScaleCompensate ( boolean )
-						connectAttr -f ($node+".segmentScaleCompensate") ($pState+"."+$hiknodename + "SC");
-						// inverseScale ( 3 doubles ) used if segmentScaleCompensate is true
-						connectAttr -f ($node+".inverseScale") ($pState+"."+$hiknodename + "IS");
-					}
-					connectAttr -f ($node+".rotateOrder") ($pState+"."+$hiknodename + "ROrder");
-					connectAttr -f ($node+".rotateAxis") ($pState+"."+$hiknodename + "PostR");
-				}
-
-				// Activate the bone by feeding it with the state
-
-				string $srcT = "";
-				string $srcR = ($pState+"."+$hiknodename+"R");
-				// string $srcS = "";
-
-				int $isRotateOnly = hikIsRotateOnlyFK( $i );
-
-				if( !$bakeMode || !$isRotateOnly ) {
-						$srcT = ($pState+"."+$hiknodename+"T");
-				}
-
-				connectSourceAndSaveAnimNew($node, $srcT, $srcR, $bakeMode);
-			}
-		}		
-	}
-}
-
-
-global proc connectSourceAndSaveAnimNew(string $pTransform, string $pSrcT, string $pSrcR, int $forcePairBlendCreation) {
-	// If nodes already has sources, create a pairblend to preserve the animation
-
-	// Note: pairBlends are just supportign T and R, not S, anim on S will be lost if $pSrcS is set
-
+	*/
 	string $cmd =
-		"from lunar.maya.resources.scripts import hikOverrides; hikOverrides.connectSourceAndSaveAnimNew( \
-		pTransform='"+$pTransform+"', \
-		pSrcT='"+$pSrcT+"', \
-		pSrcR='"+$pSrcR+"', \
-		forcePairBlendCreation='"+$forcePairBlendCreation+"')";
-
+		"import lunar.maya.LunarMayaRetarget as lmrtg; \
+		lmrtg.LMHik.connectSkFromCharacterState( \
+			pCharacter='"+$pCharacter+"', \
+			pState='"+$pState+"', \
+			bakeMode='"+$bakeMode+"', \
+		)";
 	python($cmd);
+};
 
-}
+
+global proc connectSourceAndSaveAnim(string $pTransform, string $pSrcT, string $pSrcR, string $pSrcS, int $forcePairBlendCreation) {
+	/* If nodes already has sources, create a pairblend to preserve the animation
+
+	Note: 
+		pairBlends are just supportign T and R, not S, anim on S will be lost if $pSrcS is set
+
+	*/
+	string $cmd =
+		"import lunar.maya.LunarMayaRetarget as lmrtg; \
+		lmrtg.LMHik.connectSourceAndSaveAnim( \
+			pTransform='"+$pTransform+"', \
+			pSrcT='"+$pSrcT+"', \
+			pSrcR='"+$pSrcR+"', \
+			pSrcS='"+$pSrcS+"', \
+			forcePairBlend=bool("+$forcePairBlendCreation+") \
+		)";
+	python($cmd);
+};

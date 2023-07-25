@@ -33,7 +33,7 @@ class LMAnimControl(oma.MAnimControl):
 			if cmds.timeControl(uiTimeSlider, query=True, rangeVisible=True):
 				return tuple(om.MTime(time, om.MTime.uiUnit()) for time in cmds.timeControl(uiTimeSlider, query=True, rangeArray=True))
 
-			cls.log.warning("No range is selected on the timeslider.")
+			cls.log.debug("No range is selected on the timeslider.")
 			return None
 
 		cls.log.error("No timeslider found - is maya working properly?.")

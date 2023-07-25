@@ -26,7 +26,6 @@ templateLC = {
 	},
 	"definition": {
 		"Reference": 							{"id": 999,	"node": "root_ctrl"},
-		# "Root": 									{"id": 0, 	"node": "root_ctrl"},
 		# Base (required)
 		# "HipsTranslation": 				{"id": 49, 	"node": "pelvis_pos_ctrl"},
 		"Hips":										{"id": 1, 	"node": "pelvis_ctrl"},

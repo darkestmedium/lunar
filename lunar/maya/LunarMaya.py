@@ -17,6 +17,31 @@ from lunar.abstract.fbx import AbstractFbx
 
 
 
+#--------------------------------------------------------------------------------------------------
+# DEFINITIONS
+#--------------------------------------------------------------------------------------------------
+listAttrT = ["translate"]
+listAttrR = ["rotate"]
+listAttrS = ["scale"]
+listAttrTR = ["translate", "rotate"]
+listAttrTRS = ["translate", "rotate", "scale"]
+
+listAttrTXYZ = ["translateX", "translateY", "translateZ"]
+listAttrRXYZ = ["rotateX", "rotateY", "rotateZ"]
+listAttrSXYZ = ["scaleX", "scaleY", "scaleZ"]
+
+listAttrSC = ["scale", "scaleX", "scaleY", "scaleZ"]
+
+listAttrTRXYZ = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
+listAttrTRSXYZ = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ", "scaleX", "scaleY", "scaleZ"]
+listAttrFkIk = [
+	"headFkIk", "headSoftness", "headTwist",
+	"leftArmFkIk", "leftArmSoftness", "leftArmTwist",
+	"rightArmFkIk", "rightArmSoftness", "rightArmTwist",
+	"leftLegFkIk", "leftLegSoftness", "leftLegTwist",
+	"rightLegFkIk", "rightLegSoftness", "rightLegTwist",
+]
+
 
 class LMFbx(AbstractFbx):
 	"""Maya Fbx class, inherited from AbstractFbx.
@@ -606,6 +631,36 @@ class LMFile(om.MFileIO):
 
 
 
+class LMGlobal(om.MGlobal):
+	"""Wrapper class for MGlobal with additional methods.
+	"""
+
+	@classmethod
+	def isSomethingSelected(cls) -> bool:
+		"""Checks if there are any nodes currently selected.
+
+		Returns:
+			bool: True is something is selected, False otherwise.
+
+		"""
+		listSelection = om.MSelectionList()
+		LMGlobal.getActiveSelectionList(listSelection)
+
+		if not listSelection.isEmpty(): return True
+		return False
+
+
+	@classmethod
+	def getSelection(cls) -> om.MSelectionList:
+		"""Returns the active selection list.
+		"""
+		listSelection = om.MSelectionList()
+		LMGlobal.getActiveSelectionList(listSelection)
+
+		return listSelection
+
+
+
 class LMObject(om.MObject):
 	"""Wrapper class with MObjects utils.
 	"""
@@ -676,6 +731,25 @@ class LMScene():
 
 		"""
 		return om.MFnDependencyNode(LMObject.getObjFromString("time1"))
+
+
+
+class LMSceneObject():
+	"""Class for wrapping scene objects.
+	"""
+
+
+	@classmethod
+	def sceneObjectType(cls, node:str, type:str="rig") -> bool:
+		"""Checks if the given object is a scene object.
+		"""
+		typeSceneObject = cmds.getAttr(f"{node}.sceneObjectType")
+		if cmds.getAttr(f"{node}.sceneObjectType") == type:
+			return True
+
+		return False
+
+
 
 
 
@@ -836,9 +910,6 @@ class LMNamespace(om.MNamespace):
 
 
 
-
-
-
 #--------------------------------------------------------------------------------------------------
 # Utilities
 #--------------------------------------------------------------------------------------------------
@@ -993,6 +1064,17 @@ class LMAttribute():
 		cls.unlockIfLocked(name)
 		cmds.setAttr(name, value)
 		if relock: cmds.setAttr(name, lock=True)
+
+
+	@classmethod
+	def isLocekd(cls, name:str):
+		"""Unlocks the given attribute if it is locked.
+
+		TODO:
+			Replace with the api method to unlock Attributes from referenced files 8-)
+
+		"""
+		return cmds.getAttr(name, lock=True)
 
 
 	@classmethod

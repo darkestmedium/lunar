@@ -5611,7 +5611,7 @@ templateUe4 = {
 								'translateZ': -5.965974694002268e-08},
 		'pelvis': {
 			'rotateX': -90.0,
-			'rotateY': -86.36689305003244,
+			'rotateY': -90.0,
 			'rotateZ': 90.0,
 			'scaleX': 1.0,
 			'scaleY': 0.9999999999999998,
