@@ -1,3 +1,11 @@
+"""
+Do's:
+	Selection:
+	lm.LMGlobal.selectByName is on average faster than cmds.select by 0.0001s (0.000155s vs 0.000145s)
+
+"""
+
+
 # Built-in imports
 import json
 import platform
@@ -14,6 +22,10 @@ from PySide2 import QtCore as qtc
 
 # Custom imports
 from lunar.abstract.fbx import AbstractFbx
+# Api overrides
+import lunar.maya.LunarMayaAnim as lma
+import lunar.maya.LunarMayaRig as lmr
+
 
 
 
@@ -30,6 +42,7 @@ listAttrTXYZ = ["translateX", "translateY", "translateZ"]
 listAttrRXYZ = ["rotateX", "rotateY", "rotateZ"]
 listAttrSXYZ = ["scaleX", "scaleY", "scaleZ"]
 
+listAttrRC = ["rotate", "rotateX", "rotateY", "rotateZ"]
 listAttrSC = ["scale", "scaleX", "scaleY", "scaleZ"]
 
 listAttrTRXYZ = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
@@ -41,6 +54,22 @@ listAttrFkIk = [
 	"leftLegFkIk", "leftLegSoftness", "leftLegTwist",
 	"rightLegFkIk", "rightLegSoftness", "rightLegTwist",
 ]
+
+
+
+def loadDependencies():
+	"""Loads all dependencies (hik plugins and mel sources).
+	"""
+	mel.eval(f'source "melOverrides.mel"')
+	mel.eval(f'source "dagMenuProcOverride.mel"')
+	# mel.eval(f'source "teCreateContainerOverride.mel"')
+
+	log = logging.getLogger('Lunar Maya')
+	log.info("Successfully loaded all dependencies.")
+
+
+if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): loadDependencies()
+
 
 
 class LMFbx(AbstractFbx):
@@ -231,7 +260,6 @@ class LMFbx(AbstractFbx):
 		mel.eval("FBXExportInAscii -v 0")
 		mel.eval("FBXExportFileVersion -v FBX201800")
 		mel.eval("FBXExportGenerateLog -v 0")
-
 
 
 
@@ -435,7 +463,6 @@ class LMFinder(qtc.QObject):
 
 
 
-
 class LMFile(om.MFileIO):
 	""""Class wrapper for file operations - inherited from MFileIO.
 	"""
@@ -630,7 +657,6 @@ class LMFile(om.MFileIO):
 
 
 
-
 class LMGlobal(om.MGlobal):
 	"""Wrapper class for MGlobal with additional methods.
 	"""
@@ -679,7 +705,6 @@ class LMObject(om.MObject):
 		listSelection.getDependNode(0, mObject)
 
 		return mObject
-
 
 
 
@@ -738,6 +763,7 @@ class LMSceneObject():
 	"""Class for wrapping scene objects.
 	"""
 
+	objectType = "LMSceneObject"
 
 	@classmethod
 	def sceneObjectType(cls, node:str, type:str="rig") -> bool:
@@ -748,7 +774,40 @@ class LMSceneObject():
 			return True
 
 		return False
+	
 
+
+
+class LMRigObject():
+	"""Wrapper class for rig objects in maya.
+
+	Rig Structure:
+		root
+		components:
+			main_ctrl
+			root
+			pelvis
+			spine fk 
+			head fk/ik
+			left_arm fk/ik
+			left_hand
+			right_arm fk/ik
+			right_hand
+			left_leg fk/ik
+			left_foot
+			right_leg fk/ik
+			right_foot
+
+	"""
+	objectType = "LMRig"
+
+	def __init__(self, name) -> None:
+		import lunar.maya.LunarMayaRetarget as lmrtg
+		self.root = name
+		self.namespace = LMNamespace.getNamespaceFromName(name)
+
+		self.rtgCtrl = lmrtg.LMLunarCtrl(f"{self.namespace}:Ctrl")
+		self.rtgSkeleton = lmrtg.LMLunarExport(f"{self.namespace}:Export")
 
 
 
@@ -757,8 +816,6 @@ class LMSceneObject():
 class LMMetaData():
 	"""Wrapper class for the metaData node.
 	"""
-
-	# log = logging.getLogger("LMMetaData")
 
 	def __init__(self,
 		name:str="sceneMetaData",
@@ -861,7 +918,7 @@ class LMNamespace(om.MNamespace):
 
 
 	@classmethod
-	def addNamespaceToObject(cls, object:str, namespace:str) -> str:
+	def addNamespaceToName(cls, object:str, namespace:str) -> str:
 		"""Returns the given object with the specified namesapce
 		Args:
 			object (str): Name of the node/object.
@@ -900,12 +957,28 @@ class LMNamespace(om.MNamespace):
 		if nodes:
 			namespace = om.MNamespace.getNamespaceFromName(nodes[0])
 			if namespace: return namespace
-
-			om.MGlobal.displayWarning("Selection has to have a namespace")
+			cls.log.warning("Selection has to have a namespace")
 			return None
-
-		om.MGlobal.displayWarning("Nothing is currently selected.")
+		cls.log.info("Nothing is currently selected.")
 		return None
+
+
+	@classmethod
+	def removeNamespaceFromName(cls, name:str) -> str:
+		"""Returns the given object with the specified namesapce
+		Args:
+			name (str): Name of the node/object.
+
+		Returns:
+			str: If the namespace is not an empty string, name with namespace will be returned. Otherwise
+				just the name.
+
+		"""
+		if name != "":
+			nameWithoutNamespace = name.split(":")[-1]
+			if nameWithoutNamespace: return nameWithoutNamespace
+
+		return name
 
 
 
@@ -999,11 +1072,18 @@ class LMAttribute():
 	def addFkIkMode(cls, object:str, name:str, defaultValue:int=0) -> str:
 		"""Adds a display type attribute on the given object.
 		"""
-		attrName = f"{object}.{name}"
+		# attrName = f"{object}.{name}"
 		cmds.addAttr(object, longName=name, attributeType="enum", enumName="Fk=0:Ik=1", keyable=True, defaultValue=defaultValue)
 		# cmds.setAttr(attrName, channelBox=True)
 		cmds.setAttr(f"{object}.overrideEnabled", True)
-		return attrName
+		return f"{object}.{name}"
+
+
+	@classmethod
+	def addMessage(cls, object:str, name:str, isArray:bool=False):
+		# attrName = f"{object}.{name}"
+		cmds.addAttr(object, longName=name, attributeType="message", multi=isArray)
+		return f"{object}.{name}"
 
 
 	@classmethod

@@ -64,5 +64,11 @@
 		"variant": "cpp",
 		"vector": "cpp",
 		"algorithm": "cpp"
-	}
+	},
+	"python.analysis.extraPaths": [
+		"/Users/luky/Documents/Unreal Projects/Animation/Intermediate/PythonStub",
+		"/Users/luky/My Drive/Development/3d/Maya/devkit/completion/py",
+		"C:/Users/lbiernat/My Drive/Development/3d/Maya/devkit/completion/py",
+		"./thirdparty/maya/studiolibrary"
+	]
 }

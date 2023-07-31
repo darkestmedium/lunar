@@ -1,0 +1,33 @@
+// ===========================================================================
+// Copyright 2023 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+//
+//
+// Creation Date:  28 June 1996
+//
+//
+//  Procedure Name:
+//      buildObjectMenuItemsNow
+//
+//  Description:
+//      This procedure is called from ModelEdMenu as a postMenuCommand.
+//
+//  Input Arguments:
+//      The parent item to parent the popup menu to.
+//
+//  Return Value:
+//      None.
+//
+
+
+global proc buildObjectMenuItemsNow(string $parent) {
+	/* Mel override for buildObjectMenuItemsNow from others/buildObjectMenuItemsNow.mel
+	*/
+	string $cmd =	"import lunar.maya.LunarMayaUi as lmui; \
+		lmui.LMUi.buildObjectMenuItemsNow(parent='"+$parent+"')";
+	python($cmd);
+}

@@ -25,9 +25,9 @@ templateLC = {
 		"Head":										{"id": 15, 	"node": "head_ctrl"},
 	},
 	"definition": {
-		"Reference": 							{"id": 999,	"node": "root_ctrl"},
+		# "Reference": 							{"id": 0,	"node": "root_ctrl"},
+    "Root": 									{"id": 500,	"node": "root_ctrl"},
 		# Base (required)
-		# "HipsTranslation": 				{"id": 49, 	"node": "pelvis_pos_ctrl"},
 		"Hips":										{"id": 1, 	"node": "pelvis_ctrl"},
 		"LeftUpLeg": 							{"id": 2, 	"node": "thigh_l_ctrl"},
 		"LeftLeg": 								{"id": 3, 	"node": "calf_l_ctrl"},

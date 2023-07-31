@@ -8,6 +8,7 @@
 		}
 	],
 	"settings": {
+		// "python.analysis.extraPaths": ["./thirdparty/maya/studiolibrary"],
 		"files.associations": {
 			"*.py": "python",
 			"iosfwd": "cpp",

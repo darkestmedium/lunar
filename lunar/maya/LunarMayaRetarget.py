@@ -40,8 +40,6 @@ def loadDependencies():
 	
 	
 	# "mayaCharacterization", "retargeterNodes"] 
-	
-
 	mel.eval('HIKCharacterControlsTool')
 
 	mel.eval(f'source "hikCharacterControlsUI.mel"')
@@ -74,7 +72,7 @@ class LMHumanIk():
 		HIKSolerNode
 		HIKState2SK
 		HIKRetargeterNode
-	
+
 	HIKProperty2State.message -> propertyState.HIKCharacterNode.OutputCharacterDefinition -> InputCharacterDefinition.HIKSolerNode
 																																												-> InputCharacterDefinition.HIKState2SK
 																																												-> InputCharacterDefinitionDst.HIKRetargeterNode
@@ -398,9 +396,8 @@ class LMHumanIk():
 
 		"""
 		# Firstly attempt to get the Reference node
-		node = self.nameWithNamespace(self.definition['Reference']['node'])
-		if cmds.objExists(node):
-			return node
+		node = self.nameWithNamespace(self.definition['Root']['node'])
+		if cmds.objExists(node): return node
 
 		self.log.warning(f"'{node}' root node could not be retrieved - it doesn't exist.")
 		return None
@@ -452,7 +449,9 @@ class LMHumanIk():
 		"""
 		for i in self.definition:
 			node = self.nameWithNamespace(self.definition[i]["node"])
-			if not cmds.objExists(node) or self.definition[i]["id"] == 999: continue
+			# Ommit the custom "Root" node since it does not exist in
+			if not cmds.objExists(node) or self.definition[i]["id"] >= 500:
+				continue
 			mel.eval(f'setCharacterObject("{node}", "{self.character}", {self.definition[i]["id"]}, 0);')
 
 
@@ -639,7 +638,7 @@ class LMHumanIk():
 		
 		"""
 		listConnections = cmds.listConnections(f'{node}.{attribute}', source=source, destination=destination, type=type)
-		if listConnections.__len__() >= 1:
+		if listConnections:
 			self.nodeProperties = listConnections[0]
 			return self.nodeProperties
 		
@@ -1272,7 +1271,7 @@ class LMLunarCtrl(LMHumanIk):
 	}
 
 
-	def __init__(self, name="HiK") -> None:
+	def __init__(self, name="Ctrl") -> None:
 		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
 		"""
 		# Get and set internal character name variables
@@ -1424,12 +1423,10 @@ class LMLunarCtrl(LMHumanIk):
 						# Left Weapon
 						sourceLeftWeapon = f"{source.namespace}:weapon_l"
 						if cmds.objExists(sourceLeftWeapon):
-							# om.MGlobal.displayWarning(sourceLeftWeapon)
 							self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.nameWithNamespace("weapon_l_ctrl"), maintainOffset=False)
 						# Right Weapon
 						sourceRightWeapon = f"{source.namespace}:weapon_r"
 						if cmds.objExists(sourceLeftWeapon):
-							# om.MGlobal.displayWarning(sourceRightWeapon)
 							self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.nameWithNamespace("weapon_r_ctrl"), maintainOffset=False)
 
 						# Root motion setup outside Hik feautres. (Manual override)
@@ -2496,7 +2493,6 @@ class LMRetargeter():
 class LMHik():
 	"""Python overrides for hik utilities procedures.
 	"""
-
 	log = logging.getLogger("LMHik")
 
 
@@ -2534,9 +2530,48 @@ class LMHik():
 		return cmds.getAttr(f"{attrParent}X", keyable=True) and cmds.getAttr(f"{attrParent}Y", keyable=True) and cmds.getAttr(f"{attrParent}X", keyable=True)
 
 
+# hikInputSourceUtils.mel
+#--------------------------------------------------------------------------------------------------
+
+	@classmethod
+	def setCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
+		"""Python override for hikSetCharacterInput from others/hikInputSourceUtils.mel
+		"""
+		# lGlobal2SkNode = mel.eval(f'hikGetStateToGlobalSk("{pCharacter}", 0);')
+		if mel.eval(f'hikGetStateToGlobalSk("{pCharacter}", 0);') != "":
+			# Custom Rig setup, do a direct retargeter
+			cls.setDirectCharacterInput(pCharacter, pNewCharacterSrc)
+		else:
+			if (cmds.optionVar(exists="hikRetargetUsingRig") and cmds.optionVar(query=True, exists="hikRetargetUsingRig" != 0)):
+				# // Legacy mode
+				mel.eval(f'setLayeredCharacterInput("{pCharacter}", "{pNewCharacterSrc}")')
+			else:
+				mel.eval(f'setDirectCharacterInput("{pCharacter}", "{pNewCharacterSrc}")')
+
+
+	@classmethod
+	def setDirectCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
+		"""Python override for setDirectCharacterInput from others/hikInputSourceUtils.mel
+		"""
+		nodeSolver = cls.getDirectRetargeter(pCharacter, pNewCharacterSrc, 1)
+		return
+		# cls.setActiveSolver(pCharacter, nodeSolver)
+		# cls.hikEnableCharacter(pCharacter, True)
+
+
+	@classmethod
+	def getDirectRetargeter(cls, pDstCharacter:str, pSrcCharacter:str, pCreate:int):
+		"""Python override for getDirectRetargeter from others/hikInputSourceUtils.mel
+		"""
+		pass
+
+
+# hikSkeletonUtils.mel
+#--------------------------------------------------------------------------------------------------
+
 	@classmethod
 	def connectSkFromCharacterState(cls, pCharacter:str, pState:str, bakeMode:int):
-		"""Python override for hikConnectSkFromCharacterState from others/hikSkeletonUtils.mel
+		"""Python override for hikConnectSkFromCharacterState() from others/hikSkeletonUtils.mel
 
 		Args:
 			pCharacter (str): Name of the character.
@@ -2547,12 +2582,9 @@ class LMHik():
 		# TODO add check if node is LunarCtrl connect the ik setup here?
 		# Check if character is a lunar ctrl rig:
 		if cmds.attributeQuery("mainCtrl", node=pCharacter, exists=True, message=True):
-			om.MGlobal.displayWarning(f"{pCharacter} is sourced from a lunar rig - get custom node set.")
-			# Get nodes from definition
-		# else: cmds.hikGetNodeCount()
+			cls.log.warning(f"{pCharacter} is sourced from a lunar rig - get custom node set.")
 
-		numNodes = cmds.hikGetNodeCount()
-		for indx in range(numNodes):
+		for indx in range(cmds.hikGetNodeCount()):
 			hiknodename = cmds.GetHIKNodeName(indx)
 			listNodeSkConnections = cmds.listConnections(f"{pCharacter}.{hiknodename}", source=True, destination=False)
 			# Should never write in reference
@@ -2560,7 +2592,6 @@ class LMHik():
 				if listNodeSkConnections:
 					node = listNodeSkConnections[0]
 					attrNodeState2SK = f"{pState}.{hiknodename}"
-
 					# Feed the SkState node with any information that may be required from the Sk side      
 					if not cmds.isConnected(f"{node}.parentMatrix", f"{attrNodeState2SK}PGX"):
 						cmds.connectAttr(f"{node}.parentMatrix", f"{attrNodeState2SK}PGX", force=True)
@@ -2579,7 +2610,6 @@ class LMHik():
 					srcT = ""
 					srcR = f"{attrNodeState2SK}R"
 					srcS = ""
-
 					if bakeMode != 0 or mel.eval(f"hikIsRotateOnlyFK({indx});") != 0: srcT = f"{attrNodeState2SK}T"
 					if bakeMode != 0:	srcS = f"{attrNodeState2SK}S"
 
@@ -2588,8 +2618,8 @@ class LMHik():
 
 	@classmethod
 	def connectSourceAndSaveAnim(cls, pTransform:str, pSrcT:str, pSrcR:str="", pSrcS:str="", forcePairBlend:bool=False) -> str:
-		"""Python override of the global proc connectSourceAndSaveAnim()
-		
+		"""Python override for the connectSourceAndSaveAnim() from others/hikSkeletonUtils.mel
+
 		If node already has sources, create a pairblend to preserve the animation.
 
 		Note: 

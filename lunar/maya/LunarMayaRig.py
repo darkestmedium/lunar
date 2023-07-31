@@ -1412,6 +1412,12 @@ class PelvisComponent():
 		lm.LMAttribute.copyTransformsToOPM(self.ctrlPelvisRot.transform)
 		lm.LMAttribute.lockControlChannels(self.ctrlPelvisRot.transform, lockChannels=["translate", "scale", "visibility"])
 
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
+
 
 	def getCtrls(self):
 		return (self.ctrlPelvis, self.ctrlPelvisRot)
@@ -1434,6 +1440,18 @@ class SpineComponent():
 			offset=compRig.ctrlMain.transform, 
 			sourceNode=listJoints["Spine"]["Spine1"]
 		)
+
+		# attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		# [lm.LMAttribute.addMessage(object.transform, "component") for object in self.getCtrls()]
+		# cmds.connectAttr(f"{self.ctrlPelvis.transform}.component", f"{attrComp}[0]")
+		# cmds.connectAttr(f"{self.ctrlPelvisRot.transform}.component", f"{attrComp}[1]")
+		# cmds.setAttr(attrComp, lock=True)
+
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
 
 
 	def getCtrls(self):
@@ -1517,13 +1535,19 @@ class HeadComponent():
 
 		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
 
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
+
 
 	def getCtrls(self):
 		""""Returns all ctrls from the component - fk, out, ik.
 		"""
 		listCtrls = []
 		listCtrls.extend(self.fk.getCtrls())
-		listCtrls.extend(self.out.getCtrls())
+		# listCtrls.extend(self.out.getCtrls())
 		listCtrls.extend(self.ik.getCtrls())
 
 		return listCtrls
@@ -1638,10 +1662,11 @@ class Leg2bComponent():
 
 		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
 
-		# lm.LMAttribute.lockTransforms(self.grpComp)
-		# lm.LMAttribute.lockTransforms(self.grpFkComp)
-		# cmds.connectAttr(f"{self.cnstMatFk}.matrixSum", f"{self.out.ctrlStart.transform}.offsetParentMatrix")
-		# cmds.connectAttr(f"{self.cnstMatFk}.matrixSum", f"{self.ik.ctrlStart.transform}.offsetParentMatrix")
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
 
 
 	def getCtrls(self):
@@ -1649,7 +1674,7 @@ class Leg2bComponent():
 		"""
 		listCtrls = []
 		listCtrls.extend(self.fk.getCtrls())
-		listCtrls.extend(self.out.getCtrls())
+		listCtrls.extend(self.out.getTwistCtrls())
 		listCtrls.extend(self.ik.getCtrls())
 
 		return listCtrls
@@ -1681,6 +1706,12 @@ class FootComponent():
 			offset=compRig.ctrlMain.transform, 
 			sourceNode="{}{}".format((listJoints["Leg"]["ToeBase"]), sideSuffix)
 		)
+
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
 
 
 	def getCtrls(self):
@@ -1790,13 +1821,19 @@ class Arm2bComponent():
 
 		cmds.setAttr(f"{self.ik.ctrlStart.transform}.hiddenInOutliner", True)
 
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
+
 
 	def getCtrls(self):
 		""""Returns all ctrls from the component - fk, out, ik.
 		"""
 		listCtrls = []
 		listCtrls.extend(self.fk.getCtrls())
-		listCtrls.extend(self.out.getCtrls())
+		listCtrls.extend(self.out.getTwistCtrls())
 		listCtrls.extend(self.ik.getCtrls())
 
 		return listCtrls
@@ -1858,6 +1895,12 @@ class HandComponent():
 			offset=compRig.ctrlMain.transform, 
 			sourceNode="{}{}".format((listJoints["Hand"]["Weapon"]), sideSuffix)
 		)
+
+		# Message Attrs Setup
+		attrComp = lm.LMAttribute.addMessage(self.grpComp, "ctrl", True)
+		[lm.LMAttribute.addMessage(ctrl.transform, "component") for ctrl in self.getCtrls()]
+		[cmds.connectAttr(f"{ctrl.transform}.component", f"{attrComp}[{indx}]") for ctrl, indx in zip(self.getCtrls(), range(self.getCtrls().__len__()))]
+		cmds.setAttr(attrComp, lock=True)
 
 
 	def getCtrls(self):

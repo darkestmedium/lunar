@@ -11,7 +11,6 @@ import maya.OpenMaya as om
 cmds.loadPlugin("mlunar")
 
 
-
 def guiUserSetup():
 	"""User setup for gui mode.
 	"""
@@ -20,3 +19,5 @@ def guiUserSetup():
 
 
 if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): guiUserSetup()
+
+import lunar

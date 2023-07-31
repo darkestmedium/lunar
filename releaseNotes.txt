@@ -1,110 +1,151 @@
-v.0.4.1 - Animation workflow improvement release
+v.0.4.3 - Animation Workflow New Feature Release
 
-Date: 16th of July 2023
+Date: 31rd of July 2023
 
 
 
 What's new:
 
-	Adds support for Maya 2024 on Windows.
-	It is now possible to have multipile characters in the scene.
-	Importing animations is now handeled via openMaya instead of FBX wrapper commands.
-	Improved animation import via reference / namespace workflow.
+	New context sensitive Animation Marking Menu for fast and convinient access to all tools underneath
+		the right mouse button.
 
-	Animation Shelf:
+	Animation Marking Menu:
 	
-		Build new Animation Scene:
-			Adds popup menu item with "Build new Animation Scene".
-			Adds popup menu item with "Load Manny Character".
+		Build Scene MM:
+			Adds radial menu item with "Build new Scene".
+			Adds radial menu item with "Load Character".
 		
-		Import Mocap:
-			Adds popup menu item with "Import MannequinUe5"
-			Adds popup menu item with "Import MannequinUe4"
-			Adds popup menu item with "Import HumanIk"
-			Adds popup menu item with "Import SinnersDev2"
-			Adds popup menu item with "Import SinnersDev1"
-			Importing animation now works per selected character.
-			When importing while having a time range selected on the timeslider will bake and offset the animation to that range first.
-			If no time range is selected on the timeslider then the mocap will be offset to the current time.
-			If current time is equal to the mocap start time then no offset is performed.
+		Import Animation MM:
+			Adds radial menu item with "Import MannequinUe5"
+			Adds radial menu item with "Import MannequinUe4"
+			Adds radial menu item with "Import HumanIk"
+			Adds radial menu item with "Import SinnersDev2"
+			Adds radial menu item with "Import SinnersDev1"
+
+		Export Animation MM:
+			Adds radial menu item with "Export Ctrls"
+			Adds radial menu item with "Export Skeleton"
+
+		Bake Animation MM:
+			Adds radial menu item with "Bake Ctrls to Skeleton"
+			Adds radial menu item with "Bake Skeleton to Ctrls"
+
+		Graph Editor MM
+
+		Studio Library MM
+
+		Time Editor MM:
+			Adds radial menu item with "Create Clip"
+			Adds radial menu item with "Create Relocator"
+
+		Context Sensitive Dropdown MM when a ctrl is under the cursor or is selected:
+			Switch To MM:
+				Fk
+				Ik
+
+			Select Main Ctrl
+			Select Component Ctrls
+			Select All Ctrls
+
+			Reset Ctrl
+			Reset Component Ctrls
+			Reset All Ctrls
+
+			Display:
+				Toggle Bones Visibilty
+				Toggle X-Ray Bones
+				Toggle Ctrls Visibilty
+
 
 
 	Lunar Framework:
 
+
 		LunarMaya:
-			LMFile is now inherited from MFileIO and extends it with:
-				reference(cls, filePath:str, nameSpace:str, lockReference:bool=False, deferReference:bool=False) -> str:
-				importReference(cls, filePath:str):
-				removeReference(cls, filePath:str, deleteNamespaceContent:bool=True):
-				getReferenceNodesByType(cls, filePath:str, nodeType:str="joint") -> list:
-				characterDialog(cls) -> str or None:
+			LMRigObject (W.I.P): object for wrapping the ctrl rig and both retargeters.
+				__init__(self, name) -> None:
+				import lunar.maya.LunarMayaRetarget as lmrtg
+				self.root = name
+				self.namespace = LMNamespace.getNamespaceFromName(name)
+				self.rtgCtrl = lmrtg.LMLunarCtrl(f"{self.namespace}:Ctrl")
+				self.rtgSkeleton = lmrtg.LMLunarExport(f"{self.namespace}:Export")
 
-			LMObject is now inherited from MObject and extends it with:
-				getObjFromString(cls, object:str) -> om.MObject:
-			
-			LMNamespace is now inherited from MNamespace and extends it with:
-				getNameWithNamespace(cls, name:str, namespace:str) -> str:
-				getNamespaceFromSelection(cls) -> str or None:
+			LMNamespace(MNamespace):
+				removeNamespaceFromName(cls, name:str) -> str:
 
 
-		LunarMayaAnimation:
+		LunarMayaUi:
 
-			LMAnimControl is now inherited from MAnimControl and extends it with:
-				selectedStartEndTime(cls) -> tuple[om.MTime, om.MTime] or None:
-				activeStartEndTime(cls) -> tuple[om.MTime, om.MTime]:
-				minMaxStartEndTime(cls) -> tuple[om.MTime, om.MTime]:
-				animationStartEndTime(cls) -> tuple[om.MTime, om.MTime]:
-				startEndTimeFromAnimCurves(cls, nodes:list) -> tuple or None:
-				widestRange(cls, timeRange:list) -> tuple[om.MTime, om.MTime]:
-				setStartTime(cls, timeStart:om.MTime):
-				setEndTime(cls, timeStart:om.MTime):
-				setStartEndTime(cls, timeStart:om.MTime, timeEnd:om.MTime):
-				offsetKeyframes(cls, nodes, timeOffset):
-				setAutoKeyModeOffIfOn(cls) -> bool:
-				setAutoKeyModeOnIfOff(cls) -> bool:
-				toggleAutoKeyMode(cls):
+			LMUi:	Python wrapper / override for mel ui procedures.
+				buildObjectMenuItemsNow(cls, parent:str):
+				buildAnimationRadialMM(cls, object:str=""):
+				buildTimeEditordMM(cls, object:str, *args):
+				buildSceneBuildMM(cls):
+				buildImportAnimationMM(cls):
+				buildExportAnimationMM(cls):
+				buildBakeAnimationMM(cls):
+				buildAnimationPopupMM(cls, object:str="", *args):
+				builAnimationSwitchToMM(cls, object:str):
+				builAnimationDisplayMM(cls, object:str):
+				# Temp methods - will prolly move to rig module?
+				addTimeEditorClip(cls, object:str, *args):
+				addTimeEditorRelocator(cls, object:str, *args):
+				switchComponentMode(cls, *args, object:str, mode:str):
+				getAllCtrls(cls, object:str, *args) -> list:
+				getComponentCtrls(cls, object:str, *args) -> list:
+				selectMainCtrl(cls, object:str, *args):
+				selectComponentCtrls(cls, object:str, *args):
+				selectAllCtrls(cls, object:str, *args):
+				resetCtrl(cls, object:str, *args):
+				resetComponentCtrls(cls, object:str, *args):
+				resetAllCtrls(cls, object:str, *args):
+				toggleCtrlsVisbility(cls, object:str, *args):
+				toggleBonesVisbility(cls, object:str, *args):
+				openGraphEditor(cls, object:str="", *args):
+				openStudioLibrary(cls):
+				
 
-			LMHumanIk:
-				nameSpace attribute was renamed to namespace.
-				extractNameSpace method was removed.
-				namespace = extractNameSpace(name) is now obtained via LMNamespace.getNamespaceFromName().
-				returnNodeWithNameSpace was renamed with nameWithNamespace which wraps LMNamespace.getNameWithNamespace.
-				getRoot method now only attemps to get the root from the Reference node instead of Reference -> HipsTranslation -> Hips.
+		LunarMayaRetargeter:
 
-			LMLunarCtrl:
-				setSourceAndBake now automaticaly sets the rootMotion and rootRotationOffset flags via sourceAndBakeTemplate.
-			
-			LMSinnersDev2 and LMSinnersDev1:
-				Adds afterImportSetup method for cleaning up imported files.
-			
-			LMRetargeter:
-				Now automaticaly returns the wrapped retageter object via hikTemplates dict on the class.
-				Adds getFromHikTemplate(cls, name:str, hikTemplate:str):
+			LMHik: Python overrides for hik utilities procedures.
+				getStateToGlobalSk(cls, pCharacter:str, pCreate:bool=False) -> str:
+				getCurrentCharacter(cls) -> str:
+				setCurrentCharacter(cls, character:str):
+				sKeyableXYZ(cls, node:str, attribute:str) -> bool:
+				setCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
+				setDirectCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
+				getDirectRetargeter(cls, pDstCharacter:str, pSrcCharacter:str, pCreate:int):
+				connectSkFromCharacterState(cls, pCharacter:str, pState:str, bakeMode:int):
+				connectSourceAndSaveAnim(cls, pTransform:str, pSrcT:str, pSrcR:str="", pSrcS:str="", forcePairBlend:bool=False) -> str:
+				getHikNodeAttributesToBake(cls, character:LMHumanIk):
+				bakeCharacterPre(cls, character:LMHumanIk):
+				bakeCharacter(cls, nodes:list, startEnd:tuple, attributes:list=lm.listAttrTR, preserveOutsideKeys:bool=False):
+
+			LMTimeEditor:
+				createClip(cls, objects:list, name:str, startFrame:int=None) -> None: Fixed creation of time editor clips
+
+
+		Mel Overrides:
+			dagMenuProcOverride.mel
+			hikInputSourceUtils.mel
+			melOverrides.mel
+
 
 
 	Lunar Rig:
-		Ctrls are now excluded from Shading/X-Ray Joints
+		All controllers are now connected via messeage attributes to the components.
 
 
 
 Bug Fixes:
 
-	Animation:
-		Importing mocap files without a namespace.
-		Importing mocap with the HumanIk template worked only once per maya session.
-		Importing mocap files directly from unreal engine.
-	
-	Lunar Rig:
-		Fk and Ik chains are now seprated and allow the fk chain to animate broken limbs without affecting the ik chain.
-		_ik and _out ransforms are now locked and hidden from the outliner.
 
 
 
 What need's to be done:
-
-	When nothing is currently selected try to get the Player / First character in the scene.
-	Figure out while preserveOutsideKeys is not working when envoked from retargeting classes.
+	Add spine ik to the rig.
+	Update weapons bones and freeze their transforms.
+	Speed up preserveOutsideKeys bake which is around 10 times slower now.
 	Clean up import animation time madness in the animation toolset method.
-	Export selected time range from the timeslider.
 	Bake Ctrl to Export Skeleton for selected time range on the timeslider.
 	Bake Export Skeleton to Ctrls for selected time range on the timeslider.

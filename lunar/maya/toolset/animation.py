@@ -76,8 +76,8 @@ def wrapRetargeters(namespace) -> tuple[lmrtg.LMLunarCtrl, lmrtg.LMRetargeter]:
 	return rtgLunarCtrl, rtgLunarExport
 
 
-	
-def buildNewAnimationScene() -> bool:
+
+def buildNewAnimationScene(*args) -> bool:
 	"""Builds a new animation scene with a clean player rig for working with mocap.
 	"""
 	global sceneMetaData
@@ -99,8 +99,6 @@ def buildNewAnimationScene() -> bool:
 def selectCharacter():
 	nodes = cmds.ls(selection=True)
 	if nodes:
-		# print("something is selected")
-
 		# Check if selection has a namespace
 		namespace = lm.LMNamespace.getNamespaceFromName(nodes[0])
 		if namespace:
@@ -132,7 +130,7 @@ def selectCharacter():
 
 
 
-def loadCharacter(characterTemplate="Manny"):
+def loadCharacter(*args, characterTemplate="Manny"):
 	"""Loads a character rig into the scene with the specified template and namespace.
 	"""
 	namespace = lm.LMFile.characterDialog()
@@ -144,7 +142,7 @@ def loadCharacter(characterTemplate="Manny"):
 
 
 
-def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
+def loadMocap(*args, hikTemplate="MannequinUe5") -> bool or None:
 	"""Import mocap to the control rig from an fbx file.
 	"""
 	global fiAnimFbx
@@ -243,7 +241,7 @@ def loadMocap(hikTemplate="MannequinUe5") -> bool or None:
 
 
 
-def exportAnimation(exportAs=True, bake=True):
+def exportAnimation(*args, exportAs=True, bake=True):
 	"""Export animaiton to the engine.
 	"""
 	global fiAnimFbx
@@ -311,7 +309,7 @@ def importMhFaceCtrlAnimatino():
 
 
 
-def bakeToAnother(ctrlsToSkeleton=True, skeletonToCtrls=False):
+def bakeToAnother(*args, ctrlsToSkeleton=True, skeletonToCtrls=False):
 	"""Animation shelf wrapper for baking animation between the control rig and skeleton.
 	"""
 	if ctrlsToSkeleton and skeletonToCtrls:

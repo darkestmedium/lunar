@@ -178,35 +178,6 @@ class LMTimeEditor():
 
 	log = logging.getLogger("LMTimeEditor")
 
-
-	@classmethod
-	def createClip(cls, name:str, startFrame:int=None, endFrame:int=None) -> None:
-		"""Creates a time editor clip.
-
-		Args:
-			name (str): Name of the animation clip, it will be suffixed with _animClip
-			startFrame (int): Starting frame of the animation clip
-			endFrame (int): End frame - duration of the animation clip
-
-		"""
-		if not name.startswith("AS_"): name = f"AS_{name}"
-		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
-		if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
-
-		cmds.timeEditorClip(
-			name,
-			# addObjects=nodes,
-			addSelectedObjects=True,
-			includeRoot=True,
-			recursively=True,
-			removeSceneAnimation=True,
-			startTime=startFrame,
-			duration=endFrame-startFrame,
-			type=["animCurveTL", "animCurveTA", "animCurveTT", "animCurveTU"],
-			track=f"{cls.initTimeEditor()}:-1"
-		)
-
-
 	@classmethod
 	def initTimeEditor(cls) -> None:
 		"""Checks if there are any time editor compositions in the scene.
@@ -217,8 +188,39 @@ class LMTimeEditor():
 		"""
 		if not cmds.ls(type="timeEditorTracks"):
 			cmds.timeEditorComposition("Composition1", createTrack=True)
-		
+
 		return cmds.timeEditorComposition(query=True, active=True)
+
+
+	@classmethod
+	def createClip(cls, objects:list, name:str, startFrame:int=None) -> None:
+		"""Creates a time editor clip.
+
+		Args:
+			name (str): Name of the animation clip, it will be suffixed with _animClip
+			startFrame (int): Starting frame of the animation clip
+			endFrame (int): End frame - duration of the animation clip
+
+		"""
+		if not name.startswith("AS_"): name = f"AS_{name}"
+		if not startFrame: startFrame = oma.MAnimControl.minTime().value()
+		# if not endFrame: endFrame = oma.MAnimControl.maxTime().value()
+
+		# nodes = cmds.ls(selection=True)
+		listAttrs = []
+		for object in objects:
+			listAttrsKeyable = [attr.split("|")[-1] for attr in cmds.listAnimatable(object)]
+			[listAttrs.append(attr) for attr in listAttrsKeyable]
+
+		cmds.timeEditorClip(
+			name,
+			addObjects=";".join(listAttrs),
+			startTime=startFrame,
+			removeSceneAnimation=True,
+			includeRoot=False,
+			recursively=False,
+			track=f"{cls.initTimeEditor()}:-1"
+		)
 
 
 

@@ -25,11 +25,10 @@ templateMH = {
 		"Head":										{"id": 15, 	"node": "head"},
 	},
 	"definition": {
-		"Reference": 							{"id": 999, "node": "root"},
-		# "Root": 									{"id": 999, "node": "root"},
+		# "Reference": 							{"id": 0, "node": "reference"},
+		"Root": 									{"id": 500, "node": "root"},
 		# Base (required)
 		"Hips":										{"id": 1, 	"node": "pelvis"},
-		# "HipsTranslation": 				{"id": 49, 	"node": "hipstranslation"},
 		"LeftUpLeg": 							{"id": 2, 	"node": "thigh_l"},
 		"LeftLeg": 								{"id": 3, 	"node": "calf_l"},
 		"LeftFoot": 							{"id": 4, 	"node": "foot_l"},
