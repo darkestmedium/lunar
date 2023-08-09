@@ -65,8 +65,7 @@ class LMUi():
 			return
 
 		mel.eval("global int $gIsMarkingMenuOn;")
-		gIsMarkingMenuOn = mel.eval("$tempVar=$gIsMarkingMenuOn")
-		# gIsMarkingMenuOn = 0
+		gIsMarkingMenuOn = int(mel.eval("$tempVar=$gIsMarkingMenuOn"))
 
 		if cmds.popupMenu(parent, exists=True):
 			cmds.popupMenu(parent, edit=True, deleteAllItems=True)
@@ -571,7 +570,6 @@ class LMUi():
 		isCtrlVisible = cmds.getAttr(attrVisibility)
 		cmds.setAttr(attrVisibility, not isCtrlVisible)
 
-
 	@classmethod
 	def openGraphEditor(cls, object:str="", *args):
 		"""Wrapper for opening the GraphEditor with selection of the object returned from dagObjectHit
@@ -580,14 +578,18 @@ class LMUi():
 		cmds.GraphEditor()
 
 	@classmethod
-	def openStudioLibrary(cls):
+	def openStudioLibrary(cls, *args):
 		"""Wrapper method for opening the studio library windows.
 		"""
 		try:
 			import studiolibrary
-		except ImportError("Couldn't load studio library."):
+			studiolibrary.main()
+		# except:
+			# return
+		except ImportError():
+			cls.log.critical("Failed to import studiolibrary.")
 			return
-		studiolibrary.main()
+		# studiolibrary.main()
 
 
 

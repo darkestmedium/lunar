@@ -7,6 +7,7 @@
 #include "MetaDataNode.h"
 #include "MetaDataCmd.h"
 #include "TwistSolver.h"
+#include "TwistSolver.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>

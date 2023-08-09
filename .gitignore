@@ -4,6 +4,16 @@
 *Icon?
 *__MACOSX
 
+
+# directories
+devkit/
+python/
+sinners/
+thirdparty/
+sinners/.DS_Store
+sinners/.DS_Store
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -148,8 +158,4 @@ dmypy.json
 .pyre/
 sinners/.DS_Store
 
-# directories
-sinners/
-thirdparty/
-sinners/.DS_Store
-sinners/.DS_Store
+

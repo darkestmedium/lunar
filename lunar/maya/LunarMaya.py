@@ -1,7 +1,7 @@
 """
 Do's:
 	Selection:
-	lm.LMGlobal.selectByName is on average faster than cmds.select by 0.0001s (0.000155s vs 0.000145s)
+	lm.LMGlobal.selectByName is on average faster than cmds.select by 0.001s (0.00155s vs 0.00145s)
 
 """
 
@@ -463,6 +463,7 @@ class LMFinder(qtc.QObject):
 
 
 
+
 class LMFile(om.MFileIO):
 	""""Class wrapper for file operations - inherited from MFileIO.
 	"""
@@ -657,6 +658,7 @@ class LMFile(om.MFileIO):
 
 
 
+
 class LMGlobal(om.MGlobal):
 	"""Wrapper class for MGlobal with additional methods.
 	"""
@@ -687,6 +689,7 @@ class LMGlobal(om.MGlobal):
 
 
 
+
 class LMObject(om.MObject):
 	"""Wrapper class with MObjects utils.
 	"""
@@ -708,19 +711,13 @@ class LMObject(om.MObject):
 
 
 
+
 class LMScene():
 	"""Maya Scene wrapper class.
 
 	"""
 
 	log = logging.getLogger("LMScene")
-
-	@classmethod
-	def getNamespaces(cls) -> list:
-		"""Gets all namespaces that are found in the current scene.
-		"""
-		listNamespaces = [Item[1:] for Item in om.MNamespace.getNamespaces()]
-		return [Item for Item in listNamespaces if Item not in ["UI", "shared"]]
 
 
 	@classmethod
@@ -756,6 +753,7 @@ class LMScene():
 
 		"""
 		return om.MFnDependencyNode(LMObject.getObjFromString("time1"))
+
 
 
 
@@ -918,20 +916,6 @@ class LMNamespace(om.MNamespace):
 
 
 	@classmethod
-	def addNamespaceToName(cls, object:str, namespace:str) -> str:
-		"""Returns the given object with the specified namesapce
-		Args:
-			object (str): Name of the node/object.
-			namespace (str): Name of the node/object.
-
-		Returns:
-			str: Name of the node with namespace if one was set while initiating the class.
-
-		"""
-		return f"{namespace}:{object}"
-
-
-	@classmethod
 	def getNameWithNamespace(cls, name:str, namespace:str) -> str:
 		"""Returns the given object with the specified namesapce
 		Args:
@@ -961,6 +945,16 @@ class LMNamespace(om.MNamespace):
 			return None
 		cls.log.info("Nothing is currently selected.")
 		return None
+
+
+	@classmethod
+	def getNamespaceFromName(cls, name:str) -> str:
+		"""Overrides the custom method to not throw errors when there is no namespace.
+		"""
+		if name != "":
+			name = om.MNamespace.getNamespaceFromName(name)
+
+		return name
 
 
 	@classmethod

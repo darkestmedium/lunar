@@ -169,7 +169,6 @@ class LMAnimControl(oma.MAnimControl):
 
 
 
-
 class LMTimeEditor():
 	"""Wrapper class for the time editor.
 
@@ -177,6 +176,7 @@ class LMTimeEditor():
 	defaultComposition = "Composition1"
 
 	log = logging.getLogger("LMTimeEditor")
+
 
 	@classmethod
 	def initTimeEditor(cls) -> None:

@@ -5,10 +5,32 @@
 		},
 		{
 			"path": "../../../../../../../Applications/Autodesk/maya2024/Maya.app/Contents/scripts"
+		},
+		{
+			"path": "../../../../../Desktop"
 		}
 	],
+
 	"settings": {
-		// "python.analysis.extraPaths": ["./thirdparty/maya/studiolibrary"],
+		// Python
+		"python.languageServer": "Pylance",
+		// Maya 2024 Mac
+		"python.defaultInterpreterPath": "/Applications/Autodesk/maya2024/Maya.app/Contents/bin/mayapy",
+		"terminal.integrated.env.osx": {
+			"PYTHONPATH": "${workspaceFolder}/python/310/packages;",
+			// "PYTHONPATH": "${workspaceFolder}/python/310/site-packages",
+		},
+
+		"python.analysis.extraPaths": [
+			"./devkit/completion/py",
+			"./python/310/packages",
+			"./thirdparty/maya/studiolibrary"
+		],
+		"python.autoComplete.extraPaths": [
+			"./devkit/completion/py",
+			"./python/310/packages",
+		],
+
 		"files.associations": {
 			"*.py": "python",
 			"iosfwd": "cpp",
