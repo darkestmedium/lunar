@@ -1,13 +1,9 @@
 set(MAYA_FILES
 # Plugins
-	Ctrl.h
-	Ctrl.cpp
+	CtrlNode.h
+	CtrlNode.cpp
 	CtrlCommand.h
 	CtrlCommand.cpp
-	CtrlData.h
-	CtrlData.cpp
-	CtrlDrawOverride.h
-	CtrlDrawOverride.cpp
 	FootRollSolver.h
 	FootRollSolver.cpp
 	Ik2bSolver.h
@@ -21,6 +17,7 @@ set(MAYA_FILES
 	ShapesDefinition.h
 	TwistSolver.cpp
 	TwistSolver.h
+	# DisplayNode.h
 # # Api
 # 	LMAttribute.h
 # 	LMGlobal.h

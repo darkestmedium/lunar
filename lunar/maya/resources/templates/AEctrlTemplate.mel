@@ -1,67 +1,59 @@
 /*  AEctrlTemplate.mel
 		The Attribute Editor template for the ctrl node.
 		
-		source "AEctrlTemplate.mel";
-		refreshEditorTemplates;
+		source "AEctrlTemplate.mel"; refreshEditorTemplates;
 */
 
-global proc AEctrlTemplate(string $nodeName)
-{
+
+
+global proc AEctrlTemplate(string $nodeName) {
 	// Main Layout
 	editorTemplate -beginScrollLayout;
 
-		editorTemplate -beginLayout "Local Transform Attributes" -collapse false;
+		// Override AEtransformMain $nodeName;
+		editorTemplate -beginLayout "Transform Attributes" -collapse false;
+			editorTemplate -addControl "translate";
+			editorTemplate -addControl "rotate";
+			editorTemplate -addControl "rotateOrder";
+			editorTemplate -addControl "inheritsTransform";
+			editorTemplate -suppress "offsetParentMatrix";
+			editorTemplate -suppress "scale";
+			editorTemplate -suppress "shear";
+			editorTemplate -suppress "rotateAxis";
+			editorTemplate -suppress rotateQuaternion;
+			// editorTemplate -suppress rotationInterpolation;
+			editorTemplate -endLayout;
+
+
+		editorTemplate -beginLayout "Ctrl" -collapse false;
+			editorTemplate -addControl "shape";
 			editorTemplate -addControl "localPosition";
 			editorTemplate -addControl "localRotate";
 			editorTemplate -addControl "localScale";
+
+			editorTemplate -beginLayout "Ctrl Labeling" -collapse false;
+				editorTemplate -addControl "drawSolverMode";
+				editorTemplate -addControl "drawLine";
+				editorTemplate -addControl "hasDynamicAttributes";
+				editorTemplate -addControl "solverModePosition";
+				editorTemplate -addControl "lineWidth";
+				editorTemplate -addControl "solverModeSize";
+				editorTemplate -endLayout;
+				// editorTemplate -endLayout;
+
+			editorTemplate -suppress "drawLineTo";
+			editorTemplate -suppress "fkIk";
+
 			editorTemplate -endLayout;
 
-		editorTemplate -beginLayout "Ctrl Display" -collapse false;
-			editorTemplate -addControl "shape";
-			editorTemplate -addControl "fillShape";
-			editorTemplate -addControl "drawLine";
-			editorTemplate -addControl "drawFkIkState";
-			editorTemplate -addControl "fillTransparency";
-			editorTemplate -addControl "lineWidth";
-			editorTemplate -addControl "fkIkStatePosition";
-			editorTemplate -addControl "drawLineTo";
-			editorTemplate -endLayout;
 
-		// include/call base class/node attributes
-		editorTemplate -beginLayout (uiRes("m_AEshapeTemplate.kObjectDisplay"));
-			AEdagNodeCommon $nodeName;
-		editorTemplate -endLayout;
-
-		// include/call base class/node attributes
-		AEdagNodeInclude $nodeName;
+		AEtransformNoScroll $nodeName;
 
 		editorTemplate -addExtraControls;
 
-		// hide extra attributes
-		editorTemplate -beginNoOptimize;
-		editorTemplate -suppress "aInWorldMatrix";
-		editorTemplate -suppress "motionBlur";
-		editorTemplate -suppress "visibleInReflections";
-		editorTemplate -suppress "visibleInRefractions";
-		editorTemplate -suppress "castsShadows";
-		editorTemplate -suppress "receiveShadows";
-		editorTemplate -suppress "maxVisibilitySamplesOverride";
-		editorTemplate -suppress "maxVisibilitySamples";
-		editorTemplate -suppress "geometryAntialiasingOverride";
-		editorTemplate -suppress "antialiasingLevel";
-		editorTemplate -suppress "shadingSamplesOverride";
-		editorTemplate -suppress "shadingSamples";
-		editorTemplate -suppress "maxShadingSamples";
-		editorTemplate -suppress "volumeSamplesOverride";
-		editorTemplate -suppress "volumeSamples";
-		editorTemplate -suppress "depthJitter";
-		editorTemplate -suppress "ignoreSelfShadowing";
-		editorTemplate -suppress "primaryVisibility";
-		editorTemplate -suppress "compInstObjGroups";
-		editorTemplate -suppress "componentTags";
-		editorTemplate -suppress "fkIk";
-		editorTemplate -suppress "inFkIk";
-		editorTemplate -endNoOptimize;
+		// // hide extra attributess
+		// editorTemplate -beginNoOptimize;
+		// editorTemplate -endNoOptimize;
 
 	// End Main Layout
 	editorTemplate -endScrollLayout;

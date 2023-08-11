@@ -1,5 +1,4 @@
-#include "Ctrl.h"
-#include "CtrlDrawOverride.h"
+#include "CtrlNode.h"
 #include "CtrlCommand.h"
 #include "Ik2bSolver.h"
 #include "IkCommand.h"
@@ -8,6 +7,8 @@
 #include "MetaDataCmd.h"
 #include "TwistSolver.h"
 #include "TwistSolver.h"
+
+// #include "DisplayNode.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -27,7 +28,7 @@ static MCallbackId afterSaveSetMetaDataNodeCbId;
 void setMelConfig(void*) {
 	/* Sets the selection priority for locators to 999. */
 	MGlobal::executeCommandOnIdle("cycleCheck -e 0");
-	MGlobal::executeCommandOnIdle("selectPriority -locator 999");
+	// MGlobal::executeCommandOnIdle("selectPriority -locator 999");
 }
 
 static void onSceneSaved(void* clientData) {
@@ -46,36 +47,51 @@ MStatus initializePlugin(MObject obj) {
 	const char* requiredApiVersion = "Any";
 
 	MStatus status;
-	MFnPlugin pluginFn(obj, author, version, requiredApiVersion);
+	MFnPlugin fn_plugin(obj, author, version, requiredApiVersion);
 
-	// Register Controller node
-	status = pluginFn.registerNode(
-		Ctrl::typeName,
-		Ctrl::typeId,
-		Ctrl::creator,
-		Ctrl::initialize,
-		MPxLocatorNode::kLocatorNode,
-		&Ctrl::drawDbClassification
+
+
+	status = fn_plugin.registerTransform(
+		CtrlNode::type_name,
+		CtrlNode::type_id, 
+		&CtrlNode::creator, 
+		&CtrlNode::initialize,
+		&MPxTransformationMatrix::creator,
+		MPxTransformationMatrix::baseTransformationMatrixId,
+		&CtrlNode::type_drawdb
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// Register Controller draw override
 	status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(
-		Ctrl::drawDbClassification,
-		Ctrl::drawRegistrationId,
+		CtrlNode::type_drawdb,
+		CtrlNode::type_drawid,
 		CtrlDrawOverride::creator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register Controller command
-	status = pluginFn.registerCommand(
+	status = fn_plugin.registerCommand(
 		CtrlCommand::commandName,
 		CtrlCommand::creator,
 		CtrlCommand::syntaxCreator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+
+
+	// // Register Ik2bSolver node
+	// status = fn_plugin.registerNode(
+	// 	MetaDataNode::typeName,
+	// 	MetaDataNode::typeId,
+	// 	MetaDataNode::creator,
+	// 	Ik2bSolver::initialize,
+	// 	MPxNode::kDependNode
+	// );
+	// CHECK_MSTATUS_AND_RETURN_IT(status);
+
+
+
 	// Register Ik2bSolver node
-	status = pluginFn.registerNode(
+	status = fn_plugin.registerNode(
 		Ik2bSolver::typeName,
 		Ik2bSolver::typeId,
 		Ik2bSolver::creator,
@@ -84,7 +100,7 @@ MStatus initializePlugin(MObject obj) {
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register ik command
-	status = pluginFn.registerCommand(
+	status = fn_plugin.registerCommand(
 		IkCommand::commandName,
 		IkCommand::creator,
 		IkCommand::syntaxCreator
@@ -92,7 +108,7 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register MetaData node
-	status = pluginFn.registerNode(
+	status = fn_plugin.registerNode(
 		MetaDataNode::typeName,
 		MetaDataNode::typeId,
 		MetaDataNode::creator,
@@ -109,7 +125,7 @@ MStatus initializePlugin(MObject obj) {
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register MetaData command
-	status = pluginFn.registerCommand(
+	status = fn_plugin.registerCommand(
 		MetaDataCmd::commandName,
 		MetaDataCmd::creator,
 		MetaDataCmd::syntaxCreator
@@ -117,7 +133,7 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register FootRoll node
-	status = pluginFn.registerNode(
+	status = fn_plugin.registerNode(
 		FootRollSolver::typeName,
 		FootRollSolver::typeId,
 		FootRollSolver::creator,
@@ -127,7 +143,7 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register TwistSolver node
-	status = pluginFn.registerNode(
+	status = fn_plugin.registerNode(
 		TwistSolver::typeName,
 		TwistSolver::typeId,
 		TwistSolver::creator,
@@ -164,20 +180,20 @@ MStatus initializePlugin(MObject obj) {
 
 MStatus uninitializePlugin(MObject obj) {
 	MStatus status;
-	MFnPlugin pluginFn(obj);
+	MFnPlugin fn_plugin(obj);
 
 	MMessage::removeCallbacks(callbackIds);
 
 	// Deregister TwistSolver
-	status = pluginFn.deregisterNode(TwistSolver::typeId);
+	status = fn_plugin.deregisterNode(TwistSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister Footroll Node
-	status = pluginFn.deregisterNode(FootRollSolver::typeId);
+	status = fn_plugin.deregisterNode(FootRollSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister MetaData command
-	status = pluginFn.deregisterCommand(IkCommand::commandName);
+	status = fn_plugin.deregisterCommand(IkCommand::commandName);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Deregister MetaData draw override
 	status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
@@ -186,29 +202,25 @@ MStatus uninitializePlugin(MObject obj) {
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Deregister MetaDataNode
-	status = pluginFn.deregisterNode(MetaDataNode::typeId);
+	status = fn_plugin.deregisterNode(MetaDataNode::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister IkCommand
-	status = pluginFn.deregisterCommand(IkCommand::commandName);
+	status = fn_plugin.deregisterCommand(IkCommand::commandName);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Deregister Ik2Solver
-	status = pluginFn.deregisterNode(Ik2bSolver::typeId);
+	status = fn_plugin.deregisterNode(Ik2bSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	// Deregister Controller command
-	status = pluginFn.deregisterCommand(CtrlCommand::commandName);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+
 	// Deregister Controller draw override
-	status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
-		Ctrl::drawRegistrationId,
-		Ctrl::drawDbClassification
+	MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
+		CtrlNode::type_drawdb,
+		CtrlNode::type_drawid
 	);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	// Deregister Controller node
-	status = pluginFn.deregisterNode(Ctrl::typeId);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	fn_plugin.deregisterNode(CtrlNode::type_id);
+	fn_plugin.deregisterCommand(CtrlCommand::commandName);
 
 	// // Deletes the maya main menu items
 	// if (MGlobal::mayaState() == MGlobal::kInteractive)

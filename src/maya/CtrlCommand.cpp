@@ -1,5 +1,6 @@
-#include "Ctrl.h"
+#include "CtrlNode.h"
 #include "CtrlCommand.h"
+
 
 
 
@@ -31,20 +32,20 @@ const char* CtrlCommand::localScaleFlagLong = "-localScale";
 const char* CtrlCommand::shapeFlagShort = "-sh";
 const char* CtrlCommand::shapeFlagLong = "-shape";
 
-const char* CtrlCommand::fillShapeFlagShort = "-fs";
-const char* CtrlCommand::fillShapeFlagLong = "-fillShape";
+// const char* CtrlCommand::fillShapeFlagShort = "-fs";
+// const char* CtrlCommand::fillShapeFlagLong = "-fillShape";
 
 const char* CtrlCommand::drawLineFlagShort = "-dl";
 const char* CtrlCommand::drawLineFlagLong = "-drawLine";
 
-const char* CtrlCommand::drawFkIkStateFlagShort = "-dfi";
-const char* CtrlCommand::drawFkIkStateFlagLong = "-drawFkIkState";
+const char* CtrlCommand::drawSolverModeFlagShort = "-dsm";
+const char* CtrlCommand::drawSolverModeFlagLong = "-drawSolverMode";
 
-const char* CtrlCommand::fkIkStatePositionFlagShort = "-fis";
-const char* CtrlCommand::fkIkStatePositionFlagLong = "-fkIkStatePosition";
+const char* CtrlCommand::solverModePositionFlagShort = "-smp";
+const char* CtrlCommand::solverModePositionFlagLong = "-solverModePosition";
 
-const char* CtrlCommand::fillTransparencyFlagShort = "-ft";
-const char* CtrlCommand::fillTransparencyFlagLong = "-fillTransparency";
+// const char* CtrlCommand::fillTransparencyFlagShort = "-ft";
+// const char* CtrlCommand::fillTransparencyFlagLong = "-fillTransparency";
 
 const char* CtrlCommand::lineWidthFlagShort = "-lw";
 const char* CtrlCommand::lineWidthFlagLong = "-lineWidth";
@@ -60,6 +61,9 @@ const char* CtrlCommand::hideOnPlaybackFlagLong = "-hideOnPlayback";
 
 const char* CtrlCommand::helpFlagShort = "-h";
 const char* CtrlCommand::helpFlagLong = "-help";
+
+const char* CtrlCommand::hasDynamicAttributesFlagShort = "-hda";
+const char* CtrlCommand::hasDynamicAttributesFlagLong = "-hasDynamicAttributes";
 
 
 
@@ -87,18 +91,18 @@ MSyntax CtrlCommand::syntaxCreator() {
 
 	// Visual flags
 	sytnax.addFlag(shapeFlagShort, shapeFlagLong, MSyntax::kString);
-	sytnax.addFlag(fillShapeFlagShort, fillShapeFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(drawLineFlagShort, drawLineFlagLong, MSyntax::kBoolean);
-	sytnax.addFlag(fillTransparencyFlagShort, fillTransparencyFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(lineWidthFlagShort, lineWidthFlagLong, MSyntax::kDouble);
 	sytnax.addFlag(colorFlagShort, colorFlagLong, MSyntax::kString);
 
-	sytnax.addFlag(drawFkIkStateFlagShort, drawFkIkStateFlagLong, MSyntax::kBoolean);
-	sytnax.addFlag(fkIkStatePositionFlagShort, fkIkStatePositionFlagLong, MSyntax::kDouble, MSyntax::kDouble, MSyntax::kDouble);
+	sytnax.addFlag(drawSolverModeFlagShort, drawSolverModeFlagLong, MSyntax::kBoolean);
+	sytnax.addFlag(solverModePositionFlagShort, solverModePositionFlagLong, MSyntax::kDouble, MSyntax::kDouble, MSyntax::kDouble);
 
 	sytnax.addFlag(lockShapeAttributesFlagShort, lockShapeAttributesFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(hideOnPlaybackFlagShort, hideOnPlaybackFlagLong, MSyntax::kBoolean);
 	
+	sytnax.addFlag(hasDynamicAttributesFlagShort, hasDynamicAttributesFlagLong, MSyntax::kBoolean);
+
 	sytnax.addFlag(helpFlagShort, helpFlagLong, MSyntax::kBoolean);
 
 	sytnax.setObjectType(MSyntax::kSelectionList, 0, 1);
@@ -137,14 +141,13 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		strHelp += "   -lr    -localRotate          Double3    Local Rotate of the controller.\n";
 		strHelp += "   -ls    -localScale           Double3    Local Scale of the controller.\n";
 		strHelp += "   -sh    -shape                String     Shape to be drawn: 'cube' 'sphere' cross' 'diamond' 'square' 'circle' 'locator' 'none'.\n";
-		strHelp += "   -fs    -fillShape            Bool       Whether or not you want to render the solid shape or just the outline.\n";
 		strHelp += "   -dl    -drawLine             Bool       Whether or not you want to display a line from the object center to a target.\n";
-		strHelp += "   -dfis  -drawFkIkState        Bool       Whether or not you want to display te fk / ik  state.\n";
-		strHelp += "   -fisp  -fkIkStatePosition    Double3    Local Position of the fk / ik state.\n";
-		strHelp += "   -ft    -fillTransparency     Double     Controls the transparency of the fill shape.\n";
+		strHelp += "   -dsm   -drawSolverMode       Bool       Whether or not you want to display te fk / ik mode.\n";
+		strHelp += "   -smp   -solverModePosition   Double3    Local Position of the fk / ik mode.\n";
+		strHelp += "   -iad   -hasDynamicAttributes Bool       Forces redraw of the ctrl shape in the viewport, use for dynamic attributes like polevectors or fk/ik state display\n";
 		strHelp += "   -fw    -lineWidth            Double     Controls the line width of the outline.\n";
 		strHelp += "   -cl    -color                String     Viewport display color of the controller: 'lightyellow' 'yellow' 'lightorange' 'orange' 'lightblue' 'blue' 'magenta' 'green'.\n";
-		strHelp += "   -lsa   -lockShapeAttributes  Bool       Locks all the shpae attributes on the shape node after creation.\n";
+		strHelp += "   -lsa   -lockShapeAttributes  Bool       Locks all the shpae attributes node after creation.\n";
 		strHelp += "   -hop   -hideOnPlayback       Bool       Wheter or not to hide the ctrl shapes on playback.\n";
 		strHelp += "   -h     -help                 N/A        Display this text.\n";
 		MGlobal::displayInfo(strHelp);
@@ -243,35 +246,35 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 			indxShape = 0;
 		}
 	}
-	// Fill Shape Flag
-	if (argData.isFlagSet(fillShapeFlagShort)) {
-		bFillShape = argData.flagArgumentBool(fillShapeFlagShort, 0, &status);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-	}
+	// // Fill Shape Flag
+	// if (argData.isFlagSet(fillShapeFlagShort)) {
+	// 	bFillShape = argData.flagArgumentBool(fillShapeFlagShort, 0, &status);
+	// 	CHECK_MSTATUS_AND_RETURN_IT(status);
+	// }
 	// Draw Line Flag
 	if (argData.isFlagSet(drawLineFlagShort)) {
 		bDrawLine = argData.flagArgumentBool(drawLineFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
-	// Draw Fk Ik State Flag
-	if (argData.isFlagSet(drawFkIkStateFlagShort)) {
-		bDrawFkIkState = argData.flagArgumentBool(drawFkIkStateFlagShort, 0, &status);
+	// Draw Solver Mode Flag
+	if (argData.isFlagSet(drawSolverModeFlagShort)) {
+		draw_solver_mode = argData.flagArgumentBool(drawSolverModeFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
-	// Fk Ik State Position Flag
-	if (argData.isFlagSet(fkIkStatePositionFlagShort)) {
-		fkIkStatePosition.x = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 0, &status);
+	// Solver Mode Position Flag
+	if (argData.isFlagSet(solverModePositionFlagShort)) {
+		solverModePosition.x = argData.flagArgumentDouble(solverModePositionFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
-		fkIkStatePosition.y = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 1, &status);
+		solverModePosition.y = argData.flagArgumentDouble(solverModePositionFlagShort, 1, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
-		fkIkStatePosition.z = argData.flagArgumentDouble(fkIkStatePositionFlagShort, 2, &status);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-	}
-	// Fill Transparency Flag
-	if (argData.isFlagSet(fillTransparencyFlagShort)) {
-		fillTransparency = argData.flagArgumentDouble(fillTransparencyFlagShort, 0, &status);
+		solverModePosition.z = argData.flagArgumentDouble(solverModePositionFlagShort, 2, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
+	// // Fill Transparency Flag
+	// if (argData.isFlagSet(fillTransparencyFlagShort)) {
+	// 	fillTransparency = argData.flagArgumentDouble(fillTransparencyFlagShort, 0, &status);
+	// 	CHECK_MSTATUS_AND_RETURN_IT(status);
+	// }
 	// Line Width Flag
 	if (argData.isFlagSet(lineWidthFlagShort)) {
 		lineWidth = argData.flagArgumentDouble(lineWidthFlagShort, 0, &status);
@@ -309,10 +312,14 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		bHideOnPlayback = argData.flagArgumentBool(hideOnPlaybackFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
+	// Is Always Dirty Flag
+	if (argData.isFlagSet(hasDynamicAttributesFlagShort)) {
+		has_dynamic_attributes = argData.flagArgumentBool(hasDynamicAttributesFlagShort, 0, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
 
 	return MS::kSuccess;
 }
-
 
 
 MStatus CtrlCommand::doIt(const MArgList& argList) {
@@ -339,16 +346,11 @@ MStatus CtrlCommand::doIt(const MArgList& argList) {
 
 	// Command create mode
 	if (command == kCommandCreate) {
-		objThisTransform = modDag.createNode("transform", MObject::kNullObj);
-		objThisShape = modDag.createNode(Ctrl::typeName, objThisTransform);
+		objThisTransform = modDag.createNode(CtrlNode::type_name, MObject::kNullObj);
 		// If __name equals to "rigController" rename only the transform node as the shape node will be
 		// renamed in the rigController.RigController::postConstructor method.
-		if (name == Ctrl::typeName)	{
-			modDag.renameNode(objThisTransform, name);
-		}	else {
-			modDag.renameNode(objThisTransform, name);
-			modDag.renameNode(objThisShape, name + "Shape");
-		}
+		if (name != CtrlNode::type_name) {modDag.renameNode(objThisTransform, name);}
+
 		// Parent under the transform node if the selection is not empty and / or parent was specified
 		int numItems = listSelection.length();
 		if (numItems == 1) {
@@ -382,131 +384,133 @@ MStatus CtrlCommand::redoIt() {
 		// We need to init the MFnTransform with a dag path, mobjects do not work with transformations
 		// even if the object has a MFn::kTransform
 		MDagPath::getAPathTo(objThisTransform, dpThisTransform);
-		MFnTransform transformFn(dpThisTransform);
-		MFnDependencyNode shapeFn(objThisShape);
+		MFnTransform fn_transform(dpThisTransform);
+		// MFnDependencyNode fn_transform(objThisShape);
 
 		status = modDag.doIt();
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 
-		{	// TRANSFORM NODE
-			if (bTranslateTo == true) {
-				transformFn.setTranslation(posTarget, MSpace::kWorld);
-			}
-			if (bRotateTo == true) {
-				transformFn.setRotation(rotTarget, MSpace::kWorld);
-			}
+		// TRANSFORM NODE
+		if (bTranslateTo == true) {fn_transform.setTranslation(posTarget, MSpace::kWorld);}
+		if (bRotateTo == true) {fn_transform.setRotation(rotTarget, MSpace::kWorld);}
+
+		// SHAPE PLUGS
+		// Sets the plugs values based on the flag arguments
+		MPlug plugShape = fn_transform.findPlug("shape", false);
+		plugShape.setShort(indxShape);
+
+		// Sets local position values
+		MPlug plugLocalPosition = fn_transform.findPlug("localPosition", false);
+		MPlug plugLocalPositionX = fn_transform.findPlug("localPositionX", false);
+		plugLocalPositionX.setValue(localPosition.x);
+		MPlug plugLocalPositionY = fn_transform.findPlug("localPositionY", false);
+		plugLocalPositionY.setValue(localPosition.y);
+		MPlug plugLocalPositionZ = fn_transform.findPlug("localPositionZ", false);
+		plugLocalPositionZ.setValue(localPosition.z);
+
+		// Sets local rotate values
+		MPlug plugLocalRotate = fn_transform.findPlug("localRotate", false);
+		MPlug plugLocalRotateX = fn_transform.findPlug("localRotateX", false);
+		plugLocalRotateX.setValue(radians(localRotate.x));
+		MPlug plugLocalRotateY = fn_transform.findPlug("localRotateY", false);
+		plugLocalRotateY.setValue(radians(localRotate.y));
+		MPlug plugLocalRotateZ = fn_transform.findPlug("localRotateZ", false);
+		plugLocalRotateZ.setValue(radians(localRotate.z));
+
+		// Sets local scale values
+		MPlug plugLocalScale = fn_transform.findPlug("localScale", false);
+		MPlug plugLocalScaleX = fn_transform.findPlug("localScaleX", false);
+		plugLocalScaleX.setValue(localScale.x);
+		MPlug plugLocalScaleY = fn_transform.findPlug("localScaleY", false);
+		plugLocalScaleY.setValue(localScale.y);
+		MPlug plugLocalScaleZ = fn_transform.findPlug("localScaleZ", false);
+		plugLocalScaleZ.setValue(localScale.z);
+
+		// Visual flags
+
+		// MPlug plugFillShape = fn_transform.findPlug("fillShape", false);
+		// plugFillShape.setValue(bFillShape);
+
+		MPlug plugDrawLine = fn_transform.findPlug("drawLine", false);
+		plugDrawLine.setValue(bDrawLine);
+
+		// Fk Ik State
+		MPlug plug_draw_solver_mode = fn_transform.findPlug("drawSolverMode", false);
+		plug_draw_solver_mode.setValue(draw_solver_mode);
+		MPlug plug_solver_mode_size = fn_transform.findPlug("solverModeSize", false);
+		// plugDrawFkIkStateSize.setValue(draw_solver_mode);
+		MPlug plug_solver_mode_position = fn_transform.findPlug("solverModePosition", false);
+		MPlug plug_solver_mode_positionX = fn_transform.findPlug("solverModePositionX", false);
+		plug_solver_mode_positionX.setValue(solverModePosition.x);
+		MPlug plug_solver_mode_positionY = fn_transform.findPlug("solverModePositionY", false);
+		plug_solver_mode_positionY.setValue(solverModePosition.y);
+		MPlug plug_solver_mode_positionZ = fn_transform.findPlug("solverModePositionZ", false);
+		plug_solver_mode_positionZ.setValue(solverModePosition.z);
+
+		MPlug plugInFkIk = fn_transform.findPlug("fkIk", false);
+
+		MPlug plugLineWidth = fn_transform.findPlug("lineWidth", false);
+		plugLineWidth.setValue(lineWidth);
+
+		// Set color
+		MPlug plugOverrideColorR = fn_transform.findPlug("overrideColorR", false);
+		plugOverrideColorR.setValue(colorOverride.r);
+		MPlug plugOverrideColorG = fn_transform.findPlug("overrideColorG", false);
+		plugOverrideColorG.setValue(colorOverride.g);
+		MPlug plugOverrideColorB = fn_transform.findPlug("overrideColorB", false);
+		plugOverrideColorB.setValue(colorOverride.b);
+	
+
+		MPlug plug_has_dynamic_attributes = fn_transform.findPlug("hasDynamicAttributes", false);
+		plug_has_dynamic_attributes.setValue(has_dynamic_attributes);
+
+		// Lock shape attributes
+		if (bLockShapeAttributes == true) {
+			// optimize with a for loop and MPlugArray
+			// Local position
+			// LMAttribute::lockAndHideAttr(plugScale);
+			// MPlug plugScale = fn_transform.findPlug("scale", false);
+			// plugScale.setLocked(true);
+	
+			LMAttribute::lockAndHideAttr(plugLocalPosition);
+			LMAttribute::lockAndHideAttr(plugLocalPositionX);
+			LMAttribute::lockAndHideAttr(plugLocalPositionY);
+			LMAttribute::lockAndHideAttr(plugLocalPositionZ);
+			// Local rotate
+			LMAttribute::lockAndHideAttr(plugLocalRotate);
+			LMAttribute::lockAndHideAttr(plugLocalRotateX);
+			LMAttribute::lockAndHideAttr(plugLocalRotateY);
+			LMAttribute::lockAndHideAttr(plugLocalRotateZ);
+			// Local scale
+			LMAttribute::lockAndHideAttr(plugLocalScale);
+			LMAttribute::lockAndHideAttr(plugLocalScaleX);
+			LMAttribute::lockAndHideAttr(plugLocalScaleY);
+			LMAttribute::lockAndHideAttr(plugLocalScaleZ);
+			// Shape attrs
+			LMAttribute::lockAndHideAttr(plugShape);
+			LMAttribute::lockAndHideAttr(plugDrawLine);
+
+			LMAttribute::lockAndHideAttr(plug_draw_solver_mode);
+			LMAttribute::lockAndHideAttr(plug_solver_mode_size);
+
+			LMAttribute::lockAndHideAttr(plug_solver_mode_position);
+			LMAttribute::lockAndHideAttr(plug_solver_mode_positionX);
+			LMAttribute::lockAndHideAttr(plug_solver_mode_positionY);
+			LMAttribute::lockAndHideAttr(plug_solver_mode_positionZ);
+
+			LMAttribute::lockAndHideAttr(plugLineWidth);
+			LMAttribute::lockAndHideAttr(plugInFkIk);
+
+			LMAttribute::lockAndHideAttr(plug_has_dynamic_attributes);
 		}
 
-		{ // SHAPE NODE
-			// Sets the plugs values based on the flag arguments
-			MPlug plugShape = shapeFn.findPlug("shape", false);
-			plugShape.setShort(indxShape);
-
-			// Sets local position values
-			MPlug plugLocalPosition = shapeFn.findPlug("localPosition", false);
-			MPlug plugLocalPositionX = shapeFn.findPlug("localPositionX", false);
-			plugLocalPositionX.setValue(localPosition.x);
-			MPlug plugLocalPositionY = shapeFn.findPlug("localPositionY", false);
-			plugLocalPositionY.setValue(localPosition.y);
-			MPlug plugLocalPositionZ = shapeFn.findPlug("localPositionZ", false);
-			plugLocalPositionZ.setValue(localPosition.z);
-
-			// Sets local rotate values
-			MPlug plugLocalRotate = shapeFn.findPlug("localRotate", false);
-			MPlug plugLocalRotateX = shapeFn.findPlug("localRotateX", false);
-			plugLocalRotateX.setValue(radians(localRotate.x));
-			MPlug plugLocalRotateY = shapeFn.findPlug("localRotateY", false);
-			plugLocalRotateY.setValue(radians(localRotate.y));
-			MPlug plugLocalRotateZ = shapeFn.findPlug("localRotateZ", false);
-			plugLocalRotateZ.setValue(radians(localRotate.z));
-
-			// Sets local scale values
-			MPlug plugLocalScale = shapeFn.findPlug("localScale", false);
-			MPlug plugLocalScaleX = shapeFn.findPlug("localScaleX", false);
-			plugLocalScaleX.setValue(localScale.x);
-			MPlug plugLocalScaleY = shapeFn.findPlug("localScaleY", false);
-			plugLocalScaleY.setValue(localScale.y);
-			MPlug plugLocalScaleZ = shapeFn.findPlug("localScaleZ", false);
-			plugLocalScaleZ.setValue(localScale.z);
-
-			// Visual flags
-			MPlug plugFillShape = shapeFn.findPlug("fillShape", false);
-			plugFillShape.setValue(bFillShape);
-
-			MPlug plugDrawLine = shapeFn.findPlug("drawLine", false);
-			plugDrawLine.setValue(bDrawLine);
-
-			// Fk Ik State
-			MPlug plugDrawFkIkState = shapeFn.findPlug("drawFkIkState", false);
-			plugDrawFkIkState.setValue(bDrawFkIkState);
-			MPlug plugFkIkStatePosition = shapeFn.findPlug("fkIkStatePosition", false);
-			MPlug plugFkIkStatePositionX = shapeFn.findPlug("fkIkStatePositionX", false);
-			plugFkIkStatePositionX.setValue(fkIkStatePosition.x);
-			MPlug plugFkIkStatePositionY = shapeFn.findPlug("fkIkStatePositionY", false);
-			plugFkIkStatePositionY.setValue(fkIkStatePosition.y);
-			MPlug plugFkIkStatePositionZ = shapeFn.findPlug("fkIkStatePositionZ", false);
-			plugFkIkStatePositionZ.setValue(fkIkStatePosition.z);
-
-			MPlug plugInFkIk = shapeFn.findPlug("fkIk", false);
-
-			MPlug plugFillTransparency = shapeFn.findPlug("fillTransparency", false);
-			plugFillTransparency.setValue(fillTransparency);
-
-			MPlug plugLineWidth = shapeFn.findPlug("lineWidth", false);
-			plugLineWidth.setValue(lineWidth);
-
-			// Set color
-			MPlug plugOverrideColorR = shapeFn.findPlug("overrideColorR", false);
-			plugOverrideColorR.setValue(colorOverride.r);
-			MPlug plugOverrideColorG = shapeFn.findPlug("overrideColorG", false);
-			plugOverrideColorG.setValue(colorOverride.g);
-			MPlug plugOverrideColorB = shapeFn.findPlug("overrideColorB", false);
-			plugOverrideColorB.setValue(colorOverride.b);
-
-			// Lock shape attributes
-			if (bLockShapeAttributes == true) {
-				// optimize with a for loop and MPlugArray
-				// Local position
-				LMAttribute::lockAndHideAttr(plugLocalPosition);
-				LMAttribute::lockAndHideAttr(plugLocalPositionX);
-				LMAttribute::lockAndHideAttr(plugLocalPositionY);
-				LMAttribute::lockAndHideAttr(plugLocalPositionZ);
-				// Local rotate
-				LMAttribute::lockAndHideAttr(plugLocalRotate);
-				LMAttribute::lockAndHideAttr(plugLocalRotateX);
-				LMAttribute::lockAndHideAttr(plugLocalRotateY);
-				LMAttribute::lockAndHideAttr(plugLocalRotateZ);
-				// Local scale
-				LMAttribute::lockAndHideAttr(plugLocalScale);
-				LMAttribute::lockAndHideAttr(plugLocalScaleX);
-				LMAttribute::lockAndHideAttr(plugLocalScaleY);
-				LMAttribute::lockAndHideAttr(plugLocalScaleZ);
-				// Shape attrs
-				LMAttribute::lockAndHideAttr(plugShape);
-				LMAttribute::lockAndHideAttr(plugFillShape);
-				LMAttribute::lockAndHideAttr(plugDrawLine);
-
-				LMAttribute::lockAndHideAttr(plugDrawFkIkState);
-
-				LMAttribute::lockAndHideAttr(plugFkIkStatePosition);
-				LMAttribute::lockAndHideAttr(plugFkIkStatePositionX);
-				LMAttribute::lockAndHideAttr(plugFkIkStatePositionY);
-				LMAttribute::lockAndHideAttr(plugFkIkStatePositionZ);
-
-				LMAttribute::lockAndHideAttr(plugFillTransparency);
-				LMAttribute::lockAndHideAttr(plugLineWidth);
-
-				LMAttribute::lockAndHideAttr(plugInFkIk);
-			}
-		}
 		// Set hide on playback
-		MPlug plugHideOnPlayback = shapeFn.findPlug("hideOnPlayback", false);
-		plugHideOnPlayback.setValue(bHideOnPlayback);
+		fn_transform.findPlug("hideOnPlayback", false).setValue(bHideOnPlayback);
 
 		// Sets command's output result in mel / python
 		clearResult();
-		appendToResult(transformFn.name());
-		appendToResult(shapeFn.name());
+		setResult(fn_transform.name());
+		// appendToResult(fn_transform.name());
 	}
 
 	return MS::kSuccess;

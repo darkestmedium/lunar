@@ -13,7 +13,7 @@
 #include <maya/MMatrix.h>
 #include <maya/MPlug.h>
 #include <maya/MPoint.h>
-#include <maya/MDataHandle.h>
+#include <maya/MDataHandle.h>w
 #include <maya/MAnimControl.h>
 #include <maya/MDrawRegistry.h>
 #include <maya/MStringArray.h>
@@ -47,7 +47,7 @@
 
 
 // Node
-class MetaDataNode : public MPxLocatorNode {
+class DisplayNode : public MPxNode {
 public:
 	// Node Data
 	static const MString typeName;
@@ -55,78 +55,78 @@ public:
 	static const MString drawDbClassification;
 	static const MString drawRegistrationId;
 
-	// Node's Input Attributes
-	static MObject attrInMetaData;
-	static MObject attrInText;
-	static MObject attrInDisplayInViewport;
+	// // Node's Input Attributes
+	// static MObject attrInMetaData;
+	// static MObject attrInText;
+	// static MObject attrInDisplayInViewport;
 
-	static MObject AttrTextPositionX;
-	static MObject AttrTextPositionY;
-	static MObject AttrTextSize;
-	static MObject AttrTextColor;
-	// Nodes's Output Attributes
-	static MObject AttrOutUpdate;
+	// static MObject AttrTextPositionX;
+	// static MObject AttrTextPositionY;
+	// static MObject AttrTextSize;
+	// static MObject AttrTextColor;
+	// // Nodes's Output Attributes
+	// static MObject AttrOutUpdate;
 
-	MObject SelfObj;
+	// MObject SelfObj;
 
 	// Constructors
-	MetaDataNode()
-		: MPxLocatorNode()
+	DisplayNode()
+		: MPxNode()
 	{};
 	// Destructors
-	~MetaDataNode() override {};
+	~DisplayNode() override {};
 
 	// Public methods - overrides
-	static void* creator() {return new MetaDataNode();}
-	static MStatus initialize();
-	void getCacheSetup(
-		const MEvaluationNode& evalNode,
-		MNodeCacheDisablingInfo& disablingInfo,
-		MNodeCacheSetupInfo& cacheSetupInfo,
-		MObjectArray& monitoredAttributes
-	) const override;
-	void postConstructor() override;
-	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
+	static void* creator() {return new DisplayNode();}
+	static MStatus initialize() {return MS::kSuccess;};
+	// void getCacheSetup(
+	// 	const MEvaluationNode& evalNode,
+	// 	MNodeCacheDisablingInfo& disablingInfo,
+	// 	MNodeCacheSetupInfo& cacheSetupInfo,
+	// 	MObjectArray& monitoredAttributes
+	// ) const override;
+	// void postConstructor() override;
+	// SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
 };
 
 
 
 // User data
-class MetaDataNodeData : public MUserData {
+class DisplayNodeData : public MUserData {
 public:
 
 	// MPlug arrayMetaData;
-	unsigned int countMetaData;
+	// unsigned int countMetaData;
 	
-	std::vector<MString> vectorText;
+	// std::vector<MString> vectorText;
 
-	MPoint TextPosition;
-	int TextSize;
-	MColor TextColor;
+	// MPoint TextPosition;
+	// int TextSize;
+	// MColor TextColor;
 
 	// Constructors
-	MetaDataNodeData() 
+	DisplayNodeData() 
 		: MUserData()
 	{};  // Don't delete after draw
 	// Destructor
-	virtual ~MetaDataNodeData() override {};
+	virtual ~DisplayNodeData() override {};
 
-	void getText(const MObject& obj);
+	// void getText(const MObject& obj);
 };
 
 
 
 // Draw override
-class MetaDataNodeDrawOverride : public MHWRender::MPxDrawOverride {
+class DisplayNodeDrawOverride : public MHWRender::MPxDrawOverride {
 public:
 	// Constructors
-	MetaDataNodeDrawOverride(const MObject& Object)
+	DisplayNodeDrawOverride(const MObject& Object)
 		: MHWRender::MPxDrawOverride(Object, nullptr)
 	{};
 	// Destructors
-	virtual ~MetaDataNodeDrawOverride() override {};
+	virtual ~DisplayNodeDrawOverride() override {};
 
-	static MHWRender::MPxDrawOverride* creator(const MObject& Object) {return new MetaDataNodeDrawOverride(Object);}
+	static MHWRender::MPxDrawOverride* creator(const MObject& Object) {return new DisplayNodeDrawOverride(Object);}
 	virtual MHWRender::DrawAPI supportedDrawAPIs() const override {return MHWRender::kAllDevices;}
 	virtual bool hasUIDrawables() const override {return true;}
 	virtual void addUIDrawables(
@@ -140,5 +140,5 @@ public:
 		const MDagPath& cameraPath,
 		const MHWRender::MFrameContext& frameContext,
 		MUserData* oldData
-	) override;
+	) override ;
 };
