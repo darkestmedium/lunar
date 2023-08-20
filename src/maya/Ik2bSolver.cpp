@@ -285,7 +285,7 @@ bool Ik2bSolver::solveIk() {
 	getIkTransforms();
 
 	LMSolve::twoBoneIk(posIkStart, posIkMid, posIkEnd, posIkHandle, posIkPv, twist, softness, bIsPvConnected, quatIkStart, quatIkMid);
-	
+
 	// Sync the ik chain
 	fnOutStart.setRotation(quatIkStart, MSpace::kWorld);
 	fnOutMid.setRotation(quatIkMid, MSpace::kWorld);
@@ -294,7 +294,6 @@ bool Ik2bSolver::solveIk() {
 	fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
 	fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
 	fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
-
 	// Sync the ik chain
 	fnIkStart.setRotation(quatIkStart, MSpace::kWorld);
 	fnIkMid.setRotation(quatIkMid, MSpace::kWorld);
@@ -328,7 +327,6 @@ void Ik2bSolver::solveFkIk() {
 
 	// Need to blend in world space
 	blendFkIk();
-
 	// Apply the blended rotations to out ctrls
 	fnOutStart.setRotation(quatOutStart, MSpace::kWorld);
 	fnOutMid.setRotation(quatOutMid, MSpace::kWorld);
@@ -337,7 +335,6 @@ void Ik2bSolver::solveFkIk() {
 	fnOutStart.getRotation(quatOutStart, MSpace::kTransform);
 	fnOutMid.getRotation(quatOutMid, MSpace::kTransform);
 	fnOutEnd.getRotation(quatOutEnd, MSpace::kTransform);
-
 	// Sync the ik chain
 	fnIkStart.setRotation(quatIkStart, MSpace::kWorld);
 	fnIkMid.setRotation(quatIkMid, MSpace::kWorld);
@@ -425,12 +422,8 @@ MStatus Ik2bSolver::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	*/
 	MStatus status;
 
-	// if (plug != attrOutStart || plug != attrOutMid || plug != attrOutEnd) {return MS::kUnknownParameter;}
-
 	CHECK_MSTATUS_AND_RETURN_IT(parseDataBlock(dataBlock));
-
 	CHECK_MSTATUS_AND_RETURN_IT(solveLimb());
-
 	CHECK_MSTATUS_AND_RETURN_IT(updateOutput(plug, dataBlock));
 
 	return MS::kSuccess;
@@ -469,6 +462,7 @@ MStatus Ik2bSolver::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray
 		affectedPlugs.append(MPlug(objSelf, attrOutFkVisibility));
 		affectedPlugs.append(MPlug(objSelf, attrOutIkVisibility));
 	}
+
 	return MS::kSuccess;
 }
 

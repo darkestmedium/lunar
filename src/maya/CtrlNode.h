@@ -30,9 +30,11 @@
 #include <maya/MPxLocatorNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MDagMessage.h>
-#include <maya/MEvaluationManager.h>
+// #include <maya/MEvaluationManager.h>
 #include <maya/MEvaluationNode.h>
 #include <maya/MEventMessage.h>
+#include <maya/MEvaluationManager.h>
+#include <maya/MEvaluationNode.h>
 
 // Function sets
 #include <maya/MFnEnumAttribute.h>
@@ -59,7 +61,6 @@
 
 
 
-
 //-------------------------------------------------------------------------------------------------
 //
 // Ctrl Transform Node definition
@@ -68,6 +69,53 @@
 
 class CtrlNode : public MPxTransform {
 	/* Clean transform instance with a custom type_name. */
+
+public:
+	// Controls the size of the footprint geometry
+	static Attribute 	attr_in_line_matrix;
+	static Attribute 	attr_out_line_matrix;
+	// static  MObject         inputSize;			// 'sz'		Input	Distance
+	// static  MObject         outputSize;			// 'osz'	Output	Distance	: outputSize		= [](inputSize) -> {return inputSize;}
+
+	// Add your renderer-required-attributes here
+	// static MObject          inputXX;
+	// static MObject          outputXX;
+
+	// Utility attribute for viewport
+	// [[maya::storable(false)]] [[maya::connectable(false)]] [[maya::hidden]]
+	static	MObject			geometryChanging;	// 'gcg'		Output	Bool		: geometryChanging	= [](inputSize) -> {return true;} [*] check notes
+
+	// Attribute dependencies:
+	//		inputSize	-> outputSize
+	//		inputSize	-> geometryChanging 
+	// 
+	//		* inputXX	-> outputXX
+	//		* inputXX	-> geometryChanging (if XX affect the geometry)
+	// 
+	// "Logical" dependencies (Technique 1):
+	//		outputSize, geometryChanging -> [renderer]
+	//		* outputXX -> [renderer]
+	// 
+	// Additional note:
+	//
+	// Q :	Why is there outputSize ? (Technique 1)
+	// A :	Input attributes, like inputSize cannot be cached by Evaluation Cache
+	//		Check FootPrintNode::setDependentsDirty() for more details about this work-around
+	//
+	// Q :	'outputXX' is not updating in EM mode? (Technique 1)
+	// A :	The virtual connections to [renderer] are not understand by EM.
+	//		Add this connection to FootPrintNode::setDependentsDirty().
+	//
+	// Q :	"geometryChanging" always returns 'true' ? (Technique 1.1)
+	// A :	"geometryChanging" is a "dirty flag attribute" tracking if the node needs geometry-update
+	//		If anything affecting it is changed, it will re-evaluate and return 'true' 
+	//		This will notify the viewport that the geometry is changing, 
+	//		Then, it will be reset to 'false' when geometry is updated (populateGeometry() is called)
+	//		This allows us to track the dirty status without override setDependentsDirty() or postEvaluation()
+	//		* Note, viewport will not reset its value in background evaluation (VP2 caching)
+	//		  Check requiresGeometryUpdate(), populateGeometry() for detail
+	//
+
 public:
 	// Class attributes
 	static const MString type_name;
@@ -85,7 +133,7 @@ public:
 	static MObject attr_shape_indx;
 
 	static MObject attrInDrawLine;
-	static Attribute attrInDrawLineTo;
+	// static Attribute attr_in_line_matrix;
 
 	static MObject attr_draw_solver_mode;
 	static MObject attr_solver_mode_size;
@@ -97,6 +145,7 @@ public:
 
 	// Use only on dynamic ctrl like fk / ik blending or pole vectors
 	bool has_dynamic_attributes;
+	bool geo_updated;
 
 	MObject self_object;
 	MDagPath self_path;
@@ -105,6 +154,7 @@ public:
 	CtrlNode()
 		: MPxTransform()
 		, has_dynamic_attributes(false)
+		// , geo_updated(false)
 	{};
 	// Destructors
 	virtual ~CtrlNode() override {};
@@ -112,17 +162,18 @@ public:
 	// Class Methods
 	static void * 	creator() {return new CtrlNode();};
 	static MStatus	initialize();
-	virtual void postConstructor() override;
-	
-	MStatus setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
-	void getCacheSetup(const MEvaluationNode& evalNode,	MNodeCacheDisablingInfo& disablingInfo,	MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
-	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
-	
-	bool isBounded() const override {return true;};
+	virtual void 		postConstructor() override;
+
+	MStatus 				setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
+	MStatus   			compute(const MPlug& plug, MDataBlock& dataBlock) override;
+	MStatus 				postEvaluation(const  MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType) override; 
+
+	void 					  getCacheSetup(const MEvaluationNode& evalNode,	MNodeCacheDisablingInfo& disablingInfo,	MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
+	SchedulingType  schedulingType() const override {return SchedulingType::kParallel;}
+
+	bool 						isBounded() const override {return true;};
 	virtual MBoundingBox boundingBox() const override;
 
-private:
-	// CtrlDrawOverride*	ptrCtrlDrawOverride;				// The node we are rendering
 };
 
 
@@ -136,12 +187,12 @@ private:
 
 class CtrlUserData : public MUserData {
 public:
+	bool					redraw;
 	MMatrix 			mat_local;
 	MBoundingBox 	bbox;
 	MMatrix 			mat_pv;
 	MPoint 				pos_draw_pv_to;
 	
-
 	short 				shape_indx;
 	unsigned int 	prio_depth;
 	MPointArray 	list_vertecies;
@@ -180,7 +231,6 @@ public:
 
 class CtrlDrawOverride : public MHWRender::MPxDrawOverride {
 private:
-
 
 public:
 	// Destructor
@@ -229,7 +279,7 @@ private:
 		ptrCtrlNode = status ? dynamic_cast<CtrlNode*>(fn_node.userNode()) : NULL;
 	};
 
-	CtrlNode*				ptrCtrlNode;				// The node we are rendering
+	CtrlNode*		ptrCtrlNode;				// The node we are rendering
 	MCallbackId fModelEditorChangedCbId;
 	static void OnModelEditorChanged(void *clientData);
 };

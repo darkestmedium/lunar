@@ -10,6 +10,14 @@
 //
 //-------------------------------------------------------------------------------------------------
 
+
+// MObject CtrlNode::attr_out_line_matrix	= {};
+// MObject CtrlNode::inputSize        		= {};
+MObject CtrlNode::geometryChanging 				= {};
+
+
+
+
 // Class attributes
 const MString CtrlNode::type_name 	= "ctrl";
 const MTypeId CtrlNode::type_id 		= 0x900000;
@@ -24,7 +32,9 @@ MObject CtrlNode::attr_shape_indx;
 MObject CtrlNode::attr_line_width;
 
 MObject CtrlNode::attrInDrawLine;
-Attribute CtrlNode::attrInDrawLineTo;
+Attribute CtrlNode::attr_in_line_matrix;
+Attribute CtrlNode::attr_out_line_matrix;
+
 MObject CtrlNode::attr_draw_solver_mode;
 MObject CtrlNode::attr_solver_mode_size;
 MObject CtrlNode::attr_solver_mode_positionX, CtrlNode::attr_solver_mode_positionY, CtrlNode::attr_solver_mode_positionZ, CtrlNode::attr_solver_mode_position;
@@ -34,6 +44,7 @@ MObject CtrlNode::attr_has_dynamic_attributes;
 
 
 MStatus CtrlNode::initialize() {
+	/* */
 	MFnUnitAttribute fn_unit;
 	MFnNumericAttribute fn_num;
 	MFnEnumAttribute fn_enum;
@@ -93,7 +104,8 @@ MStatus CtrlNode::initialize() {
 	fn_num.setKeyable(false);
 	fn_num.setChannelBox(true);
 
-	createAttribute(attrInDrawLineTo, "drawLineTo", DefaultValue<MMatrix>());
+	createAttribute(attr_in_line_matrix, "drawLineTo", DefaultValue<MMatrix>());
+	createAttribute(attr_out_line_matrix, "drawLineToOut", DefaultValue<MMatrix>());
 
 	attr_draw_solver_mode = fn_num.create("drawSolverMode", "dsm", MFnNumericData::kBoolean, false);
 	fn_num.setStorable(true);
@@ -128,17 +140,13 @@ MStatus CtrlNode::initialize() {
 	fn_num.setKeyable(false);
 	fn_num.setChannelBox(true);
 
-	// addAttribute(local_position);
-	// addAttribute(local_rotate);
-	// addAttribute(local_scale);
-	// addAttribute(attr_shape_indx);
-	// addAttribute(attr_line_width);
-
 	// Add attributes
 	addAttributes(
 		local_position, local_rotate, local_scale,
 		attr_shape_indx, attr_line_width,
-		attrInDrawLine, attrInDrawLineTo,
+		attrInDrawLine, 
+		attr_in_line_matrix,
+		attr_out_line_matrix,
 		attr_draw_solver_mode,
 		attr_solver_mode_size,
 		attr_solver_mode_position,
@@ -146,13 +154,32 @@ MStatus CtrlNode::initialize() {
 		attr_has_dynamic_attributes
 	);
 
-	attributeAffects(attrInDrawLineTo, attr_has_dynamic_attributes);
+	MFnUnitAttribute unitFn;
+	MStatus			 stat;
+
+	// attr_out_line_matrix = unitFn.create("outputSize", "osz", MFnUnitAttribute::kDistance);
+	// unitFn.setDefault(1.0);
+	// unitFn.setWritable(false);
+	// stat = addAttribute(outputSize);
+	// inputSize = unitFn.create("size", "sz", MFnUnitAttribute::kDistance);
+	// unitFn.setDefault(1.0);
+	// stat = addAttribute(inputSize);
+
+	MFnNumericAttribute attrFn;
+	geometryChanging = attrFn.create("geometryChanging", "gcg", MFnNumericData::kBoolean, true);
+	attrFn.setStorable(false);
+	attrFn.setHidden(true);
+	attrFn.setConnectable(false);
+	stat = addAttribute(geometryChanging);
+
+	attributeAffects(CtrlNode::attr_has_dynamic_attributes, CtrlNode::geometryChanging);
+	attributeAffects(CtrlNode::attr_in_line_matrix, CtrlNode::geometryChanging);
 
 	return MS::kSuccess;
 }
 
 
-MStatus CtrlNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) {
+MStatus CtrlNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlugs) {
 	/* Sets the relation between attributes and marks the specified plugs dirty.
 
 	Args:
@@ -161,38 +188,54 @@ MStatus CtrlNode::setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& 
 			to this list.
 
 	*/
-	has_dynamic_attributes = MPlug(self_object, CtrlNode::attr_has_dynamic_attributes).asBool();
-	if (has_dynamic_attributes) {
-		MHWRender::MRenderer::setGeometryDrawDirty(self_object);
-	}
-	else if(plugBeingDirtied == local_position
-		|| plugBeingDirtied == local_positionX
-		|| plugBeingDirtied == local_positionY
-		|| plugBeingDirtied == local_positionZ
-		|| plugBeingDirtied == local_rotate
-		|| plugBeingDirtied == local_rotateX
-		|| plugBeingDirtied == local_rotateY
-		|| plugBeingDirtied == local_rotateZ
-		|| plugBeingDirtied == local_scale
-		|| plugBeingDirtied == local_scaleX
-		|| plugBeingDirtied == local_scaleY
-		|| plugBeingDirtied == local_scaleZ
-		|| plugBeingDirtied == attr_shape_indx
-		|| plugBeingDirtied == attr_line_width
-		|| plugBeingDirtied == attrInDrawLine
-		|| plugBeingDirtied == attrInDrawLineTo
-		|| plugBeingDirtied == attr_draw_solver_mode
-		|| plugBeingDirtied == attr_solver_mode_size
-		|| plugBeingDirtied == attr_solver_mode_position
-		|| plugBeingDirtied == attr_solver_mode_positionX
-		|| plugBeingDirtied == attr_solver_mode_positionY
-		|| plugBeingDirtied == attr_solver_mode_positionZ
-		|| plugBeingDirtied == attrInFkIk
-		)	{
-			MHWRender::MRenderer::setGeometryDrawDirty(self_object);
+
+	has_dynamic_attributes = MPlug(self_object, attr_has_dynamic_attributes).asBool();
+	if (has_dynamic_attributes) MHWRender::MRenderer::setGeometryDrawDirty(self_object);
+
+	if (MEvaluationManager::graphConstructionActive()) {
+		if (plug == attr_in_line_matrix) {
+			affectedPlugs.append(MPlug(self_object, geometryChanging));
 		}
+	}
 
 	return MS::kSuccess;
+}
+
+
+MStatus CtrlNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
+	// Check documentation in "class FootPrintNode" for descriptions about the attributes here
+
+	if (plug == geometryChanging) {
+		MDataHandle boolHandle = dataBlock.outputValue(geometryChanging);
+		boolHandle.setBool(true);
+		MHWRender::MRenderer::setGeometryDrawDirty(self_object);
+	}	else {
+		return MS::kUnknownParameter;
+	}
+
+	return MStatus::kSuccess;
+}
+
+
+// Called before this node is evaluated by Evaluation Manager
+MStatus CtrlNode::postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType) {
+	// For cache restoration only
+	// This method is responsible for fixing the 'geometryChanging' flag in cache restore frames
+	// Because in cache store phase,
+	// PopulateGeometry & Viewport-Caching happens before Evaluation-Cache store
+	// The value of 'geometryChanging' will always be set to 'false' (it is already used by render)
+	// Thus, we have to fix the geometryChanging attribute to the correct value 
+	// if (!geo_updated) {MHWRender::MRenderer::setGeometryDrawDirty(self_object);}
+	MStatus status;
+	if (evalType == PostEvaluationEnum::kEvaluatedDirectly && evaluationNode.dirtyPlugExists(geometryChanging, &status) && status) {
+		MDataBlock data = forceCache();
+		MDataHandle boolHandle = data.outputValue(geometryChanging, &status);
+		if (status != MStatus::kSuccess) return status;
+		boolHandle.setBool(true);
+		boolHandle.setClean();
+	}
+
+	return MPxTransform::postEvaluation(context, evaluationNode, evalType);
 }
 
 
@@ -210,7 +253,7 @@ void CtrlNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablin
 		monitoredAttribures (MObjectArray&): Attributes impacting the behavior of this method that will be monitored for change
 
 	*/
-	MPxNode::getCacheSetup(evalNode, disablingInfo, cacheSetupInfo, monitoredAttributes);
+	MPxTransform::getCacheSetup(evalNode, disablingInfo, cacheSetupInfo, monitoredAttributes);
 	assert(!disablingInfo.getCacheDisabled());
 	cacheSetupInfo.setPreference(MNodeCacheSetupInfo::kWantToCacheByDefault, true);
 }
@@ -229,7 +272,6 @@ void CtrlNode::postConstructor() {
 	// LMAttribute::lockAndHideAttr(plug_scale);
 	fn_this.findPlug("shear", false).setLocked(1);
 	fn_this.findPlug("rotateAxis", false).setLocked(1);
-
 	// Set color
 	fn_this.findPlug("overrideEnabled", false).setBool(1);
 	fn_this.findPlug("overrideRGBColors", false).setBool(1);
@@ -243,11 +285,11 @@ void CtrlNode::postConstructor() {
 
 MBoundingBox CtrlNode::boundingBox() const {
 	// Get the size
-	//
 	CtrlUserData data;
 
 	data.get_plugs(self_object);
 	data.get_bbox(self_object, self_path, data.mat_local);
+
 
 	return data.bbox;
 }
@@ -287,7 +329,9 @@ void CtrlUserData::get_plugs(const MObject& object) {
 	shape_indx = MPlug(object, CtrlNode::attr_shape_indx).asShort();
 	solver_mode_size = MPlug(object, CtrlNode::attr_solver_mode_size).asInt();
 
-	mat_pv = MDataHandle(MPlug(object, CtrlNode::attrInDrawLineTo).asMDataHandle()).asMatrix();
+	redraw = MPlug(object, CtrlNode::attr_has_dynamic_attributes).asBool();
+
+	mat_pv = MDataHandle(MPlug(object, CtrlNode::attr_in_line_matrix).asMDataHandle()).asMatrix();
 	pos_draw_pv_to = MPoint(mat_pv[3][0], mat_pv[3][1], mat_pv[3][2]);
 }
 
@@ -405,7 +449,7 @@ void CtrlUserData::get_shape(const MObject& object, const MDagPath& dp_object, M
 		list_lines.append(list_vertecies[7]);
 		list_lines.append(list_vertecies[4]);
 
-	} else if (shape_indx == 1) {	 // Sphere
+	} else if (shape_indx == 1) {	  // Sphere
 		for (int i=0; i<sphereCount; i++) {
 			list_vertecies.append(
 				MPoint(listPointsSphere[i][0], listPointsSphere[i][1], listPointsSphere[i][2]) * matrix
@@ -690,7 +734,7 @@ void CtrlUserData::get_shape(const MObject& object, const MDagPath& dp_object, M
 		list_lines.append(list_vertecies[5]);
 		list_lines.append(list_vertecies[4]);
 
-	} else if (shape_indx == 4) {  // Square
+	} else if (shape_indx == 4) {   // Square
 		for (int i=0; i<squareCount; i++) {
 			list_vertecies.append(
 				MPoint(listPointsSquare[i][0], listPointsSquare[i][1], listPointsSquare[i][2]) * matrix
@@ -705,7 +749,7 @@ void CtrlUserData::get_shape(const MObject& object, const MDagPath& dp_object, M
 		list_lines.append(list_vertecies[3]);
 		list_lines.append(list_vertecies[0]);
 
-	} else if (shape_indx == 5) {  // Circle
+	} else if (shape_indx == 5) {   // Circle
 		for (int i=0; i<circleCount; i++) {
 			list_vertecies.append(
 				MPoint(listPointsCircle[i][0], listPointsCircle[i][1], listPointsCircle[i][2]) * matrix
@@ -735,9 +779,9 @@ void CtrlUserData::get_shape(const MObject& object, const MDagPath& dp_object, M
 
 	// Draw line for pole vectors
 	if (bDrawline) { 
-		MMatrix matDrawLineTo = MDataHandle(MPlug(object, CtrlNode::attrInDrawLineTo).asMDataHandle()).asMatrix();
+		// MMatrix matDrawLineTo = MDataHandle(MPlug(object, CtrlNode::attr_in_line_matrix).asMDataHandle()).asMatrix();
 		list_lines.append(MPoint() * matrix);
-		list_lines.append(MPoint(matDrawLineTo[3][0], matDrawLineTo[3][1], matDrawLineTo[3][2]) * dp_object.inclusiveMatrixInverse());
+		list_lines.append(MPoint(pos_draw_pv_to[0], pos_draw_pv_to[1], pos_draw_pv_to[2]) * dp_object.inclusiveMatrixInverse());
 	}
 }
 
@@ -754,7 +798,7 @@ void CtrlUserData::get_text(const MObject& object) {
 		str_solver_mode = MString("Fk");
 	} else if (fkIk > 0.0 && fkIk < 100.0) {
 		MString strFkIk = LMText::doublePrecision(MPlug(object, CtrlNode::attrInFkIk).asDouble(), 0).c_str();
-		str_solver_mode = MString("Fk " + strFkIk + " Ik ");
+		str_solver_mode = MString("FkIk " + strFkIk);
 	} else if (fkIk == 100.0) {
 		str_solver_mode = MString("Ik");
 	}
@@ -762,13 +806,12 @@ void CtrlUserData::get_text(const MObject& object) {
 
 
 
+
 void CtrlDrawOverride::OnModelEditorChanged(void *clientData) {
 	// Mark the node as being dirty so that it can update on display appearance
 	// switch among wireframe and shaded.
 	CtrlDrawOverride *ovr = static_cast<CtrlDrawOverride*>(clientData);
-	if (ovr && ovr->ptrCtrlNode) {
-		MHWRender::MRenderer::setGeometryDrawDirty(ovr->ptrCtrlNode->thisMObject());
-	}
+	if (ovr && ovr->ptrCtrlNode) {MHWRender::MRenderer::setGeometryDrawDirty(ovr->ptrCtrlNode->thisMObject());}
 }
 
 
@@ -847,7 +890,7 @@ MUserData* CtrlDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagP
 
 	data->col_wireframe = MHWRender::MGeometryUtilities::wireframeColor(objPath);
 
-	// // If XRay Joints Draw in XRay Mode
+	// If XRay Joints Draw in XRay Mode
 	// if (frameContext.getDisplayStyle() & MHWRender::MFrameContext::kXrayJoint) {data->DrawInXray = true;}
 	// else {data->DrawInXray = false;}
 

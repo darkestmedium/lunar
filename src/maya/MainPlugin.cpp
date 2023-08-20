@@ -8,7 +8,7 @@
 #include "TwistSolver.h"
 #include "TwistSolver.h"
 
-// #include "DisplayNode.h"
+#include "footPrintNodeGeoOverride.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -31,11 +31,10 @@ void setMelConfig(void*) {
 	// MGlobal::executeCommandOnIdle("selectPriority -locator 999");
 }
 
-static void onSceneSaved(void* clientData) {
 
+static void onSceneSaved(void* clientData) {
 	MGlobal::executePythonCommand("import lunar.maya.LunarMaya as lm");
 	MGlobal::executePythonCommand("lm.LMMetaData().setFromSceneName()");
-
 }
 
 
@@ -77,7 +76,6 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 
-
 	// // Register Ik2bSolver node
 	// status = fn_plugin.registerNode(
 	// 	MetaDataNode::typeName,
@@ -87,8 +85,6 @@ MStatus initializePlugin(MObject obj) {
 	// 	MPxNode::kDependNode
 	// );
 	// CHECK_MSTATUS_AND_RETURN_IT(status);
-
-
 
 	// Register Ik2bSolver node
 	status = fn_plugin.registerNode(
@@ -152,6 +148,39 @@ MStatus initializePlugin(MObject obj) {
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+
+	Globals = new GlobalVariables();
+
+	// status = fn_plugin.registerTransform(
+	// 	gPluginNodeName,
+	// 	FootPrintNode::id, 
+	// 	&FootPrintNode::creator, 
+	// 	&FootPrintNode::initialize,
+	// 	&MPxTransformationMatrix::creator,
+	// 	MPxTransformationMatrix::baseTransformationMatrixId,
+	// 	&FootPrintNode::drawDbClassification
+	// );
+	// CHECK_MSTATUS_AND_RETURN_IT(status);
+	status = fn_plugin.registerNode(
+		gPluginNodeName,
+		FootPrintNode::id,
+		&FootPrintNode::creator,
+		&FootPrintNode::initialize,
+		MPxNode::kLocatorNode,
+		&FootPrintNode::drawDbClassification
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+	status = MDrawRegistry::registerGeometryOverrideCreator(
+		FootPrintNode::drawDbClassification,
+		FootPrintNode::drawRegistrantId,
+		FootPrintGeometryOverride::Creator
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+	// Register a custom selection mask with priority 2 (same as locators
+	// by default).
+	// MSelectionMask::registerSelectionType(gPluginSelectionMask, 2);
+
+
 	if (MGlobal::mayaState() == MGlobal::kInteractive) {
 		// Register callback to set selection priority on locators to 999
 		setMelConfig(NULL);
@@ -182,6 +211,18 @@ MStatus uninitializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin fn_plugin(obj);
 
+
+	// 	delete Globals;
+
+	// Do not check the return code and return here
+	// Plugin uninitialization should never fail
+	MDrawRegistry::deregisterGeometryOverrideCreator(
+		FootPrintNode::drawDbClassification,
+		FootPrintNode::drawRegistrantId
+	);
+	fn_plugin.deregisterNode(FootPrintNode::id);
+	// MSelectionMask::deregisterSelectionType(gPluginSelectionMask);
+
 	MMessage::removeCallbacks(callbackIds);
 
 	// Deregister TwistSolver
@@ -208,10 +249,9 @@ MStatus uninitializePlugin(MObject obj) {
 	// Deregister IkCommand
 	status = fn_plugin.deregisterCommand(IkCommand::commandName);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// Deregister Ik2Solver
+	// Deregister Ik2bSolver
 	status = fn_plugin.deregisterNode(Ik2bSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-
 
 
 	// Deregister Controller draw override

@@ -8,9 +8,8 @@ MAYA_PLUG_IN_PATH+:= lunar/maya/resources/plug-ins/python
 MAYA_SHELF_PATH+:= lunar/maya/resources/shelves
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/scripts
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/templates
-PYTHONPATH+:= python/310/site-packages
-<!-- Third Party -->
 PYTHONPATH+:= thirdparty/maya/studiolibrary
+<!-- PYTHONPATH+:= python/310/site-packages -->
 
 <!-- 2023 -->
 + MAYAVERSION:2023 PLATFORM:mac Lunar 0.3.1 /Users/luky/My Drive/Development/3d/Maya/LunarDev
@@ -21,8 +20,6 @@ MAYA_PLUG_IN_PATH+:= lunar/maya/resources/plug-ins/python
 MAYA_SHELF_PATH+:= lunar/maya/resources/shelves
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/scripts
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/templates
-PYTHONPATH+:= python/310/site-packages
-<!-- Third Party -->
 PYTHONPATH+:= thirdparty/maya/studiolibrary
 
 <!-- 2022 -->
@@ -34,8 +31,6 @@ MAYA_PLUG_IN_PATH+:= lunar/maya/resources/plug-ins/python
 MAYA_SHELF_PATH+:= lunar/maya/resources/shelves
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/scripts
 MAYA_SCRIPT_PATH+:= lunar/maya/resources/templates
-<!-- PYTHONPATH+:= python/310/site-packages -->
-<!-- Third Party -->
 PYTHONPATH+:= thirdparty/maya/studiolibrary
 
 

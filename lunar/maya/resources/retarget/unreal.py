@@ -4750,15 +4750,15 @@ templateUe5 = {
 		'weapon_l': {'rotateX': -11.617611580307605,
 									'rotateY': -15.808370734790156,
 									'rotateZ': 8.517086343981928,
-									'translateX': 1.163377881050124,
-									'translateY': 1.3170588016510436,
-									'translateZ': 0.519515991210934},
+									'translateX': -8.184,
+									'translateY': -2.253,
+									'translateZ': 0.634},
 		'weapon_r': {'rotateX': -11.617611866448334,
 									'rotateY': -15.808370499724777,
 									'rotateZ': 8.51708852163158,
-									'translateX': -1.163383364677422,
-									'translateY': -1.3170545101165771,
-									'translateZ': -0.519517362117778}
+									'translateX': 8.184,
+									'translateY': 2.253,
+									'translateZ': -0.634}
 	},
 	"aPose": {
 		# 'hipstranslation': {
@@ -5252,15 +5252,15 @@ templateUe5 = {
 		'weapon_l': {'rotateX': -11.617611580307605,
 									'rotateY': -15.808370734790156,
 									'rotateZ': 8.517086343981928,
-									'translateX': 1.163377881050124,
-									'translateY': 1.3170588016510436,
-									'translateZ': 0.519515991210934},
+									'translateX': -8.184,
+									'translateY': -2.253,
+									'translateZ': 0.634},
 		'weapon_r': {'rotateX': -11.617611866448334,
 									'rotateY': -15.808370499724777,
 									'rotateZ': 8.51708852163158,
-									'translateX': -1.163383364677422,
-									'translateY': -1.3170545101165771,
-									'translateZ': -0.519517362117778}
+									'translateX': 8.184,
+									'translateY': 2.253,
+									'translateZ': -0.634}
 	}
 }
 

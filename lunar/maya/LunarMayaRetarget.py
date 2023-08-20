@@ -31,11 +31,8 @@ def loadDependencies():
 	"""Loads all dependencies (hik plugins and mel sources).
 	"""
 	# [cmds.loadPlugin(plugin) for plugin in ["mayaHIK", "mayaCharacterization", "retargeterNodes"] if cmds.pluginInfo(plugin, query=True, loaded=False)]
-	# # if cmds.pluginInfo("mayaHIK", query=True, loaded=False): 
 	cmds.loadPlugin("mayaHIK")
-	# # if cmds.pluginInfo("mayaCharacterization", query=True, loaded=False): 
 	cmds.loadPlugin("mayaCharacterization")
-	# # if cmds.pluginInfo("retargeterNodes", query=True, loaded=False): 
 	cmds.loadPlugin("retargeterNodes")
 	
 	
@@ -1167,6 +1164,7 @@ class LMLunarCtrl(LMHumanIk):
 	cnstLeftWeapon = None
 	cnstRightWeapon = None
 
+
 	ctrlsIk = [
 		"arm_ik_l_ctrl", "arm_ik_r_ctrl", "arm_pv_l_ctrl", "arm_pv_r_ctrl",
 		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
@@ -1421,13 +1419,13 @@ class LMLunarCtrl(LMHumanIk):
 						cmds.parentConstraint(self.locRightLegPv, self.nameWithNamespace("leg_pv_r_ctrl"), maintainOffset=False, skipRotate=["x", "y", "z"])
 
 						# Left Weapon
-						sourceLeftWeapon = f"{source.namespace}:weapon_l"
-						if cmds.objExists(sourceLeftWeapon):
-							self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.nameWithNamespace("weapon_l_ctrl"), maintainOffset=False)
-						# Right Weapon
-						sourceRightWeapon = f"{source.namespace}:weapon_r"
-						if cmds.objExists(sourceLeftWeapon):
-							self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.nameWithNamespace("weapon_r_ctrl"), maintainOffset=False)
+						# sourceLeftWeapon = f"{source.namespace}:weapon_l"
+						# if cmds.objExists(sourceLeftWeapon):
+						# 	self.cnstLeftWeapon = cmds.parentConstraint(sourceLeftWeapon, self.nameWithNamespace("weapon_l_ctrl"), maintainOffset=False)
+						# # Right Weapon
+						# sourceRightWeapon = f"{source.namespace}:weapon_r"
+						# if cmds.objExists(sourceLeftWeapon):
+						# 	self.cnstRightWeapon = cmds.parentConstraint(sourceRightWeapon, self.nameWithNamespace("weapon_r_ctrl"), maintainOffset=False)
 
 						# Root motion setup outside Hik feautres. (Manual override)
 						if rootMotion:
@@ -2582,7 +2580,7 @@ class LMHik():
 		# TODO add check if node is LunarCtrl connect the ik setup here?
 		# Check if character is a lunar ctrl rig:
 		if cmds.attributeQuery("mainCtrl", node=pCharacter, exists=True, message=True):
-			cls.log.warning(f"{pCharacter} is sourced from a lunar rig - get custom node set.")
+			cls.log.debug(f"{pCharacter} is sourced from a lunar rig - get custom node set.")
 
 		for indx in range(cmds.hikGetNodeCount()):
 			hiknodename = cmds.GetHIKNodeName(indx)
@@ -2751,29 +2749,18 @@ if __name__ == "__main__":
 
 	cmds.file(new=True, force=True)
 
-	# # Source list
-	# sourceList = lm.LMFinder.getFilesInDirectory("/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal")
-	# # print(sourceList)
-	# alredyRetargetedList = lm.LMFinder.getFilesInDirectory("/Users/luky/Desktop/thug")
-	# alredyRetargetedFileNameList = [retargeted.fileName() for retargeted in alredyRetargetedList]
-	# missingRetargetList = []
-	# for anim in sourceList:
-	# 	if anim.fileName() not in alredyRetargetedFileNameList:
-	# 		missingRetargetList.append(anim.filePath())
-
-
+ 	# Source list
 	retargeter = LMRetargeter(
 		# sources=missingRetargetList,
 		sources=[
 			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
-			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player",
-			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/thug_npc_normal",
-			# "/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Thug_ArtSource_Input/Animations",
-			"/Users/luky/My Drive/Mocap/Player/aimMovement",
+			# "/Users/luky/Downloads/mm-explore/player-mm-explore-idle^run-strafe-90r-r-foot.fbx",
+			"/Users/luky/Downloads/mm-explore",
 		],
 		# targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
 		targets=["/Users/luky/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],
-		outputDirectory="/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/Animations/AimMovement",
+		outputDirectory="/Users/luky/Downloads/mm-explore-out",
+		# outputDirectory="/Users/luky/Downloads",
 		# sourceNameSpace="Anton",
 		sourceTemplate="SinnersDev2",
 		# sourceTemplate="MannequinUe4",
@@ -2789,12 +2776,3 @@ if __name__ == "__main__":
 		oversamplingRate=1,
 		rootMotion=True,
 	)
-	# retargeter.retarget(
-	# 	preserveFolderHierarchy=True,
-	# 	# trimStart=1,  # if baking from sinnersDev set
-	# 	matchSource=True,
-	# 	# reachActorChest=1.0,
-	# 	oversamplingRate=1,
-	# 	rootMotion=True,
-	# 	# rootRotationOffset=-90, # if baking from sinnersDev set
-	# )

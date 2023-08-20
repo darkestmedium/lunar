@@ -1487,7 +1487,7 @@ class HeadComponent():
 			solverModePosition=solverModePosition,
 			side="center",
 			createTwistSolver=False,
-			hasDynamicAttributes=False,
+			hasDynamicAttributes=True,
 		)
 
 		self.ik = Ik2bLimbComponent(

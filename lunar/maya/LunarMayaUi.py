@@ -159,6 +159,11 @@ class LMUi():
 					if leadObject.__len__() == 0:
 						leadObject = cmds.ls(hilite=True, tail=1, typ="transform")
 					if leadObject.__len__() > 0:
+						object = leadObject[0]
+
+						if cmds.nodeType(leadObject) == "ctrl": 
+							cls.buildAnimationMM(parent, object)
+							return
 						# // MAYA-67156: Something is selected/hilighted so pass
 						# // an empty object to dagMenuProc to indicate nothing was
 						# // under the cursor and let it decide what object(s) to use

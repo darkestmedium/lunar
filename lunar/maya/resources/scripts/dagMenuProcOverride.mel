@@ -2571,8 +2571,8 @@ global proc dagMenuProc(string $parent, string $object) {
 	}
 
 	// Create the custom lunar menu here
-	string $listShapes[] = `listRelatives -typ ctrl $object`;
-	if (size($listShapes) > 0) {
+	// string $listShapes[] = `listRelatives -typ ctrl $object`;
+	if (`nodeType $object` == "ctrl") {
 		string $cmd =	"import lunar.maya.LunarMayaUi as lmui; \
 			lmui.LMUi.buildAnimationMM(parent='"+$parent+"', object='"+$object+"')";
 		python($cmd);
