@@ -212,7 +212,7 @@ MStatus uninitializePlugin(MObject obj) {
 	MFnPlugin fn_plugin(obj);
 
 
-	// 	delete Globals;
+	// delete Globals;
 
 	// Do not check the return code and return here
 	// Plugin uninitialization should never fail

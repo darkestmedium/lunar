@@ -52,7 +52,6 @@ class Ctrl():
 		localRotate=(0.0, 0.0, 90.0),
 		localScale=(3.0, 3.0, 3.0),
 		shape="circle",
-		hasDynamicAttributes=False,
 		drawSolverMode=False,
 		solverModePosition=(0.0, 0.0, 0.0),
 		lineWidth=defaultLineWidth,
@@ -84,7 +83,6 @@ class Ctrl():
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
-			hasDynamicAttributes=hasDynamicAttributes,
 			drawSolverMode=drawSolverMode,
 			solverModePosition=solverModePosition,
 			lineWidth=lineWidth,
@@ -236,7 +234,6 @@ class OutCtrl(Ctrl):
 		localRotate=(0.0, 45.0, 90.0),
 		localScale=(4.0, 4.0, 4.0),
 		shape="none",
-		hasDynamicAttributes=True,
 		drawSolverMode=False,
 		solverModePosition=(0.0, 0.0, 0.0),
 		lineWidth=Ctrl.defaultLineWidth,
@@ -253,7 +250,6 @@ class OutCtrl(Ctrl):
 			localRotate=localRotate,
 			localScale=localScale,
 			shape=shape,
-			hasDynamicAttributes=hasDynamicAttributes,
 			drawSolverMode=drawSolverMode,
 			solverModePosition=solverModePosition,
 			lineWidth=lineWidth,
@@ -313,9 +309,7 @@ class FingerCtrl():
 		localRotate=(0.0, 0.0, 90.0),
 		localScale=(3.0, 3.0, 3.0),
 		shape="circle",
-		# fillShape=False,
 		drawSolverMode=False,
-		#fillTransparency=Ctrl.defaultTransparency,
 		lineWidth=Ctrl.defaultFingerLineWidth,
 		color="yellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
@@ -331,8 +325,6 @@ class FingerCtrl():
 			localScale=localScale,
 			shape=shape,
 			drawSolverMode=drawSolverMode,
-			# fillShape=fillShape,
-			#fillTransparency=fillTransparency,
 			lineWidth=lineWidth,
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
@@ -434,7 +426,6 @@ class PoleVectorCtrl():
 		shape="locator",
 		drawSolverMode=False,
 		drawLine=True,
-		hasDynamicAttributes=True,
 		lineWidth=Ctrl.defaultLineWidth,
 		color="lightyellow",
 		lockShapeAttributes=Ctrl.defaultLockShapeAttributes,
@@ -451,7 +442,6 @@ class PoleVectorCtrl():
 			shape=shape,
 			drawSolverMode=drawSolverMode,
 			drawLine=drawLine,
-			hasDynamicAttributes=hasDynamicAttributes,
 			lineWidth=lineWidth,
 			color=color,
 			lockShapeAttributes=lockShapeAttributes,
@@ -656,8 +646,6 @@ class FkFootComponent():
 			color=color,
 		)
 		lm.LMAttribute.copyTransformsToOPM(self.ctrlToe.node)
-		# lm.LMTransformUtils.postCtrlTransform(listJoints["Leg"], sideSuffix)
-
 
 	def getCtrls(self):
 		return (
@@ -913,7 +901,7 @@ class Out2bLimbComponent():
 			start:str, mid:str, end:str, root:str=None,
 			upperTwist1:str=None, upperTwist2:str=None, lowerTwist1:str=None, lowerTwist2:str=None, 
 			drawSolverMode:bool=True, solverModePosition:tuple=(0.0, 0.0, 0.0), createTwistSolver:bool=True,
-			side:str="center", hasDynamicAttributes:bool=True,
+			side:str="center",
 		) -> None:
 		"""Class constructor.
 
@@ -1017,7 +1005,7 @@ class Out2bLimbComponent():
 			name=f"{end}{sideSuffix}_out", parent=self.ctrlMid.node,
 			translateTo=f"{end}{sideSuffix}",	rotateTo=f"{end}{sideSuffix}",
 			drawSolverMode=drawSolverMode, solverModePosition=solverModePosition,
-			color=colorSwitch, hasDynamicAttributes=hasDynamicAttributes,
+			color=colorSwitch,
 		)
 
 		[lm.LMAttribute.copyTransformsToOPM(ctrl.node) for ctrl in self.getCtrls()]
@@ -1487,7 +1475,6 @@ class HeadComponent():
 			solverModePosition=solverModePosition,
 			side="center",
 			createTwistSolver=False,
-			hasDynamicAttributes=True,
 		)
 
 		self.ik = Ik2bLimbComponent(

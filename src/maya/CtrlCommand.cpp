@@ -62,8 +62,8 @@ const char* CtrlCommand::hideOnPlaybackFlagLong = "-hideOnPlayback";
 const char* CtrlCommand::helpFlagShort = "-h";
 const char* CtrlCommand::helpFlagLong = "-help";
 
-const char* CtrlCommand::hasDynamicAttributesFlagShort = "-hda";
-const char* CtrlCommand::hasDynamicAttributesFlagLong = "-hasDynamicAttributes";
+// const char* CtrlCommand::hasDynamicAttributesFlagShort = "-hda";
+// const char* CtrlCommand::hasDynamicAttributesFlagLong = "-hasDynamicAttributes";
 
 
 
@@ -101,7 +101,7 @@ MSyntax CtrlCommand::syntaxCreator() {
 	sytnax.addFlag(lockShapeAttributesFlagShort, lockShapeAttributesFlagLong, MSyntax::kBoolean);
 	sytnax.addFlag(hideOnPlaybackFlagShort, hideOnPlaybackFlagLong, MSyntax::kBoolean);
 	
-	sytnax.addFlag(hasDynamicAttributesFlagShort, hasDynamicAttributesFlagLong, MSyntax::kBoolean);
+	// sytnax.addFlag(hasDynamicAttributesFlagShort, hasDynamicAttributesFlagLong, MSyntax::kBoolean);
 
 	sytnax.addFlag(helpFlagShort, helpFlagLong, MSyntax::kBoolean);
 
@@ -312,11 +312,11 @@ MStatus CtrlCommand::parseArguments(const MArgList &argList) {
 		bHideOnPlayback = argData.flagArgumentBool(hideOnPlaybackFlagShort, 0, &status);
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
-	// Is Always Dirty Flag
-	if (argData.isFlagSet(hasDynamicAttributesFlagShort)) {
-		has_dynamic_attributes = argData.flagArgumentBool(hasDynamicAttributesFlagShort, 0, &status);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-	}
+	// // Is Always Dirty Flag
+	// if (argData.isFlagSet(hasDynamicAttributesFlagShort)) {
+	// 	has_dynamic_attributes = argData.flagArgumentBool(hasDynamicAttributesFlagShort, 0, &status);
+	// 	CHECK_MSTATUS_AND_RETURN_IT(status);
+	// }
 
 	return MS::kSuccess;
 }
@@ -385,7 +385,6 @@ MStatus CtrlCommand::redoIt() {
 		// even if the object has a MFn::kTransform
 		MDagPath::getAPathTo(objThisTransform, dpThisTransform);
 		MFnTransform fn_transform(dpThisTransform);
-		// MFnDependencyNode fn_transform(objThisShape);
 
 		status = modDag.doIt();
 		CHECK_MSTATUS_AND_RETURN_IT(status);
@@ -461,8 +460,8 @@ MStatus CtrlCommand::redoIt() {
 		plugOverrideColorB.setValue(colorOverride.b);
 	
 
-		MPlug plug_has_dynamic_attributes = fn_transform.findPlug("hasDynamicAttributes", false);
-		plug_has_dynamic_attributes.setValue(has_dynamic_attributes);
+		// MPlug plug_has_dynamic_attributes = fn_transform.findPlug("hasDynamicAttributes", false);
+		// plug_has_dynamic_attributes.setValue(has_dynamic_attributes);
 
 		// Lock shape attributes
 		if (bLockShapeAttributes == true) {
@@ -501,7 +500,7 @@ MStatus CtrlCommand::redoIt() {
 			LMAttribute::lockAndHideAttr(plugLineWidth);
 			LMAttribute::lockAndHideAttr(plugInFkIk);
 
-			LMAttribute::lockAndHideAttr(plug_has_dynamic_attributes);
+			// LMAttribute::lockAndHideAttr(plug_has_dynamic_attributes);
 		}
 
 		// Set hide on playback

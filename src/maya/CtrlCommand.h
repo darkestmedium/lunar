@@ -81,7 +81,6 @@ public:
 	static const char* solverModePositionFlagShort;
 	static const char* solverModePositionFlagLong;
 
-
 	static const char* lineWidthFlagShort;
 	static const char* lineWidthFlagLong;
 
@@ -97,8 +96,8 @@ public:
 	static const char* helpFlagShort;
 	static const char* helpFlagLong;
 
-	static const char* hasDynamicAttributesFlagShort;
-	static const char* hasDynamicAttributesFlagLong;
+	// static const char* hasDynamicAttributesFlagShort;
+	// static const char* hasDynamicAttributesFlagLong;
 
 	MString name;
 	MString parent;
@@ -119,7 +118,7 @@ public:
 	short indxShape;
 	bool draw_solver_mode;
 	bool bDrawLine;
-	bool has_dynamic_attributes;
+	// bool has_dynamic_attributes;
 	// double fillTransparency;
 	double lineWidth;
 	bool bLockShapeAttributes;
@@ -143,7 +142,7 @@ public:
 		, colorOverride(1.0, 1.0, 0.25)
 		, bLockShapeAttributes(false)
 		, bHideOnPlayback(false)
- 		, has_dynamic_attributes(false)
+ 		// , has_dynamic_attributes(false)
 		, command(kCommandCreate)
 	{};
 

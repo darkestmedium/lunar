@@ -74,7 +74,7 @@ public:
 	// Controls the size of the footprint geometry
 	static Attribute 	attr_in_line_matrix;
 	static Attribute 	attr_out_line_matrix;
-	// static  MObject         inputSize;			// 'sz'		Input	Distance
+	// static  MObject         inputSize;				// 'sz'		Input	Distance
 	// static  MObject         outputSize;			// 'osz'	Output	Distance	: outputSize		= [](inputSize) -> {return inputSize;}
 
 	// Add your renderer-required-attributes here
@@ -132,7 +132,7 @@ public:
 	static MObject attr_line_width;
 	static MObject attr_shape_indx;
 
-	static MObject attrInDrawLine;
+	static MObject attr_in_draw_line;
 	// static Attribute attr_in_line_matrix;
 
 	static MObject attr_draw_solver_mode;
@@ -144,8 +144,7 @@ public:
 	static MObject attr_has_dynamic_attributes;
 
 	// Use only on dynamic ctrl like fk / ik blending or pole vectors
-	bool has_dynamic_attributes;
-	bool geo_updated;
+	bool draw_line;
 
 	MObject self_object;
 	MDagPath self_path;
@@ -153,8 +152,6 @@ public:
 	// Constructors
 	CtrlNode()
 		: MPxTransform()
-		, has_dynamic_attributes(false)
-		// , geo_updated(false)
 	{};
 	// Destructors
 	virtual ~CtrlNode() override {};
@@ -173,7 +170,6 @@ public:
 
 	bool 						isBounded() const override {return true;};
 	virtual MBoundingBox boundingBox() const override;
-
 };
 
 
@@ -187,7 +183,6 @@ public:
 
 class CtrlUserData : public MUserData {
 public:
-	bool					redraw;
 	MMatrix 			mat_local;
 	MBoundingBox 	bbox;
 	MMatrix 			mat_pv;
@@ -214,7 +209,6 @@ public:
 	// Constructors
 	CtrlUserData()
 		: MUserData(false)
-		// , line_width(2)
 	{};
 
 	// Destructor
@@ -251,7 +245,6 @@ public:
 		const MDagPath& objPath,
 		const MDagPath& cameraPath
 	) const override;
-
 	virtual bool hasUIDrawables() const override {return true;}
 	virtual MUserData* prepareForDraw(
 		const MDagPath& objPath,

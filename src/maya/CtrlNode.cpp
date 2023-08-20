@@ -31,7 +31,7 @@ MObject CtrlNode::local_scale, CtrlNode::local_scaleX, CtrlNode::local_scaleY, C
 MObject CtrlNode::attr_shape_indx;
 MObject CtrlNode::attr_line_width;
 
-MObject CtrlNode::attrInDrawLine;
+MObject CtrlNode::attr_in_draw_line;
 Attribute CtrlNode::attr_in_line_matrix;
 Attribute CtrlNode::attr_out_line_matrix;
 
@@ -40,7 +40,7 @@ MObject CtrlNode::attr_solver_mode_size;
 MObject CtrlNode::attr_solver_mode_positionX, CtrlNode::attr_solver_mode_positionY, CtrlNode::attr_solver_mode_positionZ, CtrlNode::attr_solver_mode_position;
 MObject CtrlNode::attrInFkIk;
 
-MObject CtrlNode::attr_has_dynamic_attributes;
+// MObject CtrlNode::attr_has_dynamic_attributes;
 
 
 MStatus CtrlNode::initialize() {
@@ -99,13 +99,12 @@ MStatus CtrlNode::initialize() {
 	fn_num.setKeyable(false);
 	fn_num.setChannelBox(true);
 
-	attrInDrawLine = fn_num.create("drawLine", "dl", MFnNumericData::kBoolean, false);
+	attr_in_draw_line = fn_num.create("drawLine", "dl", MFnNumericData::kBoolean, false);
 	fn_num.setStorable(true);
 	fn_num.setKeyable(false);
 	fn_num.setChannelBox(true);
 
 	createAttribute(attr_in_line_matrix, "drawLineTo", DefaultValue<MMatrix>());
-	createAttribute(attr_out_line_matrix, "drawLineToOut", DefaultValue<MMatrix>());
 
 	attr_draw_solver_mode = fn_num.create("drawSolverMode", "dsm", MFnNumericData::kBoolean, false);
 	fn_num.setStorable(true);
@@ -135,44 +134,28 @@ MStatus CtrlNode::initialize() {
 	fn_num.setSoftMin(0.0);
 	fn_num.setSoftMax(100.0);
 
-	attr_has_dynamic_attributes = fn_num.create("hasDynamicAttributes", "hda", MFnNumericData::kBoolean, false);
-	fn_num.setStorable(true);
-	fn_num.setKeyable(false);
-	fn_num.setChannelBox(true);
+	// attr_has_dynamic_attributes = fn_num.create("hasDynamicAttributes", "hda", MFnNumericData::kBoolean, false);
+	// fn_num.setStorable(true);
+	// fn_num.setKeyable(false);
+	// fn_num.setChannelBox(true);
+
+	geometryChanging = fn_num.create("geometryChanging", "gcg", MFnNumericData::kBoolean, true);
+	fn_num.setStorable(false);
+	fn_num.setHidden(true);
+	fn_num.setConnectable(false);
 
 	// Add attributes
 	addAttributes(
 		local_position, local_rotate, local_scale,
 		attr_shape_indx, attr_line_width,
-		attrInDrawLine, 
-		attr_in_line_matrix,
-		attr_out_line_matrix,
+		attr_in_draw_line, attr_in_line_matrix,
 		attr_draw_solver_mode,
 		attr_solver_mode_size,
 		attr_solver_mode_position,
 		attrInFkIk,
-		attr_has_dynamic_attributes
+		geometryChanging
 	);
 
-	MFnUnitAttribute unitFn;
-	MStatus			 stat;
-
-	// attr_out_line_matrix = unitFn.create("outputSize", "osz", MFnUnitAttribute::kDistance);
-	// unitFn.setDefault(1.0);
-	// unitFn.setWritable(false);
-	// stat = addAttribute(outputSize);
-	// inputSize = unitFn.create("size", "sz", MFnUnitAttribute::kDistance);
-	// unitFn.setDefault(1.0);
-	// stat = addAttribute(inputSize);
-
-	MFnNumericAttribute attrFn;
-	geometryChanging = attrFn.create("geometryChanging", "gcg", MFnNumericData::kBoolean, true);
-	attrFn.setStorable(false);
-	attrFn.setHidden(true);
-	attrFn.setConnectable(false);
-	stat = addAttribute(geometryChanging);
-
-	attributeAffects(CtrlNode::attr_has_dynamic_attributes, CtrlNode::geometryChanging);
 	attributeAffects(CtrlNode::attr_in_line_matrix, CtrlNode::geometryChanging);
 
 	return MS::kSuccess;
@@ -189,13 +172,11 @@ MStatus CtrlNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlug
 
 	*/
 
-	has_dynamic_attributes = MPlug(self_object, attr_has_dynamic_attributes).asBool();
-	if (has_dynamic_attributes) MHWRender::MRenderer::setGeometryDrawDirty(self_object);
+	draw_line = MPlug(self_object, attr_in_draw_line).asBool();
+	if (draw_line) MHWRender::MRenderer::setGeometryDrawDirty(self_object);
 
 	if (MEvaluationManager::graphConstructionActive()) {
-		if (plug == attr_in_line_matrix) {
-			affectedPlugs.append(MPlug(self_object, geometryChanging));
-		}
+		if (plug == attr_in_line_matrix) {affectedPlugs.append(MPlug(self_object, geometryChanging));}
 	}
 
 	return MS::kSuccess;
@@ -204,7 +185,6 @@ MStatus CtrlNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlug
 
 MStatus CtrlNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	// Check documentation in "class FootPrintNode" for descriptions about the attributes here
-
 	if (plug == geometryChanging) {
 		MDataHandle boolHandle = dataBlock.outputValue(geometryChanging);
 		boolHandle.setBool(true);
@@ -279,17 +259,15 @@ void CtrlNode::postConstructor() {
 	fn_this.findPlug("overrideColorG", false).setDouble(1.0);
 	fn_this.findPlug("overrideColorB", false).setDouble(0.25);
 
-	has_dynamic_attributes = MPlug(self_object, CtrlNode::attr_has_dynamic_attributes).asBool();
+	draw_line = MPlug(self_object, CtrlNode::attr_in_draw_line).asBool();
 }
 
 
 MBoundingBox CtrlNode::boundingBox() const {
 	// Get the size
 	CtrlUserData data;
-
 	data.get_plugs(self_object);
 	data.get_bbox(self_object, self_path, data.mat_local);
-
 
 	return data.bbox;
 }
@@ -324,12 +302,10 @@ void CtrlUserData::get_plugs(const MObject& object) {
 
 	MFnDependencyNode fn_object(object);
 
-	bDrawline = MPlug(object, CtrlNode::attrInDrawLine).asBool();
+	bDrawline = MPlug(object, CtrlNode::attr_in_draw_line).asBool();
 	line_width = MPlug(object, CtrlNode::attr_line_width).asFloat();
 	shape_indx = MPlug(object, CtrlNode::attr_shape_indx).asShort();
 	solver_mode_size = MPlug(object, CtrlNode::attr_solver_mode_size).asInt();
-
-	redraw = MPlug(object, CtrlNode::attr_has_dynamic_attributes).asBool();
 
 	mat_pv = MDataHandle(MPlug(object, CtrlNode::attr_in_line_matrix).asMDataHandle()).asMatrix();
 	pos_draw_pv_to = MPoint(mat_pv[3][0], mat_pv[3][1], mat_pv[3][2]);
@@ -953,7 +929,7 @@ void CtrlDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDra
 		drawManager.text(pTransformData->pos_solver_mode, pTransformData->str_solver_mode, drawManager.kCenter);
 	}
 
-	// // End drawable
+	// End drawable
 	// if (pCtrlData->DrawInXray) {drawManager.endDrawInXray();}
 
 	drawManager.endDrawable();
