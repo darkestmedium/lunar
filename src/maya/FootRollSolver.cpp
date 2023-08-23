@@ -64,7 +64,6 @@ MStatus FootRollSolver::initialize() {
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
 
-
 	createAttribute(attrInRoll, "roll", DefaultValue<double>());
 	createAttribute(attrInBendLimitAngle, "bendLimitAngle", DefaultValue<double>());
 	createAttribute(attrInToeLimitAngle, "toeLimitAngle", DefaultValue<double>());
@@ -106,9 +105,7 @@ bool FootRollSolver::isPassiveOutput(const MPlug& plug) const {
 		bool: Wheter or not he specified plug is passive - true indicates passive.
 
 	*/
-	if (plug == attrOutUpdate) {
-		return true;
-	}
+	if (plug == attrOutUpdate) {return true;}
 	return MPxNode::isPassiveOutput(plug);
 }
 

@@ -80,7 +80,6 @@ class LMBuildPlugin():
 
 		output = subprocess.run(["cp", "-f", self.pathBuiltPlugin, self.pathPluginTarget], capture_output=True, text=True)
 
-
 		isAppRunning = False
 		while not isAppRunning:
 			# time.sleep(3)
@@ -92,7 +91,6 @@ class LMBuildPlugin():
 				print(f"Launching {self.mayaName}")
 				if self.namePlatform == "Darwin": 
 					subprocess.run([f"/Applications/Autodesk/maya{self.mayaVersion}/Maya.app/Contents/bin/maya"])
-				# subprocess.run([f"maya{self.mayaVersion}"])
 
 
 	@classmethod
