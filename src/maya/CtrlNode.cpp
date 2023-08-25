@@ -40,7 +40,6 @@ MObject CtrlNode::attr_solver_mode_size;
 MObject CtrlNode::attr_solver_mode_positionX, CtrlNode::attr_solver_mode_positionY, CtrlNode::attr_solver_mode_positionZ, CtrlNode::attr_solver_mode_position;
 MObject CtrlNode::attrInFkIk;
 
-// MObject CtrlNode::attr_has_dynamic_attributes;
 
 
 MStatus CtrlNode::initialize() {
@@ -133,11 +132,6 @@ MStatus CtrlNode::initialize() {
 	fn_num.setChannelBox(true);
 	fn_num.setSoftMin(0.0);
 	fn_num.setSoftMax(100.0);
-
-	// attr_has_dynamic_attributes = fn_num.create("hasDynamicAttributes", "hda", MFnNumericData::kBoolean, false);
-	// fn_num.setStorable(true);
-	// fn_num.setKeyable(false);
-	// fn_num.setChannelBox(true);
 
 	geometryChanging = fn_num.create("geometryChanging", "gcg", MFnNumericData::kBoolean, true);
 	fn_num.setStorable(false);

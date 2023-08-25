@@ -253,7 +253,6 @@ MStatus uninitializePlugin(MObject obj) {
 	status = fn_plugin.deregisterNode(Ik2bSolver::typeId);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-
 	// Deregister Controller draw override
 	MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
 		CtrlNode::type_drawdb,

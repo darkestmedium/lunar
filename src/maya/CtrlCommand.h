@@ -142,7 +142,6 @@ public:
 		, colorOverride(1.0, 1.0, 0.25)
 		, bLockShapeAttributes(false)
 		, bHideOnPlayback(false)
- 		// , has_dynamic_attributes(false)
 		, command(kCommandCreate)
 	{};
 

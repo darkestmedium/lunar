@@ -426,7 +426,6 @@ MStatus CtrlCommand::redoIt() {
 		plugLocalScaleZ.setValue(localScale.z);
 
 		// Visual flags
-
 		// MPlug plugFillShape = fn_transform.findPlug("fillShape", false);
 		// plugFillShape.setValue(bFillShape);
 

@@ -131,9 +131,7 @@ public:
 
 	static MObject attr_line_width;
 	static MObject attr_shape_indx;
-
 	static MObject attr_in_draw_line;
-	// static Attribute attr_in_line_matrix;
 
 	static MObject attr_draw_solver_mode;
 	static MObject attr_solver_mode_size;
@@ -141,7 +139,6 @@ public:
 	static MObject attrInText;
 
 	static MObject attrInFkIk;
-	static MObject attr_has_dynamic_attributes;
 
 	// Use only on dynamic ctrl like fk / ik blending or pole vectors
 	bool draw_line;
