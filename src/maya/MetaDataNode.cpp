@@ -2,10 +2,10 @@
 
 
 // Public Data
-const MString MetaDataNode::typeName = "metaData";
-const MTypeId MetaDataNode::typeId = 0x0066675;
-const MString MetaDataNode::drawDbClassification = "drawdb/geometry/metaData";
-const MString MetaDataNode::drawRegistrationId = "metaDataNode";
+const MString MetaDataNode::type_name = "metaData";
+const MTypeId MetaDataNode::type_id = 0x0066675;
+const MString MetaDataNode::type_drawdb = "drawdb/geometry/metaData";
+const MString MetaDataNode::type_drawid = "metaDataNode";
 
 // Node's Input Attributes
 MObject MetaDataNode::attrInMetaData;
@@ -22,7 +22,6 @@ MObject MetaDataNode::AttrOutUpdate;
 
 
 
-
 MStatus MetaDataNode::initialize() {
 	MStatus status;
 	MFnTypedAttribute AttrTyped;
@@ -32,7 +31,6 @@ MStatus MetaDataNode::initialize() {
 	MFnCompoundAttribute cAttr;
 
 	// Node's Input Attributes
-
 	/* metaData:
 	-- metaData
 		 | -- text
@@ -76,6 +74,31 @@ MStatus MetaDataNode::initialize() {
 }
 
 
+MStatus MetaDataNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlugs) {
+	/* Sets the relation between attributes and marks the specified plugs dirty.
+
+	Args:
+		plugBeingDirtied (&MPlug): Plug which is being set dirty by Maya.
+		affectedPlugs (&MPlugArray): The programmer should add any plugs which they want to set dirty
+			to this list.
+
+	*/
+	if ( plug == attrInMetaData
+		|| plug == attrInText
+		|| plug == attrInDisplayInViewport
+		|| plug == AttrTextPositionX
+		|| plug == AttrTextPositionY
+		|| plug == AttrTextSize
+		|| plug == AttrTextColor
+	) {
+		MHWRender::MRenderer::setGeometryDrawDirty(self_object);
+	}
+
+	return MS::kSuccess;
+}
+
+
+
 void MetaDataNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const {
 	/* Disables Cached Playback support by default.
 
@@ -90,7 +113,7 @@ void MetaDataNode::getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisa
 		monitoredAttribures (MObjectArray&): Attributes impacting the behavior of this method that will be monitored for change
 
 	*/
-	MPxNode::getCacheSetup(evalNode, disablingInfo, cacheSetupInfo, monitoredAttributes);
+	MPxTransform::getCacheSetup(evalNode, disablingInfo, cacheSetupInfo, monitoredAttributes);
 	assert(!disablingInfo.getCacheDisabled());
 	cacheSetupInfo.setPreference(MNodeCacheSetupInfo::kWantToCacheByDefault, true);
 }
@@ -108,34 +131,31 @@ void MetaDataNode::postConstructor() {
 	Reimplemented in MPxTransform, and MPxPolyTrg.
 
 	*/
-	SelfObj = thisMObject();
+	self_object = thisMObject();
 
-	MFnDependencyNode FnShape(SelfObj);
-	FnShape.setName(MetaDataNode::typeName + "Shape");
+	// MFnDependencyNode FnShape(self_object);
+	// // FnShape.setName(MetaDataNode::type_name + "Shape");
+	MFnDependencyNode fn_this(self_object);
+	fn_this.findPlug("shear", false).setLocked(1);
+	fn_this.findPlug("rotateAxis", false).setLocked(1);
 
-	MPlug PlugVisibility(SelfObj, MetaDataNode::visibility);
-	PlugVisibility.setChannelBox(true);
+	MPlug plugVisibility(self_object, MetaDataNode::visibility);
+	plugVisibility.setChannelBox(true);
 
-	MPlug plugLocalPositionX(SelfObj, MetaDataNode::localPositionX);
-	MPlug plugLocalPositionY(SelfObj, MetaDataNode::localPositionY);
-	MPlug plugLocalPositionZ(SelfObj, MetaDataNode::localPositionZ);
-	MPlug plugLocalScaleX(SelfObj, MetaDataNode::localScaleX);
-	MPlug plugLocalScaleY(SelfObj, MetaDataNode::localScaleY);
-	MPlug plugLocalScaleZ(SelfObj, MetaDataNode::localScaleZ);
+	MPlug plugTranslate(self_object, MetaDataNode::translate);
+	MPlug plugRotate(self_object, MetaDataNode::rotate);
+	MPlug plugScale(self_object, MetaDataNode::scale);
 
-	LMAttribute::lockAndHideAttr(plugLocalPositionX);
-	LMAttribute::lockAndHideAttr(plugLocalPositionY);
-	LMAttribute::lockAndHideAttr(plugLocalPositionZ);
-	LMAttribute::lockAndHideAttr(plugLocalScaleX);
-	LMAttribute::lockAndHideAttr(plugLocalScaleY);
-	LMAttribute::lockAndHideAttr(plugLocalScaleZ);
+	LMAttribute::lockAndHideAttr(plugTranslate);
+	LMAttribute::lockAndHideAttr(plugRotate);
+	LMAttribute::lockAndHideAttr(plugScale);
 }
+
 
 
 void MetaDataNodeData::getText(const MObject& obj) {
 	/*Gets the string array from metaData attribute
 	*/
-
 	MPlug arrayMetaData = MPlug(obj, MetaDataNode::attrInMetaData);
 	countMetaData = arrayMetaData.numElements();
 	vectorText.clear();
@@ -151,7 +171,17 @@ void MetaDataNodeData::getText(const MObject& obj) {
 }
 
 
-MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) {
+
+void MetaDataDrawOverride::OnModelEditorChanged(void *clientData) {
+	// Mark the node as being dirty so that it can update on display appearance
+	// switch among wireframe and shaded.
+	MetaDataDrawOverride *ovr = static_cast<MetaDataDrawOverride*>(clientData);
+	if (ovr && ovr->ptr_metadata) {MHWRender::MRenderer::setGeometryDrawDirty(ovr->ptr_metadata->thisMObject());}
+}
+
+
+
+MUserData* MetaDataDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath, const MHWRender::MFrameContext& frameContext, MUserData* oldData) {
 	/* Called by Maya whenever the object is dirty and needs to update for draw.
 
 	Any data needed from the Maya dependency graph must be retrieved and cached in this
@@ -212,7 +242,8 @@ MUserData* MetaDataNodeDrawOverride::prepareForDraw(const MDagPath& objPath, con
 }
 
 
-void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data) {
+
+void MetaDataDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext& frameContext, const MUserData* data) {
 	/* Provides access to the MUIDrawManager, which can be used to queue up operations to draw simple
 	UI shapes like lines, circles, text, etc.
 
@@ -232,7 +263,6 @@ void MetaDataNodeDrawOverride::addUIDrawables(const MDagPath& objPath, MHWRender
 	if (!pMetaDataNodeData) {return;}
 
 	drawManager.beginDrawable(MHWRender::MUIDrawManager::kNonSelectable);
-
 	drawManager.setColor(pMetaDataNodeData->TextColor);
 	drawManager.setFontSize(pMetaDataNodeData->TextSize);
 

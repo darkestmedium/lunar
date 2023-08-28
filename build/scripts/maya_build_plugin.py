@@ -1,4 +1,5 @@
 # Built-in imports
+import os
 import platform
 import subprocess
 import time
@@ -114,9 +115,11 @@ class LMBuildPlugin():
 
 if __name__ == "__main__":
 
+	# print(os.environ["mayaVersion"])
+
 	build = LMBuildPlugin(
 		# projectName="mlunar",
-		# mayaVersion=2023, 
+		mayaVersion=os.environ["mayaVersion"], 
 		# buildType="Debug",
 		# buildTarget="all",
 		# clean=True,

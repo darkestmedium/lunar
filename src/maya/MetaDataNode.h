@@ -17,6 +17,7 @@
 #include <maya/MAnimControl.h>
 #include <maya/MDrawRegistry.h>
 #include <maya/MStringArray.h>
+#include <maya/MEventMessage.h>
 
 // Function Sets
 #include <maya/MFnMatrixAttribute.h>
@@ -36,6 +37,7 @@
 #include <maya/MUserData.h>
 
 // Proxies
+#include <maya/MPxTransform.h>
 #include <maya/MPxLocatorNode.h>
 #include <maya/MPxDrawOverride.h>
 
@@ -47,13 +49,14 @@
 
 
 // Node
-class MetaDataNode : public MPxLocatorNode {
+// class MetaDataNode : public MPxLocatorNode {
+class MetaDataNode : public MPxTransform {
 public:
 	// Node Data
-	static const MString typeName;
-	static const MTypeId typeId;
-	static const MString drawDbClassification;
-	static const MString drawRegistrationId;
+	static const MString type_name;
+	static const MTypeId type_id;
+	static const MString type_drawdb;
+	static const MString type_drawid;
 
 	// Node's Input Attributes
 	static MObject attrInMetaData;
@@ -67,26 +70,25 @@ public:
 	// Nodes's Output Attributes
 	static MObject AttrOutUpdate;
 
-	MObject SelfObj;
+	MObject self_object;
 
 	// Constructors
 	MetaDataNode()
-		: MPxLocatorNode()
+		: MPxTransform()
 	{};
 	// Destructors
-	~MetaDataNode() override {};
+	virtual ~MetaDataNode() override {};
 
 	// Public methods - overrides
-	static void* creator() {return new MetaDataNode();}
-	static MStatus initialize();
-	void getCacheSetup(
-		const MEvaluationNode& evalNode,
-		MNodeCacheDisablingInfo& disablingInfo,
-		MNodeCacheSetupInfo& cacheSetupInfo,
-		MObjectArray& monitoredAttributes
-	) const override;
-	void postConstructor() override;
-	SchedulingType schedulingType() const override {return SchedulingType::kParallel;}
+	static void* 		creator() {return new MetaDataNode();}
+	static MStatus	initialize();
+	virtual void 		postConstructor() override;
+
+	MStatus 				setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlugs) override;
+	void 						getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
+	SchedulingType 	schedulingType() const override {return SchedulingType::kParallel;}
+
+	// bool 						isBounded() const override {return true;};
 };
 
 
@@ -94,19 +96,17 @@ public:
 // User data
 class MetaDataNodeData : public MUserData {
 public:
-
 	// MPlug arrayMetaData;
 	unsigned int countMetaData;
 	
 	std::vector<MString> vectorText;
-
 	MPoint TextPosition;
 	int TextSize;
 	MColor TextColor;
 
 	// Constructors
 	MetaDataNodeData() 
-		: MUserData()
+		: MUserData(false)
 	{};  // Don't delete after draw
 	// Destructor
 	virtual ~MetaDataNodeData() override {};
@@ -117,16 +117,18 @@ public:
 
 
 // Draw override
-class MetaDataNodeDrawOverride : public MHWRender::MPxDrawOverride {
+class MetaDataDrawOverride : public MHWRender::MPxDrawOverride {
 public:
-	// Constructors
-	MetaDataNodeDrawOverride(const MObject& Object)
-		: MHWRender::MPxDrawOverride(Object, nullptr)
-	{};
 	// Destructors
-	virtual ~MetaDataNodeDrawOverride() override {};
+	virtual ~MetaDataDrawOverride() override 	{
+		ptr_metadata = NULL; 
+		if (fModelEditorChangedCbId != 0) {
+			MMessage::removeCallback(fModelEditorChangedCbId);
+			fModelEditorChangedCbId = 0;
+		}
+	};
 
-	static MHWRender::MPxDrawOverride* creator(const MObject& Object) {return new MetaDataNodeDrawOverride(Object);}
+	static MHWRender::MPxDrawOverride* creator(const MObject& Object) {return new MetaDataDrawOverride(Object);}
 	virtual MHWRender::DrawAPI supportedDrawAPIs() const override {return MHWRender::kAllDevices;}
 	virtual bool hasUIDrawables() const override {return true;}
 	virtual void addUIDrawables(
@@ -141,4 +143,21 @@ public:
 		const MHWRender::MFrameContext& frameContext,
 		MUserData* oldData
 	) override;
+
+private:
+	// Constructors
+	MetaDataDrawOverride(const MObject& obj)
+		: MHWRender::MPxDrawOverride(obj, nullptr, false)
+		, ptr_metadata(nullptr)
+	{
+		fModelEditorChangedCbId = MEventMessage::addEventCallback("modelEditorChanged", OnModelEditorChanged, this);
+		MStatus status;
+		MFnDependencyNode fn_node(obj, &status);
+		ptr_metadata = status ? dynamic_cast<MetaDataNode*>(fn_node.userNode()) : NULL;
+	};
+
+	MetaDataNode*	ptr_metadata;						// The node we are rendering
+	MCallbackId 	fModelEditorChangedCbId;
+	static void 	OnModelEditorChanged(void *clientData);
+
 };

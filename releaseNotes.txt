@@ -1,150 +1,46 @@
-v.0.4.3 - Animation Workflow New Feature Release
+v.0.4.5 - Speed Improvements Release
 
-Date: 31rd of July 2023
+Date: 28th of August 2023
 
 
 
 What's new:
 
-	New context sensitive Animation Marking Menu for fast and convinient access to all tools underneath
-		the right mouse button.
-
-	Animation Marking Menu:
-	
-		Build Scene MM:
-			Adds radial menu item with "Build new Scene".
-			Adds radial menu item with "Load Character".
-		
-		Import Animation MM:
-			Adds radial menu item with "Import MannequinUe5"
-			Adds radial menu item with "Import MannequinUe4"
-			Adds radial menu item with "Import HumanIk"
-			Adds radial menu item with "Import SinnersDev2"
-			Adds radial menu item with "Import SinnersDev1"
-
-		Export Animation MM:
-			Adds radial menu item with "Export Ctrls"
-			Adds radial menu item with "Export Skeleton"
-
-		Bake Animation MM:
-			Adds radial menu item with "Bake Ctrls to Skeleton"
-			Adds radial menu item with "Bake Skeleton to Ctrls"
-
-		Graph Editor MM
-
-		Studio Library MM
-
-		Time Editor MM:
-			Adds radial menu item with "Create Clip"
-			Adds radial menu item with "Create Relocator"
-
-		Context Sensitive Dropdown MM when a ctrl is under the cursor or is selected:
-			Switch To MM:
-				Fk
-				Ik
-
-			Select Main Ctrl
-			Select Component Ctrls
-			Select All Ctrls
-
-			Reset Ctrl
-			Reset Component Ctrls
-			Reset All Ctrls
-
-			Display:
-				Toggle Bones Visibilty
-				Toggle X-Ray Bones
-				Toggle Ctrls Visibilty
+	Ctrl Rig is now two times faster than before.
+	Ctrl and MetaData nodes now inherit from the MPxTransform node and do not have a shape node.
+	Z is now the default up axis.
 
 
 
 	Lunar Framework:
+		
+		CtrlNode:
+			Renames drawFkIkState to drawSolverMode.
+			Renames fkIkStatePosition to solerModePosition.
 
+		CtrlCommand:
+			Returns a single string with the transform node instead of a list with transform / shape node.
 
-		LunarMaya:
-			LMRigObject (W.I.P): object for wrapping the ctrl rig and both retargeters.
-				__init__(self, name) -> None:
-				import lunar.maya.LunarMayaRetarget as lmrtg
-				self.root = name
-				self.namespace = LMNamespace.getNamespaceFromName(name)
-				self.rtgCtrl = lmrtg.LMLunarCtrl(f"{self.namespace}:Ctrl")
-				self.rtgSkeleton = lmrtg.LMLunarExport(f"{self.namespace}:Export")
-
-			LMNamespace(MNamespace):
-				removeNamespaceFromName(cls, name:str) -> str:
-
-
-		LunarMayaUi:
-
-			LMUi:	Python wrapper / override for mel ui procedures.
-				buildObjectMenuItemsNow(cls, parent:str):
-				buildAnimationRadialMM(cls, object:str=""):
-				buildTimeEditordMM(cls, object:str, *args):
-				buildSceneBuildMM(cls):
-				buildImportAnimationMM(cls):
-				buildExportAnimationMM(cls):
-				buildBakeAnimationMM(cls):
-				buildAnimationPopupMM(cls, object:str="", *args):
-				builAnimationSwitchToMM(cls, object:str):
-				builAnimationDisplayMM(cls, object:str):
-				# Temp methods - will prolly move to rig module?
-				addTimeEditorClip(cls, object:str, *args):
-				addTimeEditorRelocator(cls, object:str, *args):
-				switchComponentMode(cls, *args, object:str, mode:str):
-				getAllCtrls(cls, object:str, *args) -> list:
-				getComponentCtrls(cls, object:str, *args) -> list:
-				selectMainCtrl(cls, object:str, *args):
-				selectComponentCtrls(cls, object:str, *args):
-				selectAllCtrls(cls, object:str, *args):
-				resetCtrl(cls, object:str, *args):
-				resetComponentCtrls(cls, object:str, *args):
-				resetAllCtrls(cls, object:str, *args):
-				toggleCtrlsVisbility(cls, object:str, *args):
-				toggleBonesVisbility(cls, object:str, *args):
-				openGraphEditor(cls, object:str="", *args):
-				openStudioLibrary(cls):
-				
-
-		LunarMayaRetargeter:
-
-			LMHik: Python overrides for hik utilities procedures.
-				getStateToGlobalSk(cls, pCharacter:str, pCreate:bool=False) -> str:
-				getCurrentCharacter(cls) -> str:
-				setCurrentCharacter(cls, character:str):
-				sKeyableXYZ(cls, node:str, attribute:str) -> bool:
-				setCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
-				setDirectCharacterInput(cls, pCharacter:str, pNewCharacterSrc:str):
-				getDirectRetargeter(cls, pDstCharacter:str, pSrcCharacter:str, pCreate:int):
-				connectSkFromCharacterState(cls, pCharacter:str, pState:str, bakeMode:int):
-				connectSourceAndSaveAnim(cls, pTransform:str, pSrcT:str, pSrcR:str="", pSrcS:str="", forcePairBlend:bool=False) -> str:
-				getHikNodeAttributesToBake(cls, character:LMHumanIk):
-				bakeCharacterPre(cls, character:LMHumanIk):
-				bakeCharacter(cls, nodes:list, startEnd:tuple, attributes:list=lm.listAttrTR, preserveOutsideKeys:bool=False):
-
-			LMTimeEditor:
-				createClip(cls, objects:list, name:str, startFrame:int=None) -> None: Fixed creation of time editor clips
-
-
-		Mel Overrides:
-			dagMenuProcOverride.mel
-			hikInputSourceUtils.mel
-			melOverrides.mel
 
 
 
 	Lunar Rig:
 		All controllers are now connected via messeage attributes to the components.
+		Weapon slots are locked and placed in the correct place.
+
 
 
 
 Bug Fixes:
+	Ctrl is updating the pole vector line properly by marking the geometry dirty.
+	Ctrl is now properly evaluated in EM and has some optimizations from the MPxGeometryOverride.
 
 
 
 
 What need's to be done:
 	Add spine ik to the rig.
-	Update weapons bones and freeze their transforms.
+	Optimize the ik solver.
 	Speed up preserveOutsideKeys bake which is around 10 times slower now.
 	Clean up import animation time madness in the animation toolset method.
 	Bake Ctrl to Export Skeleton for selected time range on the timeslider.

@@ -8,9 +8,9 @@
 global proc AEmetaDataTemplate(string $nodeName) {
 	// Main layout
 	editorTemplate -beginScrollLayout;
-		
+
 		editorTemplate -addControl "metaData";
-	
+
 		editorTemplate -beginLayout "Meta Data Display" -collapse false;
 			editorTemplate -addControl "textPositionX";
 			editorTemplate -addControl "textPositionY";
@@ -19,38 +19,83 @@ global proc AEmetaDataTemplate(string $nodeName) {
 			editorTemplate -addControl "visibility";
 			editorTemplate -endLayout;
 
-		editorTemplate -beginLayout (uiRes("m_AEshapeTemplate.kObjectDisplay"));
-			// include/call base class/node attributes
-			AEdagNodeCommon $nodeName;
-		editorTemplate -endLayout;
-		// include/call base class/node attributes
-		AEdagNodeInclude $nodeName;
-		
-		// hide attributes attributes
-		editorTemplate -beginNoOptimize;
-		editorTemplate -suppress "localPosition";
-		editorTemplate -suppress "localScale";
-		editorTemplate -suppress "aInWorldMatrix";
-		editorTemplate -suppress "motionBlur";
-		editorTemplate -suppress "visibleInReflections";
-		editorTemplate -suppress "visibleInRefractions";
-		editorTemplate -suppress "castsShadows";
-		editorTemplate -suppress "receiveShadows";
-		editorTemplate -suppress "maxVisibilitySamplesOverride";
-		editorTemplate -suppress "maxVisibilitySamples";
-		editorTemplate -suppress "geometryAntialiasingOverride";
-		editorTemplate -suppress "antialiasingLevel";
-		editorTemplate -suppress "shadingSamplesOverride";
-		editorTemplate -suppress "shadingSamples";
-		editorTemplate -suppress "maxShadingSamples";
-		editorTemplate -suppress "volumeSamplesOverride";
-		editorTemplate -suppress "volumeSamples";
-		editorTemplate -suppress "depthJitter";
-		editorTemplate -suppress "ignoreSelfShadowing";
-		editorTemplate -suppress "primaryVisibility";
-		editorTemplate -suppress "compInstObjGroups";
-		editorTemplate -suppress "componentTags";
-		editorTemplate -endNoOptimize;
+		editorTemplate -beginLayout "Node Behavior" -collapse true;
+			editorTemplate -addControl "caching";
+			editorTemplate -addControl "nodeState";
+			editorTemplate -endLayout;
+
+		// Hide attributes
+		editorTemplate -suppress translate;
+		editorTemplate -suppress rotate;
+		editorTemplate -suppress scale;
+		editorTemplate -suppress rotateOrder;
+		editorTemplate -suppress inheritsTransform;
+		editorTemplate -suppress offsetParentMatrix;
+		editorTemplate -suppress shear;
+		editorTemplate -suppress rotateAxis;
+		editorTemplate -suppress rotateQuaternion;
+		editorTemplate -suppress frozen;
+		editorTemplate -suppress blackBox;
+		editorTemplate -suppress rmbCommand;
+		editorTemplate -suppress template;
+		editorTemplate -suppress templateName;
+		editorTemplate -suppress templatePath;
+		editorTemplate -suppress templateVersion;
+		editorTemplate -suppress viewName;
+		editorTemplate -suppress iconName;
+		editorTemplate -suppress viewMode;
+		editorTemplate -suppress uiTreatment;
+		editorTemplate -suppress customTreatment;
+		editorTemplate -suppress creator;
+		editorTemplate -suppress creationDate;
+		editorTemplate -suppress containerType;
+		editorTemplate -suppress intermediateObject;
+		editorTemplate -suppress instObjGroups;
+		editorTemplate -suppress drawOverride;
+
+		editorTemplate -suppress objectColorRGB;
+		editorTemplate -suppress wireColorRGB;
+		editorTemplate -suppress listObjectColor;
+		editorTemplate -suppress objectColor;
+		editorTemplate -suppress lodVisibility;
+		editorTemplate -suppress selectionChildHighlighting;
+		editorTemplate -suppress renderInfo;
+		editorTemplate -suppress renderLayerInfo;
+
+		editorTemplate -suppress useObjectColor;
+		editorTemplate -suppress ghosting;
+		editorTemplate -suppress ghostingMode;
+		editorTemplate -suppress ghostCustomSteps;
+		editorTemplate -suppress ghostFrames;
+		editorTemplate -suppress ghostOpacityRange;
+		editorTemplate -suppress ghostColorPre;
+		editorTemplate -suppress ghostColorPost;
+		editorTemplate -suppress ghostDriver;
+		editorTemplate -suppress ghostUseDriver;
+
+		editorTemplate -suppress hiddenInOutliner;
+		editorTemplate -suppress useOutlinerColor;
+		editorTemplate -suppress outlinerColor;
+
+		editorTemplate -suppress rotatePivot;
+		editorTemplate -suppress rotatePivotTranslate;
+		editorTemplate -suppress scalePivot;
+		editorTemplate -suppress scalePivotTranslate;
+		editorTemplate -suppress minTransLimit;
+		editorTemplate -suppress maxTransLimit;
+		editorTemplate -suppress minRotLimit;
+		editorTemplate -suppress maxRotLimit;
+		editorTemplate -suppress minScaleLimit;
+		editorTemplate -suppress maxScaleLimit;
+
+		editorTemplate -suppress geometry;
+		editorTemplate -suppress selectHandle;
+		editorTemplate -suppress displayHandle;
+		editorTemplate -suppress displayScalePivot;
+		editorTemplate -suppress displayRotatePivot;
+		editorTemplate -suppress displayLocalAxis;
+		editorTemplate -suppress dynamics;
+		editorTemplate -suppress showManipDefault;
 	
 		editorTemplate -addExtraControls;
 

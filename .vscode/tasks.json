@@ -3,13 +3,11 @@
   // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
-		{
+		{ // BUILD TASKS
 			"label": "Build Maya Plugin",
 			"type": "shell",
-			"command": "sh ./build/scripts/maya_build_plugin.sh",
-			"windows": {
-				"command": ".\\build\\scripts\\maya_build_plugin.cmd"
-			},
+			"command": "export mayaVersion=${input:mayaVersion} && python3 ./build/scripts/maya_build_plugin.py",
+			// "windows": {"command": "cmd SET mayaVersion=${input:mayaVersion} && python3 .\\build\\scripts\\maya_build_plugin.py"},
 			"group": {
 				"kind": "build",
 				"isDefault": false
@@ -20,22 +18,34 @@
 			},
 			"problemMatcher": []
 		},
-		{
-			"label": "Clean workspace",
+
+		{ // CLEAN TASKS
+			"label": "Clean Workspace",
 			"type": "shell",
 			"command": "sh ./build/scripts/clean_workspace_git.sh",
-			// "windows": {
-			// 	"command": ".\\build\\scripts\\maya_build_plugin.cmd"
-			// },
 			"group": {
 				"kind": "build",
 				"isDefault": false
 			},
-			// "presentation": {
-			// 	"reveal": "always",
-			// 	"panel": "new"
-			// },
-			// "problemMatcher": []
+		},
+		{
+			"label": "Clean ./build/maya",
+			"type": "shell",
+			"command": "rm -r ./build/maya",
+			"windows": {"command": "del /f .\\build\\maya"},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+		},
+	],
+
+	"inputs": [
+		{
+			"id": "mayaVersion",
+			"description": "Maya Version:",
+			"default": "2024",
+			"type": "promptString"
 		},
 	]
 }

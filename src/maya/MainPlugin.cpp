@@ -8,7 +8,7 @@
 #include "TwistSolver.h"
 #include "TwistSolver.h"
 
-#include "footPrintNodeGeoOverride.h"
+// #include "footPrintNodeGeoOverride.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -42,13 +42,11 @@ static void onSceneSaved(void* clientData) {
 MStatus initializePlugin(MObject obj) {
 	// Plugin variables
 	const char* author = "Lunatics";
-	const char* version = "0.3.1";
+	const char* version = "0.4.5";
 	const char* requiredApiVersion = "Any";
 
 	MStatus status;
 	MFnPlugin fn_plugin(obj, author, version, requiredApiVersion);
-
-
 
 	status = fn_plugin.registerTransform(
 		CtrlNode::type_name,
@@ -75,17 +73,6 @@ MStatus initializePlugin(MObject obj) {
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-
-	// // Register Ik2bSolver node
-	// status = fn_plugin.registerNode(
-	// 	MetaDataNode::typeName,
-	// 	MetaDataNode::typeId,
-	// 	MetaDataNode::creator,
-	// 	Ik2bSolver::initialize,
-	// 	MPxNode::kDependNode
-	// );
-	// CHECK_MSTATUS_AND_RETURN_IT(status);
-
 	// Register Ik2bSolver node
 	status = fn_plugin.registerNode(
 		Ik2bSolver::typeName,
@@ -104,20 +91,21 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register MetaData node
-	status = fn_plugin.registerNode(
-		MetaDataNode::typeName,
-		MetaDataNode::typeId,
-		MetaDataNode::creator,
-		MetaDataNode::initialize,
-	 	MPxLocatorNode::kLocatorNode,
-	 	&MetaDataNode::drawDbClassification
+	status = fn_plugin.registerTransform(
+		MetaDataNode::type_name,
+		MetaDataNode::type_id, 
+		&MetaDataNode::creator, 
+		&MetaDataNode::initialize,
+		&MPxTransformationMatrix::creator,
+		MPxTransformationMatrix::baseTransformationMatrixId,
+		&MetaDataNode::type_drawdb
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register MetaData draw override
 	status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(
-		MetaDataNode::drawDbClassification,
-		MetaDataNode::drawRegistrationId,
-		MetaDataNodeDrawOverride::creator
+		MetaDataNode::type_drawdb,
+		MetaDataNode::type_drawid,
+		MetaDataDrawOverride::creator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Register MetaData command
@@ -147,38 +135,6 @@ MStatus initializePlugin(MObject obj) {
 		MPxNode::kDependNode
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-
-	Globals = new GlobalVariables();
-
-	// status = fn_plugin.registerTransform(
-	// 	gPluginNodeName,
-	// 	FootPrintNode::id, 
-	// 	&FootPrintNode::creator, 
-	// 	&FootPrintNode::initialize,
-	// 	&MPxTransformationMatrix::creator,
-	// 	MPxTransformationMatrix::baseTransformationMatrixId,
-	// 	&FootPrintNode::drawDbClassification
-	// );
-	// CHECK_MSTATUS_AND_RETURN_IT(status);
-	status = fn_plugin.registerNode(
-		gPluginNodeName,
-		FootPrintNode::id,
-		&FootPrintNode::creator,
-		&FootPrintNode::initialize,
-		MPxNode::kLocatorNode,
-		&FootPrintNode::drawDbClassification
-	);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-	status = MDrawRegistry::registerGeometryOverrideCreator(
-		FootPrintNode::drawDbClassification,
-		FootPrintNode::drawRegistrantId,
-		FootPrintGeometryOverride::Creator
-	);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// Register a custom selection mask with priority 2 (same as locators
-	// by default).
-	// MSelectionMask::registerSelectionType(gPluginSelectionMask, 2);
 
 
 	if (MGlobal::mayaState() == MGlobal::kInteractive) {
@@ -211,18 +167,6 @@ MStatus uninitializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin fn_plugin(obj);
 
-
-	// delete Globals;
-
-	// Do not check the return code and return here
-	// Plugin uninitialization should never fail
-	MDrawRegistry::deregisterGeometryOverrideCreator(
-		FootPrintNode::drawDbClassification,
-		FootPrintNode::drawRegistrantId
-	);
-	fn_plugin.deregisterNode(FootPrintNode::id);
-	// MSelectionMask::deregisterSelectionType(gPluginSelectionMask);
-
 	MMessage::removeCallbacks(callbackIds);
 
 	// Deregister TwistSolver
@@ -238,12 +182,12 @@ MStatus uninitializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Deregister MetaData draw override
 	status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
-		MetaDataNode::drawDbClassification,
-		MetaDataNode::drawRegistrationId
+		MetaDataNode::type_drawdb,
+		MetaDataNode::type_drawid
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	// Deregister MetaDataNode
-	status = fn_plugin.deregisterNode(MetaDataNode::typeId);
+	status = fn_plugin.deregisterNode(MetaDataNode::type_id);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister IkCommand

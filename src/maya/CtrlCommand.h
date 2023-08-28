@@ -96,9 +96,6 @@ public:
 	static const char* helpFlagShort;
 	static const char* helpFlagLong;
 
-	// static const char* hasDynamicAttributesFlagShort;
-	// static const char* hasDynamicAttributesFlagLong;
-
 	MString name;
 	MString parent;
 
@@ -118,8 +115,6 @@ public:
 	short indxShape;
 	bool draw_solver_mode;
 	bool bDrawLine;
-	// bool has_dynamic_attributes;
-	// double fillTransparency;
 	double lineWidth;
 	bool bLockShapeAttributes;
 	bool bHideOnPlayback;

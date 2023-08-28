@@ -2,7 +2,7 @@
 import lunar.maya
 
 __moduleName__ = "lunar"
-__version__ = "0.4.2"
+__version__ = "0.4.5"
 
 
 

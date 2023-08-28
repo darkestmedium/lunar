@@ -144,18 +144,10 @@ MStatus MetaDataCmd::doIt(const MArgList& argList) {
 
 	// Command create mode
 	if (command == kCommandCreate) {
-		objTransform = dagMod.createNode("transform", MObject::kNullObj);
-		objShape = dagMod.createNode(MetaDataNode::typeName, objTransform);
-
-		// If name equals to "metaData" rename only the transform node as the shape node will be
-		// renamed in the rigController.RigController::postConstructor method.
-		if (name == MetaDataNode::typeName)	{
-			dagMod.renameNode(objTransform, name);
-		}	else {
-			dagMod.renameNode(objTransform, name);
-			dagMod.renameNode(objShape, name + "Shape");
-		}
+		obj_metadata = dagMod.createNode(MetaDataNode::type_name, MObject::kNullObj);
+		if (name != MetaDataNode::type_name) {dagMod.renameNode(obj_metadata, name);}
 	}
+
 	return redoIt();
 }
 
@@ -178,46 +170,45 @@ MStatus MetaDataCmd::redoIt() {
 		status = dagMod.doIt();
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 
-		MFnDependencyNode fnTransform(objTransform);
-		MFnDependencyNode fnShape(objShape);
+		MFnDependencyNode fn_metadata(obj_metadata);
+		// MFnDependencyNode fnShape(objShape);
 		// TRANSFORM NODE
-		MPlug plugTranslateX = fnTransform.findPlug("translateX", false);
+		MPlug plugTranslateX = fn_metadata.findPlug("translateX", false);
 		LMAttribute::lockAndHideAttr(plugTranslateX);
-		MPlug plugTranslateY = fnTransform.findPlug("translateY", false);
+		MPlug plugTranslateY = fn_metadata.findPlug("translateY", false);
 		LMAttribute::lockAndHideAttr(plugTranslateY);
-		MPlug plugTranslateZ = fnTransform.findPlug("translateZ", false);
+		MPlug plugTranslateZ = fn_metadata.findPlug("translateZ", false);
 		LMAttribute::lockAndHideAttr(plugTranslateZ);
-		MPlug plugRotateX = fnTransform.findPlug("rotateX", false);
+		MPlug plugRotateX = fn_metadata.findPlug("rotateX", false);
 		LMAttribute::lockAndHideAttr(plugRotateX);
-		MPlug plugRotateY = fnTransform.findPlug("rotateY", false);
+		MPlug plugRotateY = fn_metadata.findPlug("rotateY", false);
 		LMAttribute::lockAndHideAttr(plugRotateY);
-		MPlug plugRotateZ = fnTransform.findPlug("rotateZ", false);
+		MPlug plugRotateZ = fn_metadata.findPlug("rotateZ", false);
 		LMAttribute::lockAndHideAttr(plugRotateZ);
-		MPlug plugScaleX = fnTransform.findPlug("scaleX", false);
+		MPlug plugScaleX = fn_metadata.findPlug("scaleX", false);
 		LMAttribute::lockAndHideAttr(plugScaleX);
-		MPlug plugScaleY = fnTransform.findPlug("scaleY", false);
+		MPlug plugScaleY = fn_metadata.findPlug("scaleY", false);
 		LMAttribute::lockAndHideAttr(plugScaleY);
-		MPlug plugScaleZ = fnTransform.findPlug("scaleZ", false);
+		MPlug plugScaleZ = fn_metadata.findPlug("scaleZ", false);
 		LMAttribute::lockAndHideAttr(plugScaleZ);
-		MPlug plugVisibility = fnTransform.findPlug("visibility", false);
-		LMAttribute::lockAndHideAttr(plugVisibility);
+		// MPlug plugVisibility = fn_metadata.findPlug("visibility", false);
+		// LMAttribute::lockAndHideAttr(plugVisibility);
 
-		// SHAPE NODE
 		// Sets the plugs values based on the flag arguments
-		MPlug plugMetaData(objShape, MetaDataNode::attrInMetaData);
+		MPlug plugMetaData(obj_metadata, MetaDataNode::attrInMetaData);
 		// Get first plug in array
 		MPlug plugText0 = plugMetaData.elementByPhysicalIndex(0).child(0);
 		plugText0.setValue(text);
 
-		MPlug plugTextPositionX(objShape, MetaDataNode::AttrTextPositionX);
+		MPlug plugTextPositionX(obj_metadata, MetaDataNode::AttrTextPositionX);
 		plugTextPositionX.setValue(textPosition.x);
-		MPlug plugTextPositionY(objShape, MetaDataNode::AttrTextPositionY);
+		MPlug plugTextPositionY(obj_metadata, MetaDataNode::AttrTextPositionY);
 		plugTextPositionY.setValue(textPosition.y);
 
-		MPlug plugTextSize(objShape, MetaDataNode::AttrTextSize);
+		MPlug plugTextSize(obj_metadata, MetaDataNode::AttrTextSize);
 		plugTextSize.setInt(textSize);
 
-		MPlug plugTextColor(objShape, MetaDataNode::AttrTextColor);
+		MPlug plugTextColor(obj_metadata, MetaDataNode::AttrTextColor);
 		MPlug plugTextColorR = plugTextColor.child(0);
 		plugTextColorR.setValue(textColor.r);
 		MPlug plugTextColorG = plugTextColor.child(1);
@@ -225,13 +216,13 @@ MStatus MetaDataCmd::redoIt() {
 		MPlug plugTextColorB = plugTextColor.child(2);
 		plugTextColorB.setValue(textColor.b);
 
-		MPlug plugTextVisbility(objShape, MetaDataNode::visibility);
+		MPlug plugTextVisbility(obj_metadata, MetaDataNode::visibility);
 		plugTextVisbility.setValue(textVisibility);
 
 		// Sets command's output result in mel / python
 		clearResult();
-		appendToResult(fnTransform.name());
-		appendToResult(fnShape.name());
+		setResult(fn_metadata.name());
+		// appendToResult(fnShape.name());
 	}
 
 	return MS::kSuccess;

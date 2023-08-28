@@ -14,10 +14,10 @@ global proc AEctrlTemplate(string $nodeName) {
 		editorTemplate -beginLayout "Transform Attributes" -collapse false;
 			editorTemplate -addControl "translate";
 			editorTemplate -addControl "rotate";
+			editorTemplate -addControl "scale";
 			editorTemplate -addControl "rotateOrder";
 			editorTemplate -addControl "inheritsTransform";
 			editorTemplate -suppress "offsetParentMatrix";
-			editorTemplate -suppress "scale";
 			editorTemplate -suppress "shear";
 			editorTemplate -suppress "rotateAxis";
 			editorTemplate -suppress rotateQuaternion;
@@ -45,7 +45,6 @@ global proc AEctrlTemplate(string $nodeName) {
 			editorTemplate -suppress "fkIk";
 
 			editorTemplate -endLayout;
-
 
 		AEtransformNoScroll $nodeName;
 

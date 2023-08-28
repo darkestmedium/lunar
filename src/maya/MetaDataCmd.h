@@ -33,8 +33,7 @@
 
 
 
-class MetaDataCmd : public MPxCommand 
-{
+class MetaDataCmd : public MPxCommand {
 public:
 	enum CommandMode {kCommandCreate, kCommandHelp};
 	CommandMode command;
@@ -70,14 +69,14 @@ public:
 	MColor textColor;
 	bool textVisibility;
 	
-	MObject objTransform;
-	MObject objShape;
+	MObject obj_metadata;
+	// MObject objShape;
 
 	// Constructors
 	MetaDataCmd()
  		: MPxCommand()
-		, name(MetaDataNode::typeName)
-		, textPosition(100.0, 100.0, 0.0)
+		, name(MetaDataNode::type_name)
+		, textPosition(50.0, 50.0, 0.0)
 		, textSize(12)
 		, textColor(2.0, 2.0, 2.0)
 		, textVisibility(true)

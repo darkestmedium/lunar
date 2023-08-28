@@ -22,7 +22,6 @@
 #include <maya/MDataBlock.h>
 #include <maya/MDataHandle.h>
 #include <maya/MColor.h>
-// #include <maya/MFnPlugin.h>
 #include <maya/MDistance.h>
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnNumericAttribute.h>
@@ -30,7 +29,6 @@
 #include <maya/MPxLocatorNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MDagMessage.h>
-// #include <maya/MEvaluationManager.h>
 #include <maya/MEvaluationNode.h>
 #include <maya/MEventMessage.h>
 #include <maya/MEvaluationManager.h>
@@ -162,7 +160,7 @@ public:
 	MStatus   			compute(const MPlug& plug, MDataBlock& dataBlock) override;
 	MStatus 				postEvaluation(const  MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType) override; 
 
-	void 					  getCacheSetup(const MEvaluationNode& evalNode,	MNodeCacheDisablingInfo& disablingInfo,	MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
+	void 					  getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
 	SchedulingType  schedulingType() const override {return SchedulingType::kParallel;}
 
 	bool 						isBounded() const override {return true;};
@@ -263,7 +261,6 @@ private:
 		, ptrCtrlNode(nullptr)
 	{
 		fModelEditorChangedCbId = MEventMessage::addEventCallback("modelEditorChanged", OnModelEditorChanged, this);
-
 		MStatus status;
 		MFnDependencyNode fn_node(obj, &status);
 		ptrCtrlNode = status ? dynamic_cast<CtrlNode*>(fn_node.userNode()) : NULL;

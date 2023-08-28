@@ -823,7 +823,6 @@ class LMMetaData():
 		textVisibility:bool=True,
 	):
 		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
-
 		self.name = name
 		self.text = text
 		self.textPosition = textPosition
@@ -831,12 +830,10 @@ class LMMetaData():
 		self.textVisibility = textVisibility
 
 		self.validate()
-
 		self.text = self.getText()
 
 
 	def validate(self) -> bool:
-
 		if self.isValid():
 			self.log.info(f"Initiated from existing object")
 			return True
@@ -845,7 +842,7 @@ class LMMetaData():
 			sceneName = cmds.file(query=True, sceneName=True, shortName=True)
 			if not sceneName: self.text = "untitled"
 
-		self.transfom, self.shape = cmds.metaData(
+		self.node = cmds.metaData(
 			name=self.name,
 			# text=self.text, // this is not implemented in the cpp part due to compound array attrs
 			textPosition=self.textPosition,
@@ -853,10 +850,10 @@ class LMMetaData():
 			textVisibility=self.textVisibility,
 		)
 		# Temp override for array attributes
-		cmds.setAttr(f"{self.shape}.metaData[0].text", self.text, type="string")
-		cmds.setAttr(f"{self.shape}.metaData[0].displayInViewport", True)
+		cmds.setAttr(f"{self.node}.metaData[0].text", self.text, type="string")
+		cmds.setAttr(f"{self.node}.metaData[0].displayInViewport", True)
 
-		self.name = self.transfom
+		self.name = self.node
 		self.log.info(f"Initiated from a new object")
 
 		return True
@@ -864,12 +861,12 @@ class LMMetaData():
 
 	def isValid(self) -> bool:
 
-		if self.objOfTypeExists(self.name, "transform"):
-			self.transfom = self.name
-			self.shape = cmds.listRelatives(self.transfom, shapes=True)[0]
-			if self.shape:
-				if self.objOfTypeExists(self.shape, "metaData"):
-					return True
+		if self.objOfTypeExists(self.name, "metaData"):
+			self.node = self.name
+			return True
+			# self.node = cmds.listRelatives(self.node, shapes=True)[0]
+			# if self.node:
+			# 	if self.objOfTypeExists(self.node, "metaData"):
 
 		return False
 
@@ -883,27 +880,27 @@ class LMMetaData():
 
 
 	def setText(self, text:str):
-		cmds.setAttr(f"{self.shape}.metaData[0].text", text, type="string")
-		cmds.setAttr(f"{self.shape}.metaData[0].displayInViewport", True)
+		cmds.setAttr(f"{self.node}.metaData[0].text", text, type="string")
+		cmds.setAttr(f"{self.node}.metaData[0].displayInViewport", True)
 
 
 	def setTextPosition(self, value:tuple):
-		cmds.setAttr(f"{self.shape}.textPositionX", value[0])
-		cmds.setAttr(f"{self.shape}.textPositionY", value[1])
+		cmds.setAttr(f"{self.node}.textPositionX", value[0])
+		cmds.setAttr(f"{self.node}.textPositionY", value[1])
 
 
 	def setTextColor(self, value:tuple):
-		cmds.setAttr(f"{self.shape}.textColorR", value[0])
-		cmds.setAttr(f"{self.shape}.textColorG", value[1])
-		cmds.setAttr(f"{self.shape}.textColorB", value[2])
+		cmds.setAttr(f"{self.node}.textColorR", value[0])
+		cmds.setAttr(f"{self.node}.textColorG", value[1])
+		cmds.setAttr(f"{self.node}.textColorB", value[2])
 
 
 	def getText(self):
-		return cmds.getAttr(f"{self.shape}.metaData[0].text")
+		return cmds.getAttr(f"{self.node}.metaData[0].text")
 
 
 	def setFromSceneName(self):
-		cmds.setAttr(f"{self.shape}.metaData[0].text", cmds.file(query=True, sceneName=True, shortName=True), type="string")
+		cmds.setAttr(f"{self.node}.metaData[0].text", cmds.file(query=True, sceneName=True, shortName=True), type="string")
 		
 
 
@@ -911,7 +908,6 @@ class LMMetaData():
 class LMNamespace(om.MNamespace):
 	"""Wrapper class for MNamespace.
 	"""
-
 	log = logging.getLogger("LMNamespace")
 
 
@@ -987,9 +983,7 @@ class LMNamespace(om.MNamespace):
 class LMAttribute():
 	"""Wrapper class for attribute utilities.
 	"""
-
 	log = logging.getLogger("MAttrUtils")
-
 	dgMod = om.MDGModifier()
 
 
@@ -1196,7 +1190,6 @@ class LMAttribute():
 class LMTransformUtils():
 	"""Wrapper class for transforms utilities.
 	"""
-
 	log = logging.getLogger("MTransformUtils")	
 
 

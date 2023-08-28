@@ -124,7 +124,7 @@ def selectCharacter():
 						cmds.select(f"{namespace}:main_ctrl")
 						return
 					continue
-			
+
 			lm.LMGlobal.displayWarning("No referenced characters found in the scene, nothing to select.")
 			return
 
@@ -213,8 +213,8 @@ def loadMocap(*args, hikTemplate="MannequinUe5") -> bool or None:
 		if not cmds.objExists(sceneMetaData.name): sceneMetaData = lm.LMMetaData()
 		sceneMetaData.setText(fiAnimFbx.baseName())
 		# Temp override for array attributes
-		cmds.setAttr(f"{sceneMetaData.shape}.metaData[1].text", fiAnimFbx.filePath(), type="string")
-		cmds.setAttr(f"{sceneMetaData.shape}.metaData[0].displayInViewport", True)
+		cmds.setAttr(f"{sceneMetaData.node}.metaData[1].text", fiAnimFbx.filePath(), type="string")
+		cmds.setAttr(f"{sceneMetaData.node}.metaData[0].displayInViewport", True)
 
 		rtgMocap = lmrtg.LMRetargeter.getFromHikTemplate(f"{namespaceMocap}:Skeleton", hikTemplate)
 

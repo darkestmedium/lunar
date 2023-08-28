@@ -18,7 +18,7 @@ set(MAYA_FILES
 	TwistSolver.cpp
 	TwistSolver.h
 
-	footPrintNodeGeoOverride.h
+	# footPrintNodeGeoOverride.h
 	# DisplayNode.h
 # # Api
 # 	LMAttribute.h
