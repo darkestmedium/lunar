@@ -1,0 +1,37 @@
+/*  AEcomponentTemplate.mel
+		The Attribute Editor template for the ctrl node.
+
+		source "AEcomponentTemplate.mel"; refreshEditorTemplates;
+*/
+
+
+
+global proc AEcomponentTemplate(string $nodeName) {
+	// Main Layout
+	editorTemplate -beginScrollLayout;
+
+		// Override AEtransformMain $nodeName;
+		editorTemplate -beginLayout "Transform Attributes" -collapse false;
+			editorTemplate -addControl "translate";
+			editorTemplate -addControl "rotate";
+			editorTemplate -addControl "scale";
+			editorTemplate -addControl "rotateAxis";
+			editorTemplate -addControl "rotateOrder";
+			editorTemplate -addControl "inheritsTransform";
+			editorTemplate -addControl "offsetParentMatrix";
+			editorTemplate -suppress "shear";
+			editorTemplate -suppress rotateQuaternion;
+			editorTemplate -suppress rotationInterpolation;
+			editorTemplate -endLayout;
+
+		AEtransformNoScroll $nodeName;
+
+		editorTemplate -addExtraControls;
+
+		// // hide extra attributess
+		// editorTemplate -beginNoOptimize;
+		// editorTemplate -endNoOptimize;
+
+	// End Main Layout
+	editorTemplate -endScrollLayout;
+};

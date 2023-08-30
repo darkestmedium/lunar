@@ -217,8 +217,8 @@ class LMUi():
 		)
 		cls.buildTimeEditordMM(object)
 
-		cls.buildSceneBuildMM()
 		# Bottom Three
+		cls.buildSceneBuildMM()
 		cls.buildImportAnimationMM()
 		cls.buildExportAnimationMM()
 		cls.buildBakeAnimationMM()
@@ -579,7 +579,7 @@ class LMUi():
 	def openGraphEditor(cls, object:str="", *args):
 		"""Wrapper for opening the GraphEditor with selection of the object returned from dagObjectHit
 		"""
-		if object: lm.LMGlobal.selectByName(object, lm.LMGlobal.kReplaceList)
+		if object: lm.LMGlobal.selectByName(object, lm.LMGlobal.kAddToList)
 		cmds.GraphEditor()
 
 	@classmethod
@@ -589,10 +589,8 @@ class LMUi():
 		try:
 			import studiolibrary
 			studiolibrary.main()
-		# except:
-			# return
 		except ImportError():
-			cls.log.critical("Failed to import studiolibrary.")
+			cls.log.warning("Failed to import studiolibrary.")
 			return
 		# studiolibrary.main()
 

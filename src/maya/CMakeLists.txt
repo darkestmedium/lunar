@@ -2,6 +2,7 @@ set(MAYA_FILES
 # Plugins
 	CtrlNode.h
 	CtrlNode.cpp
+	ComponentNode.h
 	CtrlCommand.h
 	CtrlCommand.cpp
 	FootRollSolver.h

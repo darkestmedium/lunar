@@ -6,7 +6,7 @@
 #include "MetaDataNode.h"
 #include "MetaDataCmd.h"
 #include "TwistSolver.h"
-#include "TwistSolver.h"
+#include "ComponentNode.h"
 
 // #include "footPrintNodeGeoOverride.h"
 
@@ -47,6 +47,24 @@ MStatus initializePlugin(MObject obj) {
 
 	MStatus status;
 	MFnPlugin fn_plugin(obj, author, version, requiredApiVersion);
+
+	// Register Controller node
+	status = fn_plugin.registerTransform(
+		ComponentNode::type_name,
+		ComponentNode::type_id, 
+		&ComponentNode::creator, 
+		&ComponentNode::initialize,
+		&MPxTransformationMatrix::creator,
+		MPxTransformationMatrix::baseTransformationMatrixId,
+		&ComponentNode::type_drawdb
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+	status = fn_plugin.registerCommand(
+		ComponentCmd::command_name,
+		ComponentCmd::creator,
+		ComponentCmd::syntaxCreator
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = fn_plugin.registerTransform(
 		CtrlNode::type_name,
@@ -202,8 +220,11 @@ MStatus uninitializePlugin(MObject obj) {
 		CtrlNode::type_drawdb,
 		CtrlNode::type_drawid
 	);
-	fn_plugin.deregisterNode(CtrlNode::type_id);
 	fn_plugin.deregisterCommand(CtrlCommand::commandName);
+	fn_plugin.deregisterNode(CtrlNode::type_id);
+
+	fn_plugin.deregisterCommand(ComponentCmd::command_name);
+	fn_plugin.deregisterNode(ComponentNode::type_id);
 
 	// // Deletes the maya main menu items
 	// if (MGlobal::mayaState() == MGlobal::kInteractive)

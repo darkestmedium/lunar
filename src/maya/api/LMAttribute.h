@@ -59,9 +59,26 @@ namespace LMAttribute {
 
 		*/
 		MStatus status;
+		plug.setLocked(true);
 		plug.setKeyable(false);
 		plug.setChannelBox(false);
+
+		return MS::kSuccess;
+	};
+
+	inline MStatus lockAndHideAttr(MObject& node, MObject& attribute) {
+		/* Locks and hides the given plug from the channelbox.
+
+		Returns:
+			status code (MStatus): kSuccess if the command was successful, kFailure if an error occured
+				during the command.
+
+		*/
+		MStatus status;
+		MPlug plug(node, attribute);
 		plug.setLocked(true);
+		plug.setKeyable(false);
+		plug.setChannelBox(false);
 
 		return MS::kSuccess;
 	};
