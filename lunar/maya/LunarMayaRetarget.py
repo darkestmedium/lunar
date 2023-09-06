@@ -2263,21 +2263,6 @@ class LMRetargeter():
 		self.status = False
 
 
-	def __getClipsInOutputDir(self):
-		"""Gets existing clips in output directory."""
-		# __compareInputOutputClips()
-		pass
-
-
-	def __compareInputOutputClips(self):
-		"""Compare input with existing output clips and return the result."""
-		pass
-
-
-	def nameOutputClip(self):
-		pass
-
-
 	@classmethod
 	def getFromHikTemplate(cls, name:str, hikTemplate:str):
 		"""Returns the retargeter class for the specified hik template.
@@ -2340,10 +2325,8 @@ class LMRetargeter():
 		"""Sets up the target rig."""
 
 		lm.LMFile.load(self.targets[0].filePath(), self.targetNameSpace)
-
 		name = "HiK"
-		if self.targetTemplate == "LunarExport":
-			name = "Export"
+		if self.targetTemplate == "LunarExport": name = "Export"
 
 		self.target = self.initRig(self.targetTemplate, name, self.targetNameSpace)
 
@@ -2753,8 +2736,6 @@ if __name__ == "__main__":
 	retargeter = LMRetargeter(
 		# sources=missingRetargetList,
 		sources=[
-			# "C:/Users/lbiernat/My Drive/Bambaa/Content/Sinners/Animations/Mocap/Player/player-gestures/AS_player_backpack_adjust_01__part.fbx",
-			# "/Users/luky/Downloads/mm-explore/player-mm-explore-idle^run-strafe-90r-r-foot.fbx",
 			"/Users/luky/Downloads/mm-explore",
 		],
 		# targets=["/Users/luky/My Drive/Bambaa/Content/Sinners/Characters/Player/AnimationKit/Rigs/RIG_Player.ma"],

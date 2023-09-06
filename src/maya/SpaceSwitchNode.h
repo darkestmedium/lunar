@@ -261,7 +261,6 @@ MStatus SpaceSwitchNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	dh_out_matrix.setMMatrix(mat_offset * mat_driver * mat_driverinv);
 	dh_out_matrix.setClean();
 
-	// }
 	dataBlock.setClean(plug);
 
 	return MS::kSuccess;
@@ -399,11 +398,6 @@ MStatus SpaceSwitchCmd::parseArguments(const MArgList &argList) {
 		list_sel.add(argData.flagArgumentString(fl_object, 0, &status));
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
-	// Lock shape attributes
-	// if (argData.isFlagSet(fs_lock_attributes)) {
-	// 	lock_attributes = argData.flagArgumentBool(fs_lock_attributes, 0, &status);
-	// 	CHECK_MSTATUS_AND_RETURN_IT(status);
-	// }
 
 	return MS::kSuccess;
 }
