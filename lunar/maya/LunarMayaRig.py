@@ -8,6 +8,7 @@ from collections import OrderedDict
 # Third-party imports
 from maya import cmds
 import maya.OpenMaya as om
+import maya.api.OpenMaya as OpenMaya
 
 from PySide2 import QtCore as qtc
 
@@ -407,7 +408,6 @@ class FkIkSwitchCtrl():
 			lockShapeAttributes=lockShapeAttributes,
 		)
 		lm.LMAttribute.lockControlChannels(self.node, lockChannels)
-
 
 
 
@@ -950,7 +950,7 @@ class Out2bLimbComponent():
 			self.twistUpper1cnstMat = LMRigUtils.createMatrixConstraint(
 				parent=self.ctrlStart.node, 
 				child=self.ctrlTwistUpper1.node,
-				offset=compRig.ctrlMain.node, 
+				offset=compRig.ctrl_main.node, 
 				sourceNode=f"{upperTwist1}{sideSuffix}",
 			)
 		# cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.out.ctrlStart.node}.offsetParentMatrix")
@@ -964,7 +964,7 @@ class Out2bLimbComponent():
 			self.twistUpper2cnstMat = LMRigUtils.createMatrixConstraint(
 				parent=self.ctrlStart.node, 
 				child=self.ctrlTwistUpper2.node,
-				offset=compRig.ctrlMain.node, 
+				offset=compRig.ctrl_main.node, 
 				sourceNode=f"{upperTwist2}{sideSuffix}",
 			)
 
@@ -984,7 +984,7 @@ class Out2bLimbComponent():
 			self.twistLower1cnstMat = LMRigUtils.createMatrixConstraint(
 				parent=self.ctrlMid.node, 
 				child=self.ctrlTwistLower1.node,
-				offset=compRig.ctrlMain.node, 
+				offset=compRig.ctrl_main.node, 
 				sourceNode=f"{lowerTwist1}{sideSuffix}",
 			)
 		if lowerTwist2:
@@ -997,7 +997,7 @@ class Out2bLimbComponent():
 			self.twistLower2cnstMat = LMRigUtils.createMatrixConstraint(
 				parent=self.ctrlMid.node, 
 				child=self.ctrlTwistLower2.node,
-				offset=compRig.ctrlMain.node, 
+				offset=compRig.ctrl_main.node, 
 				sourceNode=f"{lowerTwist2}{sideSuffix}",
 			)
 
@@ -1256,53 +1256,53 @@ class BaseComponent():
 		lunar plugin (custom rig controller)
 
 	TODO:
-		Fix rollControllers on CtrlMain
+		Fix rollControllers on ctrl_main
 
 	"""
 	sceneObjectType = "rig"
 
-	def __init__(self, rigName="new"):
+	def __init__(self, name="new"):
 		"""Class constructor.
 
 		Args:
-			rigName (string): Name of the character / rig.
+			name (string): Name of the character / rig.
 			localScale (float): Scale of the rigController - edits localScaleXYZ attrs on the shape node.
 
 		"""
-		self.rigName = rigName
+		self.name = name
 		# Rig groups setup
-		self.grpBase = cmds.group(name="rig", empty=True)  # we're going to use a namespace anyway
-		self.ctrlMain = MainCtrl(parent=self.grpBase, localRotate=(0.0, 0.0, 0.0))
-		self.grpMesh = cmds.group(name="mesh_grp", empty=True, parent=self.grpBase)
+		self.comp_main = cmds.component(name="rig")  # we're going to use a namespace anyway
+		self.ctrl_main = MainCtrl(parent=self.comp_main, localRotate=(0.0, 0.0, 0.0))
+		self.comp_mesh = cmds.component(name="mesh", parent=self.comp_main)
 
 
 		self.setupRigGroups()
 
 		self.setupVisibilityAttributesAndConnections()
 
-		# cmds.setAttr(f"{self.grpBase}.rotateX", -90)
+		# cmds.setAttr(f"{self.comp_main}.rotateX", -90)
 
-		# for group in [self.grpBase, self.grpMesh]:
-		[lm.LMAttribute.lockControlChannels(Object, ["translate", "scale", "visibility"]) for Object in [self.grpBase, self.grpMesh]]
+		# for group in [self.comp_main, self.comp_mesh]:
+		[lm.LMAttribute.lockControlChannels(Object, ["translate", "scale", "visibility"]) for Object in [self.comp_main, self.comp_mesh]]
 
 
 	def setupRigGroups(self):
 		"""Sets main rig groups: base, ctrl, mesh and export.
 		"""
 		# Extra attribute creation
-		rigNameAttr = "rigName"
+		nameAttr = "name"
 		sceneObjectTypeAttr = "sceneObjectType"
-		[cmds.addAttr(self.grpBase, longName=attr, dataType="string") for attr in [rigNameAttr, sceneObjectTypeAttr]]
+		[cmds.addAttr(self.comp_main, longName=attr, dataType="string") for attr in [nameAttr, sceneObjectTypeAttr]]
 		
-		cmds.setAttr(f"{self.grpBase}.{rigNameAttr}", self.rigName, type="string", lock=True)
-		cmds.setAttr(f"{self.grpBase}.{sceneObjectTypeAttr}", self.sceneObjectType, type="string", lock=True)
+		cmds.setAttr(f"{self.comp_main}.{nameAttr}", self.name, type="string", lock=True)
+		cmds.setAttr(f"{self.comp_main}.{sceneObjectTypeAttr}", self.sceneObjectType, type="string", lock=True)
 
 
 	def setupVisibilityAttributesAndConnections(self):
 		"""Creates visibility and display type attributes on the main cotroller and connects them.
 		"""
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.node)
+		lm.LMAttribute.addSeparator(self.ctrl_main.node)
 
 		self.displCtrls = cmds.createNode("displayLayer", name="ctrls_displ")
 		cmds.setAttr(f"{self.displCtrls}.enabled", True)
@@ -1317,47 +1317,47 @@ class BaseComponent():
 	
 		# Visibility
 		# Main Ctrls
-		self.attrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.node, "ctrlsVisibility")
+		self.attrCtrlsVisibility = lm.LMAttribute.addOnOff(self.ctrl_main.node, "ctrlsVisibility")
 		cmds.connectAttr(self.attrCtrlsVisibility, f"{self.displCtrls}.visibility")
-		cmds.connectAttr(f"{self.displCtrls}.drawInfo", f"{self.ctrlMain.node}.drawOverride", force=True)
+		cmds.connectAttr(f"{self.displCtrls}.drawInfo", f"{self.ctrl_main.node}.drawOverride", force=True)
 
 		# Meshes
-		self.attrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.node, "meshVisibility")
+		self.attrMeshVisibility = lm.LMAttribute.addOnOff(self.ctrl_main.node, "meshVisibility")
 		cmds.connectAttr(self.attrMeshVisibility, f"{self.displMesh}.visibility")
-		cmds.connectAttr(f"{self.displMesh}.drawInfo", f"{self.grpMesh}.drawOverride", force=True)
+		cmds.connectAttr(f"{self.displMesh}.drawInfo", f"{self.comp_mesh}.drawOverride", force=True)
 	
 		# Export Skeleton
-		self.attrExportSkeletonVisibility = lm.LMAttribute.addOnOff(self.ctrlMain.node, "exportSkeletonVisibility", False)
+		self.attrExportSkeletonVisibility = lm.LMAttribute.addOnOff(self.ctrl_main.node, "exportSkeletonVisibility", False)
 		cmds.connectAttr(self.attrExportSkeletonVisibility, f"{self.displJnts}.visibility")
 
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.node, "__")
+		lm.LMAttribute.addSeparator(self.ctrl_main.node, "__")
 
 
 		# Diplay Type Overrides
 		# Main Ctrls 
-		self.attrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.node, "ctrlsDisplayType")
+		self.attrCtrlsDisplayType = lm.LMAttribute.addDisplayType(self.ctrl_main.node, "ctrlsDisplayType")
 		cmds.connectAttr(self.attrCtrlsDisplayType, f"{self.displCtrls}.displayType")
-		cmds.connectAttr(f"{self.displCtrls}.displayType", f"{self.ctrlMain.node}.overrideDisplayType")
+		cmds.connectAttr(f"{self.displCtrls}.displayType", f"{self.ctrl_main.node}.overrideDisplayType")
 
 
 		# Meshes
-		self.attrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.node, "meshDisplayType", 2)
+		self.attrMeshDisplayType = lm.LMAttribute.addDisplayType(self.ctrl_main.node, "meshDisplayType", 2)
 		cmds.connectAttr(self.attrMeshDisplayType, f"{self.displMesh}.displayType")
-		cmds.connectAttr(f"{self.displMesh}.displayType", f"{self.grpMesh}.overrideDisplayType")
+		cmds.connectAttr(f"{self.displMesh}.displayType", f"{self.comp_mesh}.overrideDisplayType")
 
 		# Export Skeleton
-		self.attrExportSkeletonDisplayType = lm.LMAttribute.addDisplayType(self.ctrlMain.node, "exportSkeletonDisplayType", 2)
+		self.attrExportSkeletonDisplayType = lm.LMAttribute.addDisplayType(self.ctrl_main.node, "exportSkeletonDisplayType", 2)
 		cmds.connectAttr(self.attrExportSkeletonDisplayType, f"{self.displJnts}.displayType")
 
 
-		lm.LMAttribute.addSeparator(self.ctrlMain.node, "___")
+		lm.LMAttribute.addSeparator(self.ctrl_main.node, "___")
 
 
 		# Hide Ctrls On Playback
-		self.attrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrlMain.node, "hideCtrlsOnPlayback", False)
+		self.attrHideCtrlsOnPlayback = lm.LMAttribute.addOnOff(self.ctrl_main.node, "hideCtrlsOnPlayback", False)
 		cmds.connectAttr(self.attrHideCtrlsOnPlayback, f"{self.displCtrls}.hideOnPlayback")
-		cmds.connectAttr(f"{self.displCtrls}.hideOnPlayback", f"{self.ctrlMain.node}.hideOnPlayback")
+		cmds.connectAttr(f"{self.displCtrls}.hideOnPlayback", f"{self.ctrl_main.node}.hideOnPlayback")
 
 
 
@@ -1374,7 +1374,7 @@ class PelvisComponent():
 
 		"""
 		
-		self.grpComp = cmds.group(name="pelvis_grp", parent=parent, empty=True)
+		self.grpComp = cmds.component(name="pelvis_comp", parent=parent)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 		
 		# Main chain
@@ -1413,7 +1413,7 @@ class SpineComponent():
 
 	def __init__(self, compRig, attachTo:str, listJoints:list) -> None:
 		
-		self.grpComp = cmds.group(name="spine_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name="spine_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 
 		self.fk = FkSpineComponent(self.grpComp, listJoints)
@@ -1421,7 +1421,7 @@ class SpineComponent():
 		self.cnstMat = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlSpine1.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode=listJoints["Spine"]["Spine1"]
 		)
 
@@ -1455,7 +1455,7 @@ class HeadComponent():
 
 	def __init__(self, compRig, attachTo:str, listJoints:list, solverModePosition:tuple=(0,0,0)) -> None:
 		
-		self.grpComp = cmds.group(name="head_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name="head_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 
 		self.fk = Fk2bLimbComponent(
@@ -1498,7 +1498,7 @@ class HeadComponent():
 		self.cnstMat = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode=listJoints["Head"]["Neck1"]
 		)
 		cmds.connectAttr(f"{self.cnstMat}.matrixSum", f"{self.out.ctrlStart.node}.offsetParentMatrix")
@@ -1554,16 +1554,16 @@ class Leg2bComponent():
 			sideSuffix = "_r"
 			color = "lightblue"
 
-		self.grpComp = cmds.group(name=f"leg{sideSuffix}_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name=f"leg{sideSuffix}_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 		# lm.LMAttribute.lockTransforms(self.grpComp)
 
-		# self.grpFkComp = cmds.group(name="fk_grp", parent=self.grpComp, empty=True)
+		# self.grpFkComp = cmds.component(name="fk_comp", parent=self.grpComp, empty=True)
 		# cmds.matchTransform(self.grpFkComp, self.grpComp, position=True, rotation=True)
 		# lm.LMAttribute.copyTransformsToOPM(self.grpFkComp)
 		# lm.LMAttribute.lockTransforms(self.grpFkComp)
 
-		# self.grpOutComp = cmds.group(name="out_grp", parent=self.grpComp, empty=True)
+		# self.grpOutComp = cmds.component(name="out_comp", parent=self.grpComp, empty=True)
 		# cmds.matchTransform(self.grpOutComp, self.grpComp, position=True, rotation=True)
 		# lm.LMAttribute.copyTransformsToOPM(self.grpOutComp)
 		# lm.LMAttribute.lockTransforms(self.grpOutComp)
@@ -1615,19 +1615,19 @@ class Leg2bComponent():
 			parent=attachTo,
 			# child=self.grpFkComp,
 			child=self.fk.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
 		)
 		self.cnstMatIk = LMRigUtils.createMatrixConstraint(
 			parent=attachTo,
 			child=self.ik.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
 		)
 		self.cnstMatOut = LMRigUtils.createMatrixConstraint(
 			parent=attachTo,
 			child=self.out.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Leg"]["UpLeg"]), sideSuffix)
 		)
 
@@ -1679,7 +1679,7 @@ class FootComponent():
 			sideSuffix = "_r"
 			color = "lightblue"
 		
-		self.grpComp = cmds.group(name=f"foot{sideSuffix}_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name=f"foot{sideSuffix}_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 
 		self.fk = FkFootComponent(self.grpComp, listJoints, side)
@@ -1687,7 +1687,7 @@ class FootComponent():
 		self.cnstMat = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlToe.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Leg"]["ToeBase"]), sideSuffix)
 		)
 
@@ -1727,7 +1727,7 @@ class Arm2bComponent():
 			color = "lightblue"
 			colorSwitch = "blue"
 
-		self.grpComp = cmds.group(name=f"arm{sideSuffix}_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name=f"arm{sideSuffix}_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 
 		self.fk = Fk2bLimbComponent(
@@ -1773,19 +1773,19 @@ class Arm2bComponent():
 		self.cnstMatFk = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlRoot.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Arm"]["Shoulder"]["Root"]), sideSuffix)
 		)
 		self.cnstMatOut = LMRigUtils.createMatrixConstraint(
 			parent=self.fk.ctrlRoot.node, 
 			child=self.out.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Arm"]["Arm"]), sideSuffix)
 		)
 		self.cnstMatIk = LMRigUtils.createMatrixConstraint(
 			parent=self.fk.ctrlRoot.node, 
 			child=self.ik.ctrlStart.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Arm"]["Arm"]), sideSuffix)
 		)
 
@@ -1838,7 +1838,7 @@ class HandComponent():
 			sideSuffix = "_r"
 			color = "lightblue"
 		
-		self.grpComp = cmds.group(name=f"hand{sideSuffix}_grp", parent=compRig.ctrlMain.node, empty=True)
+		self.grpComp = cmds.component(name=f"hand{sideSuffix}_comp", parent=compRig.ctrl_main.node, empty=True)
 		lm.LMAttribute.lockTransforms(self.grpComp)
 
 		self.fk = FkHandComponent(self.grpComp, listJoints, side)
@@ -1846,37 +1846,37 @@ class HandComponent():
 		self.cnstThumb = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlThumb1.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["Thumb1"]), sideSuffix)
 		)
 		self.cnstIndex = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlInHandIndex.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["InHandIndex"]), sideSuffix)
 		)
 		self.cnstMiddle = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlInHandMiddle.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["InHandMiddle"]), sideSuffix)
 		)
 		self.cnstPinky = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlInHandPinky.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["InHandPinky"]), sideSuffix)
 		)
 		self.cnstRing = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlInHandRing.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["InHandRing"]), sideSuffix)
 		)
 		self.cnstWeapon = LMRigUtils.createMatrixConstraint(
 			parent=attachTo, 
 			child=self.fk.ctrlWeapon.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 			sourceNode="{}{}".format((listJoints["Hand"]["Weapon"]), sideSuffix)
 		)
 
@@ -1916,15 +1916,15 @@ class FkIkSwitchComponent():
 	):
 		# Create controller
 		self.ctrlFkIkSwitch = FkIkSwitchCtrl(
-			parent=compRig.ctrlMain.node,
-			translateTo=compRig.ctrlMain.node, rotateTo=compRig.ctrlMain.node,
+			parent=compRig.ctrl_main.node,
+			translateTo=compRig.ctrl_main.node, rotateTo=compRig.ctrl_main.node,
 			# localPosition=localPosition,
 			# solverModePosition=solverModePosition
 		)
 		self.matCnst = LMRigUtils.createMatrixConstraint(
 			parent=compHead.out.ctrlEnd.node, 
 			child=self.ctrlFkIkSwitch.node,
-			offset=compRig.ctrlMain.node, 
+			offset=compRig.ctrl_main.node, 
 		)
 
 		# TODO split this into a method
@@ -2097,6 +2097,71 @@ class LMRigUtils():
 		cmds.connectAttr(f"{nodeMultMatrix}.matrixSum", f"{child}.offsetParentMatrix")
 
 		return nodeMultMatrix
+
+
+	@classmethod
+	def create_space_switch(cls, node, drivers, switch_attribute=None):
+		"""Creates a space switch network.
+
+		The network uses the offsetParentMatrix attribute and does not create any
+		constraints or new dag nodes.
+
+		:param node: Transform to drive
+		:param drivers: List of tuples: [(driver1, "spaceName1"), (driver2, "spaceName2")]
+		:param switch_attribute: Name of the switch attribute to create on the target node.
+		"""
+		if switch_attribute is None: switch_attribute = "space"
+
+		if cmds.objExists(f"{node}.{switch_attribute}"): cmds.deleteAttr(node, at=switch_attribute)
+
+		names = [d[1] for d in drivers]
+		cmds.addAttr(node, ln=switch_attribute, at="enum", en=":".join(names), keyable=True)
+
+		spaceswitch = cmds.spaceSwitch(name=f"{node}_spaceswitch")
+		# Get the current offset parent matrix.  This is used as the starting blend point
+		mat = OpenMaya.MMatrix(cmds.getAttr("{}.offsetParentMatrix".format(node)))
+		cmds.setAttr(f"{spaceswitch}.spaces[0].offsetMatrix", list(mat), type="matrix")
+
+		parent = cmds.listRelatives(node, parent=True, path=True)
+		to_parent_local = f"{parent[0]}.worldInverseMatrix[0]" if parent else None
+
+		for indx, driver in enumerate(drivers):
+			driver = driver[0]
+			cls._connect_driver_matrix_network(spaceswitch, node, driver, indx, to_parent_local)
+			target_attr = f"{spaceswitch}.target[{indx}]"
+
+		cmds.connectAttr(f"{spaceswitch}.outputMatrix", f"{node}.offsetParentMatrix")
+		cmds.connectAttr(f"{node}.{switch_attribute}", f"{spaceswitch}.space")
+
+
+	@classmethod
+	def _connect_driver_matrix_network(cls, spaceswitch, node, driver, index, to_parent_local):
+		# The multMatrix node will calculate the transformation to blend to when driven
+		# by this driver transform
+		offset = (
+			OpenMaya.MSelectionList().add(node).getDagPath(0).exclusiveMatrix()
+			* OpenMaya.MMatrix(cmds.getAttr("{}.worldInverseMatrix[0]".format(driver)))
+		)
+		cmds.setAttr(f"{spaceswitch}.spaces[{index}].offsetMatrix", list(offset), type="matrix")
+		cmds.connectAttr(f"{driver}.worldMatrix[0]", f"{spaceswitch}.spaces[{index}].driverMatrix")
+
+		if to_parent_local:	cmds.connectAttr(to_parent_local, f"{spaceswitch}.spaces[{index}].driverInverseMatrix")
+
+
+
+	def switch_space(node, attribute, space, create_keys=False):
+		"""Seamlessly switch between spaces
+
+		:param node: Node to switch
+		:param attribute: Space switching attribute on node
+		:param space: Space index in the space attribute
+		:param create_keys: True to create switching keys
+		"""
+		m = cmds.xform(node, q=True, ws=True, m=True)
+		cmds.setAttr("{}.{}".format(node, attribute), space)
+		cmds.xform(node, ws=True, m=m)
+
+
 
 
 

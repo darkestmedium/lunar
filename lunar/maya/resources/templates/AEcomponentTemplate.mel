@@ -15,14 +15,21 @@ global proc AEcomponentTemplate(string $nodeName) {
 			editorTemplate -addControl "translate";
 			editorTemplate -addControl "rotate";
 			editorTemplate -addControl "scale";
+			editorTemplate -suppress "shear";
 			editorTemplate -addControl "rotateAxis";
 			editorTemplate -addControl "rotateOrder";
 			editorTemplate -addControl "inheritsTransform";
-			editorTemplate -addControl "offsetParentMatrix";
-			editorTemplate -suppress "shear";
+			editorTemplate -suppress "offsetParentMatrix";
 			editorTemplate -suppress rotateQuaternion;
 			editorTemplate -suppress rotationInterpolation;
 			editorTemplate -endLayout;
+
+		// Override AEtransformMain $nodeName;
+		// editorTemplate -beginLayout "Space Offset" -collapse false;
+		// 	editorTemplate -addControl "enableSpaces";
+		// 	editorTemplate -addControl "space";
+		// 	editorTemplate -addControl "spaces";
+		// 	editorTemplate -endLayout;
 
 		AEtransformNoScroll $nodeName;
 

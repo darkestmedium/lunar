@@ -490,7 +490,6 @@ MStatus CtrlCommand::redoIt() {
 
 			LMAttribute::lockAndHideAttr(plug_draw_solver_mode);
 			LMAttribute::lockAndHideAttr(plug_solver_mode_size);
-
 			LMAttribute::lockAndHideAttr(plug_solver_mode_position);
 			LMAttribute::lockAndHideAttr(plug_solver_mode_positionX);
 			LMAttribute::lockAndHideAttr(plug_solver_mode_positionY);

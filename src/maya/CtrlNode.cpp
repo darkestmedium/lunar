@@ -3,7 +3,6 @@
 
 
 
-
 //-------------------------------------------------------------------------------------------------
 //
 // Ctrl Transform Node implementation with standard viewport draw
@@ -11,12 +10,7 @@
 //-------------------------------------------------------------------------------------------------
 
 
-// MObject CtrlNode::attr_out_line_matrix	= {};
-// MObject CtrlNode::inputSize        		= {};
-MObject CtrlNode::geometryChanging 				= {};
-
-
-
+MObject CtrlNode::geometryChanging 	= {};
 
 // Class attributes
 const MString CtrlNode::type_name 	= "ctrl";
@@ -24,9 +18,18 @@ const MTypeId CtrlNode::type_id 		= 0x900000;
 const MString CtrlNode::type_drawdb	= "drawdb/geometry/animation/ctrl";
 const MString CtrlNode::type_drawid	= "ctrlPlugin";
 
-MObject CtrlNode::local_position, CtrlNode::local_positionX, CtrlNode::local_positionY, CtrlNode::local_positionZ;
-MObject CtrlNode::local_rotate, CtrlNode::local_rotateX, CtrlNode::local_rotateY, CtrlNode::local_rotateZ;
-MObject CtrlNode::local_scale, CtrlNode::local_scaleX, CtrlNode::local_scaleY, CtrlNode::local_scaleZ;
+MObject CtrlNode::local_position;
+	MObject CtrlNode::local_positionX;
+	MObject CtrlNode::local_positionY;
+	MObject CtrlNode::local_positionZ;
+MObject CtrlNode::local_rotate;
+	MObject CtrlNode::local_rotateX;
+	MObject CtrlNode::local_rotateY; 
+	MObject CtrlNode::local_rotateZ;
+MObject CtrlNode::local_scale;
+	MObject CtrlNode::local_scaleX;
+	MObject CtrlNode::local_scaleY;
+	MObject CtrlNode::local_scaleZ;
 
 MObject CtrlNode::attr_shape_indx;
 MObject CtrlNode::attr_line_width;
@@ -37,16 +40,30 @@ Attribute CtrlNode::attr_out_line_matrix;
 
 MObject CtrlNode::attr_draw_solver_mode;
 MObject CtrlNode::attr_solver_mode_size;
-MObject CtrlNode::attr_solver_mode_positionX, CtrlNode::attr_solver_mode_positionY, CtrlNode::attr_solver_mode_positionZ, CtrlNode::attr_solver_mode_position;
+
+MObject CtrlNode::attr_solver_mode_position;
+	MObject CtrlNode::attr_solver_mode_positionX;
+	MObject CtrlNode::attr_solver_mode_positionY;
+	MObject CtrlNode::attr_solver_mode_positionZ;
 MObject CtrlNode::attrInFkIk;
+
+// Space switch attributes
+// MObject CtrlNode::attr_enable_spaces;
+// MObject CtrlNode::attr_space_indx;
+// MObject CtrlNode::attr_spaces;
+// 	MObject CtrlNode::attr_offset_mat;
+// 	MObject CtrlNode::attr_driver_mat;
+// 	MObject CtrlNode::attr_driverinv_mat;
 
 
 
 MStatus CtrlNode::initialize() {
 	/* */
-	MFnUnitAttribute fn_unit;
-	MFnNumericAttribute fn_num;
-	MFnEnumAttribute fn_enum;
+	MFnUnitAttribute 		 fn_unit;
+	MFnNumericAttribute  fn_num;
+	MFnEnumAttribute 		 fn_enum;
+	MFnCompoundAttribute fn_comp;
+	MFnMatrixAttribute 	 fn_mat;
 	MStatus status;
 
 	local_positionX = fn_num.create("localPositionX", "lpx", MFnNumericData::kFloat);
@@ -138,6 +155,56 @@ MStatus CtrlNode::initialize() {
 	fn_num.setHidden(true);
 	fn_num.setConnectable(false);
 
+
+
+	// // Space switch attributes
+	// attr_enable_spaces = fn_num.create("enableSpaces", "enas", MFnNumericData::kBoolean, false);
+	// fn_num.setStorable(true);
+	// fn_num.setKeyable(true);
+	// fn_num.setChannelBox(true);
+	// fn_num.setAffectsWorldSpace(true);
+
+	// attr_space_indx = fn_enum.create("space", "spac");
+	// fn_enum.addField("World", 0);
+	// fn_enum.addField("Main", 1);
+	// fn_enum.addField("Root", 2);
+	// fn_enum.addField("Pelvis", 3);
+	// fn_enum.addField("Component", 4);
+	// fn_enum.setKeyable(true);
+	// fn_enum.setAffectsWorldSpace(true);
+
+	// /* spacesAttr:
+	// -- enableSpaces
+	// -- space
+	// -- spaces
+	// 	| -- offsetMatrix
+	// 	| -- driverMatrix
+	// 	| -- driverInverseMatrix
+	// */
+	// attr_offset_mat = fn_mat.create("offsetMatrix", "ofm");
+	// fn_mat.setKeyable(true);
+	// fn_mat.setReadable(false);
+	// fn_mat.setAffectsWorldSpace(true);
+
+	// attr_driver_mat = fn_mat.create("driverMatrix", "drm");
+	// fn_mat.setKeyable(true);
+	// fn_mat.setReadable(false);
+	// fn_mat.setAffectsWorldSpace(true);
+
+	// attr_driverinv_mat = fn_mat.create("driverInverseMatrix", "dim");
+	// fn_mat.setKeyable(true);
+	// fn_mat.setReadable(false);
+	// fn_mat.setAffectsWorldSpace(true);
+
+	// attr_spaces = fn_comp.create("spaces", "spcs");
+	// fn_comp.addChild(attr_offset_mat);
+	// fn_comp.addChild(attr_driver_mat);
+	// fn_comp.addChild(attr_driverinv_mat);
+	// fn_comp.setArray(true);
+	// fn_comp.setKeyable(true);
+	// fn_comp.setReadable(false);
+	// fn_comp.setAffectsWorldSpace(true);
+
 	// Add attributes
 	addAttributes(
 		local_position, local_rotate, local_scale,
@@ -148,9 +215,25 @@ MStatus CtrlNode::initialize() {
 		attr_solver_mode_position,
 		attrInFkIk,
 		geometryChanging
+		// attr_enable_spaces,	attr_space_indx, attr_spaces
 	);
 
-	attributeAffects(CtrlNode::attr_in_line_matrix, CtrlNode::geometryChanging);
+	attributeAffects(attr_in_line_matrix, geometryChanging);
+
+	// attributeAffects(attr_enable_spaces, matrix);
+	// attributeAffects(attr_space_indx, matrix);
+	// attributeAffects(attr_offset_mat, matrix);
+	// attributeAffects(attr_driver_mat, matrix);
+	// attributeAffects(attr_driverinv_mat, matrix);
+	// attributeAffects(attr_spaces, matrix);
+
+	// This is required so that the validateAndSet method is called
+	// mustCallValidateAndSet(attr_enable_spaces);
+	// mustCallValidateAndSet(attr_space_indx);
+	// mustCallValidateAndSet(attr_offset_mat);
+	// mustCallValidateAndSet(attr_driver_mat);
+	// mustCallValidateAndSet(attr_driverinv_mat);
+	// mustCallValidateAndSet(attr_spaces);
 
 	return MS::kSuccess;
 }
@@ -170,7 +253,7 @@ MStatus CtrlNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlug
 	if (draw_line) MHWRender::MRenderer::setGeometryDrawDirty(self_object);
 
 	if (MEvaluationManager::graphConstructionActive()) {
-		if (plug == attr_in_line_matrix) {affectedPlugs.append(MPlug(self_object, geometryChanging));}
+		if (plug==attr_in_line_matrix) {affectedPlugs.append(MPlug(self_object, geometryChanging));}
 	}
 
 	return MS::kSuccess;
@@ -178,16 +261,44 @@ MStatus CtrlNode::setDependentsDirty(const MPlug& plug, MPlugArray& affectedPlug
 
 
 MStatus CtrlNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
-	// Check documentation in "class FootPrintNode" for descriptions about the attributes here
+	MStatus status;
 	if (plug == geometryChanging) {
 		MDataHandle boolHandle = dataBlock.outputValue(geometryChanging);
 		boolHandle.setBool(true);
 		MHWRender::MRenderer::setGeometryDrawDirty(self_object);
-	}	else {
+	} else {
 		return MS::kUnknownParameter;
 	}
+	// if (plug == matrix
+	// 	|| plug == inverseMatrix
+	// 	|| plug == worldMatrix
+	// 	|| plug == worldInverseMatrix
+	// 	|| plug == parentMatrix
+	// 	|| plug == parentInverseMatrix
+	// ) {
+	// 	MDataHandle dh_enable_spaces = dataBlock.inputValue(attr_enable_spaces);
+	// 	bool enable_spaces = dh_enable_spaces.asBool();
+	// 	if (enable_spaces) {
+	// 		MDataHandle dh_space_indx = dataBlock.inputValue(attr_space_indx);
+	// 		short space_indx = dh_space_indx.asShort();
+	// 		MArrayDataHandle dh_spaces = dataBlock.inputArrayValue(attr_spaces);
+	// 		dh_spaces.jumpToArrayElement(space_indx);
+	// 		MDataHandle dh_space_at_indx = dh_spaces.inputValue();
 
-	return MStatus::kSuccess;
+	// 		MMatrix mat_offset = dh_space_at_indx.child(attr_offset_mat).asMatrix();
+	// 		MMatrix mat_driver = dh_space_at_indx.child(attr_driver_mat).asMatrix();
+	// 		MMatrix mat_driverinv = dh_space_at_indx.child(attr_driverinv_mat).asMatrix();
+
+	// 		MDataHandle dh_offset_parent_mat = dataBlock.outputValue(offsetParentMatrix);
+	// 		dh_offset_parent_mat.setMMatrix(mat_offset * mat_driver * mat_driverinv);
+	// 		dh_offset_parent_mat.setClean();
+
+	// 		return MS::kSuccess;
+	// 	}
+	// }
+
+	return MS::kSuccess;
+	// return MPxTransform::compute(plug, dataBlock);
 }
 
 
@@ -253,7 +364,7 @@ void CtrlNode::postConstructor() {
 	fn_this.findPlug("overrideColorG", false).setDouble(1.0);
 	fn_this.findPlug("overrideColorB", false).setDouble(0.25);
 
-	draw_line = MPlug(self_object, CtrlNode::attr_in_draw_line).asBool();
+	draw_line = MPlug(self_object, attr_in_draw_line).asBool();
 }
 
 
@@ -265,6 +376,66 @@ MBoundingBox CtrlNode::boundingBox() const {
 
 	return data.bbox;
 }
+
+
+// MStatus CtrlNode::validateAndSetValue(const MPlug& plug, const MDataHandle& handle) {
+// 	if (plug.isNull()) {return MS::kFailure;}
+
+// 	if ( plug == attr_enable_spaces
+// 		|| plug == attr_space_indx
+// 		|| plug == attr_offset_mat
+// 		|| plug == attr_driver_mat
+// 		|| plug == attr_driverinv_mat
+// 		|| plug == attr_spaces
+// 	) {
+// 		MStatus status;
+// 		MDataBlock dataBlock = forceCache();
+// 		// We need to grab some data from the input plug and handle
+// 		MDataHandle blockHandle = dataBlock.outputValue(plug, &status);
+// 		blockHandle.set(handle.asDouble());
+// 		blockHandle.setClean();
+
+// 		MDataHandle dh_enable_spaces = dataBlock.outputValue(attr_enable_spaces, &status);
+// 		bool enable_spaces = dh_enable_spaces.asBool();
+// 		// dh_enable_spaces.setBool(enable_spaces);
+// 		if (enable_spaces) {
+// 			MDataHandle dh_space_indx = dataBlock.outputValue(attr_space_indx, &status);
+// 			short space_indx = dh_space_indx.asShort();
+// 			MArrayDataHandle dh_spaces = dataBlock.outputArrayValue(attr_spaces, &status);
+// 			dh_spaces.jumpToArrayElement(space_indx);
+// 			MDataHandle dh_space_at_indx = dh_spaces.outputValue();
+// 			MDataHandle dh_offset_mat = dh_space_at_indx.child(attr_offset_mat);
+// 			MDataHandle dh_driver_mat = dh_space_at_indx.child(attr_driver_mat);
+// 			MDataHandle dh_driverinv_mat = dh_space_at_indx.child(attr_driverinv_mat);
+// 			MMatrix mat_offset = dh_offset_mat.asMatrix();
+// 			MMatrix mat_driver = dh_driver_mat.asMatrix();
+// 			MMatrix mat_driverinv = dh_driverinv_mat.asMatrix();
+
+// 			// dh_enable_spaces.setClean();
+// 			// dh_space_indx.setShort(space_indx);
+// 			// dh_space_indx.setClean();
+// 			// dh_offset_mat.setMMatrix(mat_offset);
+// 			// dh_offset_mat.setClean();
+// 			// dh_driver_mat.setMMatrix(mat_driver);
+// 			// dh_driver_mat.setClean();
+// 			// dh_driverinv_mat.setMMatrix(mat_driverinv);
+// 			// dh_driverinv_mat.setClean();
+
+// 			MDataHandle dh_offset_parent_mat = dataBlock.outputValue(offsetParentMatrix, &status);
+// 			dh_offset_parent_mat.setMMatrix(mat_offset * mat_driver * mat_driverinv);
+// 			dh_offset_parent_mat.setClean();
+// 			// dh_spaces.setAllClean();
+
+// 			// Mark the matrix as dirty so that DG information will update.
+// 			dirtyMatrix();
+// 		}
+// 		return status;
+// 	}
+
+// 	// Allow processing for other attributes
+// 	return MPxTransform::validateAndSetValue(plug, handle);
+// }
+
 
 
 

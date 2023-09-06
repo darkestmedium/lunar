@@ -710,6 +710,18 @@ class LMObject(om.MObject):
 		return mObject
 
 
+	@classmethod
+	def getDagPathFromString(cls, object:str) -> om.MDagPath:
+		"""Gets the dag path from the given name."""
+		listSelection = om.MSelectionList()
+		listSelection.add(object)
+		dpObject = om.MDagPath()
+		listSelection.getDagPath(0, dpObject)
+
+		return dpObject
+
+
+
 
 
 class LMScene():

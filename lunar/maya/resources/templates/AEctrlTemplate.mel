@@ -39,12 +39,17 @@ global proc AEctrlTemplate(string $nodeName) {
 				editorTemplate -addControl "lineWidth";
 				editorTemplate -addControl "solverModeSize";
 				editorTemplate -endLayout;
-				// editorTemplate -endLayout;
 
 			editorTemplate -suppress "drawLineTo";
 			editorTemplate -suppress "fkIk";
-
 			editorTemplate -endLayout;
+
+
+		// editorTemplate -beginLayout "Space Offset" -collapse false;
+		// 	editorTemplate -addControl "enableSpaces";
+		// 	editorTemplate -addControl "space";
+		// 	editorTemplate -addControl "spaces";
+		// 	editorTemplate -endLayout;
 
 		AEtransformNoScroll $nodeName;
 

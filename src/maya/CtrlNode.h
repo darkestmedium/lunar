@@ -122,10 +122,18 @@ public:
 	static const MString type_drawid;
 
 	// Node attributes
-	// static MObject size;
-	static MObject local_position, local_positionX, local_positionY, local_positionZ;
-	static MObject local_rotate, local_rotateX, local_rotateY, local_rotateZ;
-	static MObject local_scale, local_scaleX, local_scaleY, local_scaleZ;
+	static MObject local_position;
+		static MObject local_positionX;
+		static MObject local_positionY;
+		static MObject local_positionZ;
+	static MObject local_rotate;
+		static MObject local_rotateX;
+		static MObject local_rotateY;
+		static MObject local_rotateZ;
+	static MObject local_scale;
+		static MObject local_scaleX;
+		static MObject local_scaleY;
+		static MObject local_scaleZ;
 
 	static MObject attr_line_width;
 	static MObject attr_shape_indx;
@@ -133,10 +141,21 @@ public:
 
 	static MObject attr_draw_solver_mode;
 	static MObject attr_solver_mode_size;
-	static MObject attr_solver_mode_positionX, attr_solver_mode_positionY, attr_solver_mode_positionZ, attr_solver_mode_position;
-	static MObject attrInText;
+	static MObject attr_solver_mode_position;
+		static MObject attr_solver_mode_positionX;
+		static MObject attr_solver_mode_positionY;
+		static MObject attr_solver_mode_positionZ;
 
+	static MObject attrInText;
 	static MObject attrInFkIk;
+
+	// Space switch attributes
+	// static MObject attr_enable_spaces;
+	// static MObject attr_space_indx;
+	// static MObject attr_spaces;
+	// 	static MObject attr_offset_mat;
+	// 	static MObject attr_driver_mat;
+	// 	static MObject attr_driverinv_mat;
 
 	// Use only on dynamic ctrl like fk / ik blending or pole vectors
 	bool draw_line;
@@ -165,6 +184,10 @@ public:
 
 	bool 						isBounded() const override {return true;};
 	virtual MBoundingBox boundingBox() const override;
+
+	// void  	resetTransformation(MPxTransformationMatrix* matrix) override {MPxTransform::resetTransformation(matrix);};
+	// void  	resetTransformation(const MMatrix& resetMatrix) override {MPxTransform::resetTransformation(resetMatrix);};
+	// MStatus validateAndSetValue(const MPlug&, const MDataHandle&) override;
 };
 
 

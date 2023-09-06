@@ -8,7 +8,7 @@
 #include "TwistSolver.h"
 #include "ComponentNode.h"
 
-// #include "footPrintNodeGeoOverride.h"
+#include "SpaceSwitchNode.h"
 
 // Function Sets
 #include <maya/MFnPlugin.h>
@@ -47,6 +47,17 @@ MStatus initializePlugin(MObject obj) {
 
 	MStatus status;
 	MFnPlugin fn_plugin(obj, author, version, requiredApiVersion);
+
+
+	// Register SpaceSwitchNode
+	status = fn_plugin.registerNode(
+		SpaceSwitchNode::type_name,
+		SpaceSwitchNode::type_id,
+		SpaceSwitchNode::creator,
+		SpaceSwitchNode::initialize,
+		MPxNode::kDependNode
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Register Controller node
 	status = fn_plugin.registerTransform(
@@ -88,6 +99,14 @@ MStatus initializePlugin(MObject obj) {
 		CtrlCommand::commandName,
 		CtrlCommand::creator,
 		CtrlCommand::syntaxCreator
+	);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	// Register Space switch command
+	status = fn_plugin.registerCommand(
+		SpaceSwitchCmd::command_name,
+		SpaceSwitchCmd::creator,
+		SpaceSwitchCmd::syntaxCreator
 	);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
@@ -155,6 +174,9 @@ MStatus initializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 
+
+
+
 	if (MGlobal::mayaState() == MGlobal::kInteractive) {
 		// Register callback to set selection priority on locators to 999
 		setMelConfig(NULL);
@@ -192,12 +214,13 @@ MStatus uninitializePlugin(MObject obj) {
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	// Deregister Footroll Node
-	status = fn_plugin.deregisterNode(FootRollSolver::typeId);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	fn_plugin.deregisterNode(FootRollSolver::typeId);
+
+	fn_plugin.deregisterCommand(SpaceSwitchCmd::command_name);
 
 	// Deregister MetaData command
-	status = fn_plugin.deregisterCommand(IkCommand::commandName);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+	fn_plugin.deregisterCommand(IkCommand::commandName);
+
 	// Deregister MetaData draw override
 	status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
 		MetaDataNode::type_drawdb,
@@ -225,6 +248,8 @@ MStatus uninitializePlugin(MObject obj) {
 
 	fn_plugin.deregisterCommand(ComponentCmd::command_name);
 	fn_plugin.deregisterNode(ComponentNode::type_id);
+
+	fn_plugin.deregisterNode(SpaceSwitchNode::type_id);
 
 	// // Deletes the maya main menu items
 	// if (MGlobal::mayaState() == MGlobal::kInteractive)
