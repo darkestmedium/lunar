@@ -1,5 +1,5 @@
-# Lunar Ctrls
 #--------------------------------------------------------------------------------------------------
+# Lunar Ctrls
 #--------------------------------------------------------------------------------------------------
 
 
@@ -242,8 +242,8 @@ templateLC = {
 											'translateZ': -8.470329472543003e-22},
 		'fkik_ctrl': {
 			# 'headFkIk': 0,
-			'headSoftness': 0.0,
-			'headTwist': 0.0,
+			# 'headSoftness': 0.0,
+			# 'headTwist': 0.0,
 			# 'leftArmFkIk': 0,
 			'leftArmSoftness': 0.0,
 			'leftArmTwist': 0.0,
@@ -580,8 +580,8 @@ templateLC = {
 											'translateZ': 0.0},
 		'fkik_ctrl': {
 			# 'headFkIk': 0,
-			'headSoftness': 0.0,
-			'headTwist': 0.0,
+			# 'headSoftness': 0.0,
+			# 'headTwist': 0.0,
 			# 'leftArmFkIk': 0,
 			'leftArmSoftness': 0.0,
 			'leftArmTwist': 0.0,

@@ -50,7 +50,7 @@ target_include_directories(mlunar
 MAYA_PLUGIN(mlunar)
 
 # # Add the subdirectory for the nested project
-add_subdirectory(api)
+add_subdirectory("api")
 # add_subdirectory(ctrl)
 # add_subdirectory(solver)
 # add_subdirectory(misc)

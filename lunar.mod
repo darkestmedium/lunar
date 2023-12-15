@@ -38,7 +38,7 @@ PYTHONPATH+:= thirdparty/maya/studiolibrary
 
 <!-- LINUX -->
 <!-- 2024 -->
-+ MAYAVERSION:2024 PLATFORM:linux Lunar 0.4.5 /Users/luky/Dropbox/Development/3d/Maya/LunarDev
++ MAYAVERSION:2024 PLATFORM:linux Lunar 0.4.5 ~/Dropbox/Development/3d/Maya/LunarDev
 scripts: ./
 plug-ins: lunar/maya/resources/plug-ins/linux/2024
 icons: lunar/maya/resources/icons
@@ -49,7 +49,7 @@ MAYA_SCRIPT_PATH+:= lunar/maya/resources/templates
 PYTHONPATH+:= thirdparty/maya/studiolibrary
 
 <!-- 2023 -->
-+ MAYAVERSION:2023 PLATFORM:linux Lunar 0.4.5 /Users/luky/Dropbox/Development/3d/Maya/LunarDev
++ MAYAVERSION:2023 PLATFORM:linux Lunar 0.4.5 ~/Dropbox/Development/3d/Maya/LunarDev
 scripts: ./
 plug-ins: lunar/maya/resources/plug-ins/linux/2023
 icons: lunar/maya/resources/icons
@@ -60,7 +60,7 @@ MAYA_SCRIPT_PATH+:= lunar/maya/resources/templates
 PYTHONPATH+:= thirdparty/maya/studiolibrary
 
 <!-- 2022 -->
-+ MAYAVERSION:2022 PLATFORM:linux Lunar 0.4.5 /Users/luky/Dropbox/Development/3d/Maya/LunarDev
++ MAYAVERSION:2022 PLATFORM:linux Lunar 0.4.5 ~/Dropbox/Development/3d/Maya/LunarDev
 scripts: ./
 plug-ins: lunar/maya/resources/plug-ins/linux/2022
 icons: lunar/maya/resources/icons

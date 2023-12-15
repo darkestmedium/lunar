@@ -72,8 +72,8 @@ public:
 	// Controls the size of the footprint geometry
 	static Attribute 	attr_in_line_matrix;
 	static Attribute 	attr_out_line_matrix;
-	// static  MObject         inputSize;				// 'sz'		Input	Distance
-	// static  MObject         outputSize;			// 'osz'	Output	Distance	: outputSize		= [](inputSize) -> {return inputSize;}
+	// static  MObject  inputSize;	// 'sz'	 Input	Distance
+	// static  MObject  outputSize;	// 'osz' Output	Distance: outputSize		= [](inputSize) -> {return inputSize;}
 
 	// Add your renderer-required-attributes here
 	// static MObject          inputXX;
@@ -81,7 +81,7 @@ public:
 
 	// Utility attribute for viewport
 	// [[maya::storable(false)]] [[maya::connectable(false)]] [[maya::hidden]]
-	static	MObject			geometryChanging;	// 'gcg'		Output	Bool		: geometryChanging	= [](inputSize) -> {return true;} [*] check notes
+	static	MObject		geometryChanging;	// 'gcg'		Output	Bool		: geometryChanging	= [](inputSize) -> {return true;} [*] check notes
 
 	// Attribute dependencies:
 	//		inputSize	-> outputSize
@@ -153,9 +153,9 @@ public:
 	// static MObject attr_enable_spaces;
 	// static MObject attr_space_indx;
 	// static MObject attr_spaces;
-	// 	static MObject attr_offset_mat;
-	// 	static MObject attr_driver_mat;
-	// 	static MObject attr_driverinv_mat;
+	// static MObject attr_offset_mat;
+	// static MObject attr_driver_mat;
+	// static MObject attr_driverinv_mat;
 
 	// Use only on dynamic ctrl like fk / ik blending or pole vectors
 	bool draw_line;
@@ -173,16 +173,16 @@ public:
 	// Class Methods
 	static void * 	creator() {return new CtrlNode();};
 	static MStatus	initialize();
-	virtual void 		postConstructor() override;
+	virtual void 	postConstructor() override;
 
-	MStatus 				setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
-	MStatus   			compute(const MPlug& plug, MDataBlock& dataBlock) override;
-	MStatus 				postEvaluation(const  MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType) override; 
+	MStatus 		setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
+	MStatus   		compute(const MPlug& plug, MDataBlock& dataBlock) override;
+	MStatus 		postEvaluation(const  MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType) override; 
 
-	void 					  getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
+	void 			getCacheSetup(const MEvaluationNode& evalNode, MNodeCacheDisablingInfo& disablingInfo, MNodeCacheSetupInfo& cacheSetupInfo, MObjectArray& monitoredAttributes) const override;
 	SchedulingType  schedulingType() const override {return SchedulingType::kParallel;}
 
-	bool 						isBounded() const override {return true;};
+	bool 			isBounded() const override {return true;};
 	virtual MBoundingBox boundingBox() const override;
 
 	// void  	resetTransformation(MPxTransformationMatrix* matrix) override {MPxTransform::resetTransformation(matrix);};
@@ -201,17 +201,17 @@ public:
 
 class CtrlUserData : public MUserData {
 public:
-	MMatrix 			mat_local;
+	MMatrix 		mat_local;
 	MBoundingBox 	bbox;
-	MMatrix 			mat_pv;
-	MPoint 				pos_draw_pv_to;
+	MMatrix 		mat_pv;
+	MPoint 			pos_draw_pv_to;
 	
-	short 				shape_indx;
+	short 			shape_indx;
 	unsigned int 	prio_depth;
 	MPointArray 	list_vertecies;
 	MPointArray 	list_lines;
-	float 				line_width;
-	MColor 				col_wireframe;
+	float 			line_width;
+	MColor 			col_wireframe;
 
 	// Fk Ik state
 	MObject objDrawLineTo;

@@ -491,7 +491,7 @@ class LMUi():
 		"""
 		namespace = lm.LMNamespace.getNamespaceFromName(object)
 		ctrlMain = f"{namespace}:main_ctrl"
-		listTransforms = cmds.listRelatives(ctrlMain, typ="transform", allDescendents=True)
+		listTransforms = cmds.listRelatives(ctrlMain, typ="ctrl", allDescendents=True)
 		listCtrls = []
 		listCtrls.append(ctrlMain)
 		[listCtrls.append(ctrl) for ctrl in listTransforms if ctrl.endswith("_ctrl")]

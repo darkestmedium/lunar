@@ -45,8 +45,8 @@ global proc shelf_LMAnim () {
     ;
     separator
         -enable 1
-        -width 34
-        -height 35
+        -width 32
+        -height 31
         -manage 1
         -visible 1
         -preventOverride 0
@@ -175,7 +175,7 @@ global proc shelf_LMAnim () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
         -width 35
         -height 34
@@ -213,8 +213,8 @@ global proc shelf_LMAnim () {
     ;
     separator
         -enable 1
-        -width 34
-        -height 35
+        -width 32
+        -height 31
         -manage 1
         -visible 1
         -preventOverride 0
@@ -260,8 +260,8 @@ global proc shelf_LMAnim () {
     ;
     separator
         -enable 1
-        -width 34
-        -height 35
+        -width 32
+        -height 31
         -manage 1
         -visible 1
         -preventOverride 0
@@ -274,7 +274,7 @@ global proc shelf_LMAnim () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
         -width 35
         -height 34
@@ -342,7 +342,7 @@ global proc shelf_LMAnim () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
         -width 35
         -height 34
@@ -376,7 +376,7 @@ global proc shelf_LMAnim () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
         -width 35
         -height 34

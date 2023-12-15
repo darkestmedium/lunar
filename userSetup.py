@@ -20,4 +20,3 @@ def guiUserSetup():
 
 if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): guiUserSetup()
 
-import lunar

@@ -6,7 +6,7 @@
 		{ // BUILD TASKS
 			"label": "Build Maya Plugin",
 			"type": "shell",
-			"command": "export mayaVersion=${input:mayaVersion} && python3 ./build/scripts/maya_build_plugin.py",
+			"command": "export mayaVersion=${input:mayaVersion} && python ./build/scripts/maya_build_plugin.py",
 			// "windows": {"command": "cmd SET mayaVersion=${input:mayaVersion} && python3 .\\build\\scripts\\maya_build_plugin.py"},
 			"group": {
 				"kind": "build",

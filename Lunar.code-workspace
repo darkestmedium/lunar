@@ -3,16 +3,20 @@
 		{
 			"path": "."
 		},
-		{
-			"path": "../../../../../../../Applications/Autodesk/maya2024/Maya.app/Contents/scripts"
-		}
+		// {
+		// 	"path": "../../../../../../../Applications/Autodesk/maya2024/Maya.app/Contents/scripts"
+		// },
+		// {
+		// 	"path": "../../../../../../../Volumes/lucid/Backbone/Backbone - CG/projects/CGP_Rigging/lego_base"
+		// }
 	],
 
 	"settings": {
 		// Python
 		"python.languageServer": "Pylance",
 		// Maya 2024 Mac
-		"python.defaultInterpreterPath": "/Applications/Autodesk/maya2024/Maya.app/Contents/bin/mayapy",
+		// "python.defaultInterpreterPath": "/Applications/Autodesk/maya2024/Maya.app/Contents/bin/mayapy",
+		"python.defaultInterpreterPath": "/usr/autodesk/maya2024/bin/mayapy",
 		"terminal.integrated.env.osx": {
 			"PYTHONPATH": "${workspaceFolder}/python/310/packages;",
 			// "PYTHONPATH": "${workspaceFolder}/python/310/site-packages",

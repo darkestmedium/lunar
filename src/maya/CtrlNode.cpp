@@ -14,7 +14,7 @@ MObject CtrlNode::geometryChanging 	= {};
 
 // Class attributes
 const MString CtrlNode::type_name 	= "ctrl";
-const MTypeId CtrlNode::type_id 		= 0x900000;
+const MTypeId CtrlNode::type_id 	= 0x900000;
 const MString CtrlNode::type_drawdb	= "drawdb/geometry/animation/ctrl";
 const MString CtrlNode::type_drawid	= "ctrlPlugin";
 
@@ -294,7 +294,6 @@ MStatus CtrlNode::compute(const MPlug& plug, MDataBlock& dataBlock) {
 	// 		dh_offset_parent_mat.setClean();
 
 	// 		return MS::kSuccess;
-	// 	}
 	// }
 
 	return MS::kSuccess;

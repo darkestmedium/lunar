@@ -29,9 +29,10 @@ import lunar.maya.LunarMayaRig as lmr
 
 
 
-#--------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 # DEFINITIONS
-#--------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
+
 listAttrT = ["translate"]
 listAttrR = ["rotate"]
 listAttrS = ["scale"]
@@ -69,6 +70,47 @@ def loadDependencies():
 
 
 if (om.MGlobal.mayaState() == om.MGlobal.kInteractive): loadDependencies()
+
+
+
+class LMScene():
+	"""Maya Scene wrapper class.
+	"""
+	log = logging.getLogger("MScene")
+
+
+	@classmethod
+	def getAnimationRange(cls) -> tuple:
+		"""Gets the scene's start and end frame.
+		"""
+		return(oma.MAnimControl.minTime().value, oma.MAnimControl.maxTime().value)
+
+
+	@classmethod
+	def setFramerate(cls, frameRate:float=30) -> None:
+		""""Sets the scene's frame rate.
+		"""
+		if frameRate == 30:	om.MTime.setUIUnit(8)
+		else:
+			print(f"Framerate {frameRate} unsupported.")
+
+
+	@classmethod
+	def setAnimationRange(cls, timeStart:int, timeEnd:int, animation:bool=True) -> None:
+		"""Sets the playback range on the timeline.
+		"""
+		timeUiUnit = om.MTime.uiUnit()
+		timeStart = om.MTime(timeStart, timeUiUnit)
+		timeEnd = om.MTime(timeEnd, timeUiUnit)
+		oma.MAnimControl.setMinMaxTime(timeStart, timeEnd)
+		if animation: oma.MAnimControl.setAnimationStartEndTime(timeStart, timeEnd)
+
+
+	@classmethod
+	def getTimeNode(cls) -> om.MFnDependencyNode:
+		"""Gets the function set for the scene's time1 node.
+		"""
+		return om.MFnDependencyNode(MObject.getObjFromString("time1"))
 
 
 
@@ -260,6 +302,7 @@ class LMFbx(AbstractFbx):
 		mel.eval("FBXExportInAscii -v 0")
 		mel.eval("FBXExportFileVersion -v FBX201800")
 		mel.eval("FBXExportGenerateLog -v 0")
+
 
 
 
@@ -723,52 +766,6 @@ class LMObject(om.MObject):
 
 
 
-
-class LMScene():
-	"""Maya Scene wrapper class.
-
-	"""
-
-	log = logging.getLogger("LMScene")
-
-
-	@classmethod
-	def getAnimationRange(cls) -> tuple:
-		"""Gets the scene's start and end frame.
-		"""
-		return (oma.MAnimControl.minTime().value(), oma.MAnimControl.maxTime().value())
-
-
-	@classmethod
-	def setFramerate(cls, frameRate:float=30) -> None:
-		""""Sets the scene's frame rate.
-		"""
-		if frameRate == 30:	om.MTime.setUIUnit(8)
-		else:	print(f"Framerate {frameRate} unsupported.")
-
-
-	@classmethod
-	def setAnimationRange(cls, timeStart:int, timeEnd:int, animation:bool=True) -> None:
-		"""Sets the playback range on the timeline.
-		"""
-		timeUiUnit = om.MTime.uiUnit()
-		timeStart = om.MTime(timeStart, timeUiUnit)
-		timeEnd = om.MTime(timeEnd, timeUiUnit)
-
-		oma.MAnimControl.setMinMaxTime(timeStart, timeEnd)
-		if animation: oma.MAnimControl.setAnimationStartEndTime(timeStart, timeEnd)
-
-
-	@classmethod
-	def getTimeNode(cls) -> om.MFnDependencyNode:
-		"""Gets the function set for the scene's time1 node.
-
-		"""
-		return om.MFnDependencyNode(LMObject.getObjFromString("time1"))
-
-
-
-
 class LMSceneObject():
 	"""Class for wrapping scene objects.
 	"""
@@ -784,7 +781,7 @@ class LMSceneObject():
 			return True
 
 		return False
-	
+
 
 
 
@@ -818,7 +815,6 @@ class LMRigObject():
 
 		self.rtgCtrl = lmrtg.LMLunarCtrl(f"{self.namespace}:Ctrl")
 		self.rtgSkeleton = lmrtg.LMLunarExport(f"{self.namespace}:Export")
-
 
 
 

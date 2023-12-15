@@ -21,6 +21,7 @@ import lunar.maya.LunarMayaRig as lmr
 # HumanIk templates
 import lunar.maya.resources.retarget.humanik as lmrrhi
 import lunar.maya.resources.retarget.lunarctrl as lmrrlc
+import lunar.maya.resources.retarget.lego as lmrrl
 import lunar.maya.resources.retarget.sinnersdev as lmrrsd
 import lunar.maya.resources.retarget.unreal as lmrrue
 
@@ -1526,8 +1527,8 @@ class LMLunarCtrl(LMHumanIk):
 		"""
 
 		ctrlSwitch = self.nameWithNamespace("fkik_ctrl")
-		cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
-		cmds.setAttr(f"{ctrlSwitch}.headTwist", 0)
+		# cmds.setAttr(f"{ctrlSwitch}.headSoftness", 0)
+		# cmds.setAttr(f"{ctrlSwitch}.headTwist", 0)
 
 		cmds.setAttr(f"{ctrlSwitch}.leftArmSoftness", 0)
 		cmds.setAttr(f"{ctrlSwitch}.leftArmSoftness", 0)
@@ -1899,6 +1900,164 @@ class LMLunarExport(LMMannequinUe5):
 			cmds.setAttr(f"{ctrlMain}.exportSkeletonVisibility", False)
 		if IsSelectable != 0:
 			cmds.setAttr(f"{ctrlMain}.exportSkeletonDisplayType", IsSelectable)
+
+
+
+
+
+
+class LMLegoCtrl(LMLunarCtrl):
+	"""Class for setting up the Maya Lunar Control rig in Maya.
+
+	Must share same namespace with the MLunarExport. Used for animating inside Maya.
+
+	TODO:
+		Sync with other modules / classes
+
+	"""
+	minimalDefinition = lmrrl.templateLC["minimalDefinition"]
+	definition = lmrrl.templateLC["definition"]
+	hikTemplate = "LunarCtrl"
+	tPose = lmrrl.templateLC["tPose"]
+	aPose = lmrrl.templateLC["aPose"]
+
+	sourceAndBakeTemplate = {
+		"HumanIk": 			[False, 0],
+		"SinnersDev2": 	[True, -90],
+		"SinnersDev1": 	[True, -90],
+	}
+
+	ctrlMain = "main_ctrl"
+
+	cnstLeftWeapon = None
+	cnstRightWeapon = None
+
+
+	ctrlsIk = [
+		"arm_ik_l_ctrl", "arm_ik_r_ctrl", "arm_pv_l_ctrl", "arm_pv_r_ctrl",
+		"leg_ik_l_ctrl", "leg_ik_r_ctrl", "leg_pv_l_ctrl", "leg_pv_r_ctrl",
+		"head_ik_ctrl",
+	]
+
+	ctrlsAttrs = {
+		"arm_ik_l_ctrl": lm.listAttrTR,
+		"arm_ik_r_ctrl": lm.listAttrTR,
+		"arm_pv_l_ctrl": lm.listAttrT,
+		"arm_pv_r_ctrl": lm.listAttrT,
+		"ball_l_ctrl": lm.listAttrR,
+		"ball_r_ctrl": lm.listAttrR,
+		"calf_l_ctrl": ["rotateZ"],
+		"calf_r_ctrl": ["rotateZ"],
+		"calf_twist_01_l_ctrl": ["rotateX"],
+		"calf_twist_01_r_ctrl": ["rotateX"],
+		"calf_twist_02_l_ctrl": ["rotateX"],
+		"calf_twist_02_r_ctrl": ["rotateX"],
+		"clavicle_l_ctrl": lm.listAttrR,
+		"clavicle_r_ctrl": lm.listAttrR,
+		"fkik_ctrl": lm.listAttrFkIk,
+		"foot_l_ctrl": lm.listAttrR,
+		"foot_r_ctrl": lm.listAttrR,
+		"hand_l_ctrl": lm.listAttrR,
+		"hand_r_ctrl": lm.listAttrR,
+		"head_ctrl": lm.listAttrR,
+		"head_ik_ctrl": lm.listAttrTR,
+		"index_01_l_ctrl": lm.listAttrR,
+		"index_01_r_ctrl": lm.listAttrR,
+		"index_02_l_ctrl": lm.listAttrR,
+		"index_02_r_ctrl": lm.listAttrR,
+		"index_03_l_ctrl": lm.listAttrR,
+		"index_03_r_ctrl": lm.listAttrR,
+		"index_metacarpal_l_ctrl": lm.listAttrR,
+		"index_metacarpal_r_ctrl": lm.listAttrR,
+		"leg_ik_l_ctrl": lm.listAttrTR,
+		"leg_ik_r_ctrl": lm.listAttrTR,
+		"leg_pv_l_ctrl": lm.listAttrT,
+		"leg_pv_r_ctrl": lm.listAttrT,
+		"lowerarm_l_ctrl": ["rotateZ"],
+		"lowerarm_r_ctrl": ["rotateZ"],
+		"lowerarm_twist_01_l_ctrl": ["rotateX"],
+		"lowerarm_twist_01_r_ctrl": ["rotateX"],
+		"lowerarm_twist_02_l_ctrl": ["rotateX"],
+		"lowerarm_twist_02_r_ctrl": ["rotateX"],
+		"main_ctrl": lm.listAttrTR,
+		"middle_01_l_ctrl": lm.listAttrR,
+		"middle_01_r_ctrl": lm.listAttrR,
+		"middle_02_l_ctrl": lm.listAttrR,
+		"middle_02_r_ctrl": lm.listAttrR,
+		"middle_03_l_ctrl": lm.listAttrR,
+		"middle_03_r_ctrl": lm.listAttrR,
+		"middle_metacarpal_l_ctrl": lm.listAttrR,
+		"middle_metacarpal_r_ctrl": lm.listAttrR,
+		"neck_01_ctrl": lm.listAttrR,
+		"neck_02_ctrl": lm.listAttrR,
+		"pelvis_ctrl": lm.listAttrTR,
+		"pelvis_rot_ctrl": lm.listAttrR,
+		"pinky_01_l_ctrl": lm.listAttrR,
+		"pinky_01_r_ctrl": lm.listAttrR,
+		"pinky_02_l_ctrl": lm.listAttrR,
+		"pinky_02_r_ctrl": lm.listAttrR,
+		"pinky_03_l_ctrl": lm.listAttrR,
+		"pinky_03_r_ctrl": lm.listAttrR,
+		"pinky_metacarpal_l_ctrl": lm.listAttrR,
+		"pinky_metacarpal_r_ctrl": lm.listAttrR,
+		"ring_01_l_ctrl": lm.listAttrR,
+		"ring_01_r_ctrl": lm.listAttrR,
+		"ring_02_l_ctrl": lm.listAttrR,
+		"ring_02_r_ctrl": lm.listAttrR,
+		"ring_03_l_ctrl": lm.listAttrR,
+		"ring_03_r_ctrl": lm.listAttrR,
+		"ring_metacarpal_l_ctrl": lm.listAttrR,
+		"ring_metacarpal_r_ctrl": lm.listAttrR,
+		"root_ctrl": lm.listAttrTR,
+		"spine_01_ctrl": lm.listAttrR,
+		"spine_02_ctrl": lm.listAttrR,
+		"spine_03_ctrl": lm.listAttrR,
+		"spine_04_ctrl": lm.listAttrR,
+		"spine_05_ctrl": lm.listAttrR,
+		"thigh_l_ctrl": lm.listAttrR,
+		"thigh_r_ctrl": lm.listAttrR,
+		"thigh_twist_01_l_ctrl": ["rotateX"],
+		"thigh_twist_01_r_ctrl": ["rotateX"],
+		"thigh_twist_02_l_ctrl": ["rotateX"],
+		"thigh_twist_02_r_ctrl": ["rotateX"],
+		"thumb_01_l_ctrl": lm.listAttrR,
+		"thumb_01_r_ctrl": lm.listAttrR,
+		"thumb_02_l_ctrl": lm.listAttrR,
+		"thumb_02_r_ctrl": lm.listAttrR,
+		"thumb_03_l_ctrl": lm.listAttrR,
+		"thumb_03_r_ctrl": lm.listAttrR,
+		"upperarm_l_ctrl": lm.listAttrR,
+		"upperarm_r_ctrl": lm.listAttrR,
+		"upperarm_twist_01_l_ctrl": ["rotateX"],
+		"upperarm_twist_01_r_ctrl": ["rotateX"],
+		"upperarm_twist_02_l_ctrl": ["rotateX"],
+		"upperarm_twist_02_r_ctrl": ["rotateX"],
+		"weapon_l_ctrl": lm.listAttrTR,
+		"weapon_r_ctrl": lm.listAttrTR,
+	}
+
+
+	def __init__(self, name="Ctrl") -> None:
+		"""Maya human ik init function for wrapping the in scene skeleton to the python object.
+		"""
+		# Get and set internal character name variables
+		self.log = logging.getLogger(f"{self.__class__.__name__} - {name}")
+		
+		self.namespace = lm.LMNamespace.getNamespaceFromName(name)
+		self.character = name
+
+		self.initSetup()
+
+		# Why do we need it here?? 
+		self.nodeProperties = self.getPropertiesNode()
+		self.nodeState2Sk = self.getState2SkNode()
+	
+		self.ctrlMain = self.getCtrlMain()
+		self.root = self.getRoot()
+		self.rootCnst = None
+
+
+
 
 
 
